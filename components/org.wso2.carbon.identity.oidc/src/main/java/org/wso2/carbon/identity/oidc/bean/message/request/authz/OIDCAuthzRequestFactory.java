@@ -58,7 +58,6 @@ public class OIDCAuthzRequestFactory extends AuthzRequestFactory {
 
         OIDCAuthzRequest.OIDCAuthzRequestBuilder builder = new OIDCAuthzRequest.OIDCAuthzRequestBuilder
                 (request, response);
-        builder.setTenantDomain(request.getParameter(MultitenantConstants.TENANT_DOMAIN));
         builder.setResponseType(request.getParameter(OAuth.OAUTH_RESPONSE_TYPE));
         builder.setClientId(request.getParameter(OAuth.OAUTH_CLIENT_ID));
         builder.setRedirectURI(request.getParameter(OAuth.OAUTH_REDIRECT_URI));

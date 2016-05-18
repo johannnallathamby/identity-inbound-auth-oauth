@@ -82,14 +82,7 @@ public class TokenResponseProcessor extends ROApprovalProcessor {
         if(issueRefreshToken(messageContext)) {
             oltuRespBuilder.setParam(OAuth.OAUTH_REFRESH_TOKEN, new String(accessToken.getRefreshToken()));
         }
-
-        OAuthResponse oltuResponse;
-        try {
-            oltuResponse = oltuRespBuilder.buildQueryMessage();
-        } catch (OAuthSystemException e) {
-            throw OAuth2RuntimeException.error(e.getMessage(), e);
-        }
-
+        
         AuthzResponse.AuthzResponseBuilder builder = new AuthzResponse.AuthzResponseBuilder(messageContext);
         builder.setOLTUAuthzResponseBuilder(oltuRespBuilder);
         return builder;
