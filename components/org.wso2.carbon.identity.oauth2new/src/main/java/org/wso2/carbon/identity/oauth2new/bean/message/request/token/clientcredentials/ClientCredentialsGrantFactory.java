@@ -21,6 +21,7 @@ package org.wso2.carbon.identity.oauth2new.bean.message.request.token.clientcred
 import org.apache.commons.lang.StringUtils;
 import org.apache.oltu.oauth2.common.OAuth;
 import org.apache.oltu.oauth2.common.message.types.GrantType;
+import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
 import org.wso2.carbon.identity.oauth2new.bean.message.request.token.TokenRequestFactory;
 import org.wso2.carbon.identity.oauth2new.exception.OAuth2ClientException;
 import org.wso2.carbon.identity.oauth2new.util.OAuth2Util;
@@ -50,7 +51,22 @@ public class ClientCredentialsGrantFactory extends TokenRequestFactory {
 
         ClientCredentialsGrantRequest.ClientCredentialsGrantBuilder builder = new ClientCredentialsGrantRequest
                 .ClientCredentialsGrantBuilder(request, response);
+        super.create(builder, request, response);
         builder.setScopes(OAuth2Util.buildScopeSet(request.getParameter(OAuth.OAUTH_SCOPE)));
         return builder;
+    }
+
+    @Override
+    public ClientCredentialsGrantRequest.ClientCredentialsGrantBuilder create(IdentityRequest.IdentityRequestBuilder
+                                                                                          builder,
+                                                                              HttpServletRequest request,
+                                                                              HttpServletResponse response)
+            throws OAuth2ClientException {
+
+        ClientCredentialsGrantRequest.ClientCredentialsGrantBuilder clientCredentialsGrantBuilder =
+                (ClientCredentialsGrantRequest.ClientCredentialsGrantBuilder)builder;
+        super.create(clientCredentialsGrantBuilder, request, response);
+        clientCredentialsGrantBuilder.setScopes(OAuth2Util.buildScopeSet(request.getParameter(OAuth.OAUTH_SCOPE)));
+        return clientCredentialsGrantBuilder;
     }
 }

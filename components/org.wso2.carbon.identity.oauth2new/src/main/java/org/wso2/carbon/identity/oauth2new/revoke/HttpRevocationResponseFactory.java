@@ -61,4 +61,25 @@ public class HttpRevocationResponseFactory extends HttpIdentityResponseFactory {
         }
         return responseBuilder;
     }
+
+    @Override
+    public HttpIdentityResponse.HttpIdentityResponseBuilder create(
+            HttpIdentityResponse.HttpIdentityResponseBuilder builder,
+            IdentityResponse identityResponse) {
+
+        RevocationResponse revocationResponse = (RevocationResponse)identityResponse;
+
+        builder.setStatusCode(HttpServletResponse.SC_OK);
+        if (StringUtils.isNotBlank(revocationResponse.getCallback())) {
+            builder.setBody(revocationResponse.getCallback() + "();");
+        }
+        builder.addHeader(OAuth2.Header.CACHE_CONTROL, OAuth2.HeaderValue.CACHE_CONTROL_NO_STORE);
+        builder.addHeader(OAuth2.Header.PRAGMA, OAuth2.HeaderValue.PRAGMA_NO_CACHE);
+        if (StringUtils.isNotBlank(revocationResponse.getCallback())) {
+            builder.setContentType("application/javascript");
+        } else {
+            builder.setContentType("text/html");
+        }
+        return builder;
+    }
 }

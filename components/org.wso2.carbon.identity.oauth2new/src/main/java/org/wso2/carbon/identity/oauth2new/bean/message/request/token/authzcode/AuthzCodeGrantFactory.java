@@ -21,6 +21,7 @@ package org.wso2.carbon.identity.oauth2new.bean.message.request.token.authzcode;
 import org.apache.commons.lang.StringUtils;
 import org.apache.oltu.oauth2.common.OAuth;
 import org.apache.oltu.oauth2.common.message.types.GrantType;
+import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
 import org.wso2.carbon.identity.oauth2new.bean.message.request.token.TokenRequestFactory;
 import org.wso2.carbon.identity.oauth2new.exception.OAuth2ClientException;
 
@@ -48,8 +49,22 @@ public class AuthzCodeGrantFactory extends TokenRequestFactory {
 
         AuthzCodeGrantRequest.AuthzCodeGrantBuilder builder = new AuthzCodeGrantRequest.AuthzCodeGrantBuilder
                 (request, response);
+        super.create(builder, request, response);
         builder.setCode(request.getParameter(OAuth.OAUTH_CODE));
         builder.setRedirectURI(request.getParameter(OAuth.OAUTH_REDIRECT_URI));
         return builder;
+    }
+
+    @Override
+    public AuthzCodeGrantRequest.AuthzCodeGrantBuilder create(IdentityRequest.IdentityRequestBuilder builder,
+                                                              HttpServletRequest request,
+                                                              HttpServletResponse response)
+            throws OAuth2ClientException {
+
+        AuthzCodeGrantRequest.AuthzCodeGrantBuilder authzCodeGrantBuilder = (AuthzCodeGrantRequest.AuthzCodeGrantBuilder)builder;
+        super.create(authzCodeGrantBuilder, request, response);
+        authzCodeGrantBuilder.setCode(request.getParameter(OAuth.OAUTH_CODE));
+        authzCodeGrantBuilder.setRedirectURI(request.getParameter(OAuth.OAUTH_REDIRECT_URI));
+        return authzCodeGrantBuilder;
     }
 }

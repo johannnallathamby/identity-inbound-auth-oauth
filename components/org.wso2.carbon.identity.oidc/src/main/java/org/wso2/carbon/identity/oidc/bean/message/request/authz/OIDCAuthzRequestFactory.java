@@ -19,6 +19,7 @@
 package org.wso2.carbon.identity.oidc.bean.message.request.authz;
 
 import org.apache.oltu.oauth2.common.OAuth;
+import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
 import org.wso2.carbon.identity.oauth2new.bean.message.request.authz.AuthzRequestFactory;
 import org.wso2.carbon.identity.oauth2new.exception.OAuth2ClientException;
 import org.wso2.carbon.identity.oauth2new.util.OAuth2Util;
@@ -58,11 +59,7 @@ public class OIDCAuthzRequestFactory extends AuthzRequestFactory {
 
         OIDCAuthzRequest.OIDCAuthzRequestBuilder builder = new OIDCAuthzRequest.OIDCAuthzRequestBuilder
                 (request, response);
-        builder.setResponseType(request.getParameter(OAuth.OAUTH_RESPONSE_TYPE));
-        builder.setClientId(request.getParameter(OAuth.OAUTH_CLIENT_ID));
-        builder.setRedirectURI(request.getParameter(OAuth.OAUTH_REDIRECT_URI));
-        builder.setState(request.getParameter(OAuth.OAUTH_STATE));
-        builder.setScopes(OAuth2Util.buildScopeSet(request.getParameter(OAuth.OAUTH_SCOPE)));
+        super.create(builder, request, response);
         builder.setNonce(request.getParameter(OIDC.NONCE));
         builder.setDisplay(request.getParameter(OIDC.DISPLAY));
         builder.setIdTokenHint(request.getParameter(OIDC.ID_TOKEN_HINT));
@@ -80,5 +77,32 @@ public class OIDCAuthzRequestFactory extends AuthzRequestFactory {
             builder.setConsentRequired(true);
         }
         return builder;
+    }
+
+    @Override
+    public OIDCAuthzRequest.OIDCAuthzRequestBuilder create(IdentityRequest.IdentityRequestBuilder builder,
+                                                           HttpServletRequest request,
+                                                           HttpServletResponse response) throws OAuth2ClientException {
+
+        OIDCAuthzRequest.OIDCAuthzRequestBuilder oidcAuthzRequestBuilder =
+                (OIDCAuthzRequest.OIDCAuthzRequestBuilder)builder;
+        super.create(oidcAuthzRequestBuilder, request, response);
+        oidcAuthzRequestBuilder.setNonce(request.getParameter(OIDC.NONCE));
+        oidcAuthzRequestBuilder.setDisplay(request.getParameter(OIDC.DISPLAY));
+        oidcAuthzRequestBuilder.setIdTokenHint(request.getParameter(OIDC.ID_TOKEN_HINT));
+        oidcAuthzRequestBuilder.setLoginHint(request.getParameter(OIDC.LOGIN_HINT));
+        Set<String> prompts = OAuth2Util.buildScopeSet(request.getParameter(OIDC.PROMPT));
+        if(prompts.contains(OIDC.Prompt.NONE) && prompts.size() > 1){
+            throw OAuth2ClientException.error("Prompt value 'none' cannot be used with other " +
+                                              "prompts. Prompt: " + request.getParameter(OIDC.PROMPT));
+        }
+        oidcAuthzRequestBuilder.setPrompts(prompts);
+        if (prompts.contains(OIDC.Prompt.LOGIN)) {
+            oidcAuthzRequestBuilder.setLoginRequired(true);
+        }
+        if(prompts.contains(OIDC.Prompt.CONSENT)) {
+            oidcAuthzRequestBuilder.setConsentRequired(true);
+        }
+        return oidcAuthzRequestBuilder;
     }
 }

@@ -20,7 +20,9 @@ package org.wso2.carbon.identity.oauth2.grant.ntlm.iwa;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.oltu.oauth2.common.OAuth;
+import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
 import org.wso2.carbon.identity.oauth2new.bean.message.request.token.TokenRequestFactory;
+import org.wso2.carbon.identity.oauth2new.exception.OAuth2ClientException;
 import org.wso2.carbon.identity.oauth2new.util.OAuth2Util;
 
 import javax.servlet.http.HttpServletRequest;
@@ -42,12 +44,26 @@ public class IWANTLMGrantFactory extends TokenRequestFactory {
     }
 
     @Override
-    public IWANTLMGrantRequest.IWANTLMGrantBuilder create(HttpServletRequest request, HttpServletResponse response) {
+    public IWANTLMGrantRequest.IWANTLMGrantBuilder create(HttpServletRequest request,
+                                                          HttpServletResponse response) throws OAuth2ClientException {
 
         IWANTLMGrantRequest.IWANTLMGrantBuilder builder = new IWANTLMGrantRequest.IWANTLMGrantBuilder
                 (request, response);
+        super.create(builder, request, response);
         builder.setWindowsToken(request.getParameter(IWANTLMConstants.WINDOWS_TOKEN));
         builder.setScopes(OAuth2Util.buildScopeSet(request.getParameter(OAuth.OAUTH_SCOPE)));
         return builder;
+    }
+
+    @Override
+    public IWANTLMGrantRequest.IWANTLMGrantBuilder create(IdentityRequest.IdentityRequestBuilder builder,
+                                                          HttpServletRequest request,
+                                                          HttpServletResponse response) throws OAuth2ClientException {
+
+        IWANTLMGrantRequest.IWANTLMGrantBuilder iwantlmGrantBuilder = (IWANTLMGrantRequest.IWANTLMGrantBuilder)builder;
+        super.create(iwantlmGrantBuilder, request, response);
+        iwantlmGrantBuilder.setWindowsToken(request.getParameter(IWANTLMConstants.WINDOWS_TOKEN));
+        iwantlmGrantBuilder.setScopes(OAuth2Util.buildScopeSet(request.getParameter(OAuth.OAUTH_SCOPE)));
+        return iwantlmGrantBuilder;
     }
 }

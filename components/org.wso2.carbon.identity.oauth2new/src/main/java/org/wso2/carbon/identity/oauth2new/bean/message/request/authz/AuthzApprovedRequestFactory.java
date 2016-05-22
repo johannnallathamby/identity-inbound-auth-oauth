@@ -19,6 +19,8 @@
 package org.wso2.carbon.identity.oauth2new.bean.message.request.authz;
 
 import org.apache.commons.lang3.StringUtils;
+import org.wso2.carbon.identity.application.authentication.framework.inbound.FrameworkClientException;
+import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.InboundConstants;
 import org.wso2.carbon.identity.oauth2new.OAuth2;
 import org.wso2.carbon.identity.oauth2new.bean.message.request.OAuth2IdentityRequestFactory;
@@ -49,9 +51,32 @@ public class AuthzApprovedRequestFactory extends OAuth2IdentityRequestFactory {
 
         AuthzApprovedRequest.AuthzApprovedRequestBuilder builder = new AuthzApprovedRequest.AuthzApprovedRequestBuilder
                 (request, response);
+        try {
+            super.create(builder, request, response);
+        } catch (FrameworkClientException e) {
+            throw OAuth2ClientException.error(e.getMessage(), e);
+        }
         builder.setSessionDataKey(request.getParameter(InboundConstants.RequestProcessor
                 .CONTEXT_KEY));
         builder.setConsent(request.getParameter(OAuth2.CONSENT));
         return builder;
+    }
+
+    @Override
+    public AuthzApprovedRequest.AuthzApprovedRequestBuilder create(IdentityRequest.IdentityRequestBuilder builder,
+                                                                   HttpServletRequest request,
+                                                                   HttpServletResponse response) throws OAuth2ClientException {
+
+        AuthzApprovedRequest.AuthzApprovedRequestBuilder authzApprovedRequestBuilder =
+                (AuthzApprovedRequest.AuthzApprovedRequestBuilder)builder;
+        try {
+            super.create(authzApprovedRequestBuilder, request, response);
+        } catch (FrameworkClientException e) {
+            throw OAuth2ClientException.error(e.getMessage(), e);
+        }
+        authzApprovedRequestBuilder.setSessionDataKey(request.getParameter(
+                InboundConstants.RequestProcessor.CONTEXT_KEY));
+        authzApprovedRequestBuilder.setConsent(request.getParameter(OAuth2.CONSENT));
+        return authzApprovedRequestBuilder;
     }
 }

@@ -18,6 +18,7 @@
 
 package org.wso2.carbon.identity.oidc.userinfo;
 
+import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
 import org.wso2.carbon.identity.oauth2new.bean.message.request.OAuth2IdentityRequestFactory;
 import org.wso2.carbon.identity.oauth2new.exception.OAuth2ClientException;
 
@@ -43,6 +44,13 @@ public class UserInfoRequestFactory extends OAuth2IdentityRequestFactory {
 
     @Override
     public UserInfoRequest.UserInfoRequestBuilder create(HttpServletRequest request,
+                                                         HttpServletResponse response) throws OAuth2ClientException {
+        return null;
+    }
+
+    @Override
+    public UserInfoRequest.UserInfoRequestBuilder create(IdentityRequest.IdentityRequestBuilder builder,
+                                                         HttpServletRequest request,
                                                          HttpServletResponse response) throws OAuth2ClientException {
         return null;
     }

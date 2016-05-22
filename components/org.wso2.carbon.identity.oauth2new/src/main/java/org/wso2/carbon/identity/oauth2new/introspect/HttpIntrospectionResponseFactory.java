@@ -56,4 +56,20 @@ public class HttpIntrospectionResponseFactory extends HttpIdentityResponseFactor
         responseBuilder.addHeader(OAuth2.Header.PRAGMA, OAuth2.HeaderValue.PRAGMA_NO_CACHE);
         return responseBuilder;
     }
+
+    @Override
+    public HttpIdentityResponse.HttpIdentityResponseBuilder create(
+            HttpIdentityResponse.HttpIdentityResponseBuilder builder,
+            IdentityResponse identityResponse) {
+
+        IntrospectionResponse introspectionResponse = (IntrospectionResponse)identityResponse;
+
+        builder.setStatusCode(HttpServletResponse.SC_OK);
+        Gson gson = new Gson();
+        String body = gson.toJson(introspectionResponse);
+        builder.setBody(body);
+        builder.addHeader(OAuth2.Header.CACHE_CONTROL, OAuth2.HeaderValue.CACHE_CONTROL_NO_STORE);
+        builder.addHeader(OAuth2.Header.PRAGMA, OAuth2.HeaderValue.PRAGMA_NO_CACHE);
+        return builder;
+    }
 }

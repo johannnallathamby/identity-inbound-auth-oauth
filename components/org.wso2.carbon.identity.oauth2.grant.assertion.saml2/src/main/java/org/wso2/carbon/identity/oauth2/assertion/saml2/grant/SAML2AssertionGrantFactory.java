@@ -20,6 +20,7 @@ package org.wso2.carbon.identity.oauth2.assertion.saml2.grant;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.oltu.oauth2.common.OAuth;
+import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
 import org.wso2.carbon.identity.oauth2new.bean.message.request.token.TokenRequestFactory;
 import org.wso2.carbon.identity.oauth2new.exception.OAuth2ClientException;
 import org.wso2.carbon.identity.oauth2new.util.OAuth2Util;
@@ -49,9 +50,25 @@ public class SAML2AssertionGrantFactory extends TokenRequestFactory {
 
         SAML2AssertionGrantRequest.SAML2AssertionGrantBuilder builder = new SAML2AssertionGrantRequest.SAML2AssertionGrantBuilder
                 (request, response);
+        super.create(builder, request, response);
         builder.setAssertion(request.getParameter(OAuth.OAUTH_ASSERTION));
         builder.setAssertionType(request.getParameter(OAuth.OAUTH_ASSERTION_TYPE));
         builder.setScopes(OAuth2Util.buildScopeSet(request.getParameter(OAuth.OAUTH_SCOPE)));
         return builder;
+    }
+
+    @Override
+    public SAML2AssertionGrantRequest.SAML2AssertionGrantBuilder create(IdentityRequest.IdentityRequestBuilder builder,
+                                                                        HttpServletRequest request,
+                                                                        HttpServletResponse response)
+            throws OAuth2ClientException {
+
+        SAML2AssertionGrantRequest.SAML2AssertionGrantBuilder saml2AssertionGrantBuilder = (SAML2AssertionGrantRequest
+                .SAML2AssertionGrantBuilder)builder;
+        super.create(saml2AssertionGrantBuilder, request, response);
+        saml2AssertionGrantBuilder.setAssertion(request.getParameter(OAuth.OAUTH_ASSERTION));
+        saml2AssertionGrantBuilder.setAssertionType(request.getParameter(OAuth.OAUTH_ASSERTION_TYPE));
+        saml2AssertionGrantBuilder.setScopes(OAuth2Util.buildScopeSet(request.getParameter(OAuth.OAUTH_SCOPE)));
+        return saml2AssertionGrantBuilder;
     }
 }

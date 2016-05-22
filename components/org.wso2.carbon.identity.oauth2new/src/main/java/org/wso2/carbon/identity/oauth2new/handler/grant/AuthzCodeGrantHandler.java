@@ -49,7 +49,7 @@ public class AuthzCodeGrantHandler extends AuthorizationGrantHandler {
         return false;
     }
 
-    public void validateGrant(OAuth2TokenMessageContext messageContext) throws OAuth2Exception {
+    public void validateGrant(OAuth2TokenMessageContext messageContext) throws OAuth2ClientException, OAuth2Exception {
 
         super.validateGrant(messageContext);
 

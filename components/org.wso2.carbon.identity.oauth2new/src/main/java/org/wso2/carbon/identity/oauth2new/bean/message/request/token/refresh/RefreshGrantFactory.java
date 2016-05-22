@@ -21,7 +21,9 @@ package org.wso2.carbon.identity.oauth2new.bean.message.request.token.refresh;
 import org.apache.commons.lang.StringUtils;
 import org.apache.oltu.oauth2.common.OAuth;
 import org.apache.oltu.oauth2.common.message.types.GrantType;
+import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
 import org.wso2.carbon.identity.oauth2new.bean.message.request.token.TokenRequestFactory;
+import org.wso2.carbon.identity.oauth2new.exception.OAuth2ClientException;
 import org.wso2.carbon.identity.oauth2new.util.OAuth2Util;
 
 import javax.servlet.http.HttpServletRequest;
@@ -43,12 +45,34 @@ public class RefreshGrantFactory extends TokenRequestFactory {
     }
 
     @Override
-    public RefreshGrantRequest.RefreshGrantBuilder create(HttpServletRequest request, HttpServletResponse response) {
+    public RefreshGrantRequest.RefreshGrantBuilder create(HttpServletRequest request,
+                                                          HttpServletResponse response) throws OAuth2ClientException {
 
         RefreshGrantRequest.RefreshGrantBuilder builder = new RefreshGrantRequest.RefreshGrantBuilder
                 (request, response);
+        try {
+            super.create(builder, request, response);
+        } catch (OAuth2ClientException e) {
+            throw OAuth2ClientException.error(e.getMessage(), e);
+        }
         builder.setRefreshToken(request.getParameter(OAuth.OAUTH_REFRESH_TOKEN));
         builder.setScopes(OAuth2Util.buildScopeSet(request.getParameter(OAuth.OAUTH_SCOPE)));
         return builder;
+    }
+
+    @Override
+    public RefreshGrantRequest.RefreshGrantBuilder create(IdentityRequest.IdentityRequestBuilder builder,
+                                                          HttpServletRequest request,
+                                                          HttpServletResponse response) throws OAuth2ClientException {
+
+        RefreshGrantRequest.RefreshGrantBuilder refreshGrantBuilder = (RefreshGrantRequest.RefreshGrantBuilder)builder;
+        try {
+            super.create(refreshGrantBuilder, request, response);
+        } catch (OAuth2ClientException e) {
+            throw OAuth2ClientException.error(e.getMessage(), e);
+        }
+        refreshGrantBuilder.setRefreshToken(request.getParameter(OAuth.OAUTH_REFRESH_TOKEN));
+        refreshGrantBuilder.setScopes(OAuth2Util.buildScopeSet(request.getParameter(OAuth.OAUTH_SCOPE)));
+        return refreshGrantBuilder;
     }
 }

@@ -19,6 +19,8 @@
 package org.wso2.carbon.identity.oauth2new.revoke;
 
 import org.apache.commons.lang.StringUtils;
+import org.wso2.carbon.identity.application.authentication.framework.inbound.FrameworkClientException;
+import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
 import org.wso2.carbon.identity.oauth2new.bean.message.request.OAuth2IdentityRequestFactory;
 import org.wso2.carbon.identity.oauth2new.exception.OAuth2ClientException;
 import org.wso2.carbon.utils.multitenancy.MultitenantConstants;
@@ -46,10 +48,31 @@ public class RevocationRequestFactory extends OAuth2IdentityRequestFactory {
                                                          HttpServletResponse response) throws OAuth2ClientException {
 
         RevocationRequest.RevokeRequestBuilder builder = new RevocationRequest.RevokeRequestBuilder(request, response);
-        builder.setTenantDomain(request.getParameter(MultitenantConstants.TENANT_DOMAIN));
+        try {
+            super.create(builder, request, response);
+        } catch (FrameworkClientException e) {
+            throw OAuth2ClientException.error(e.getMessage(), e);
+        }
         builder.setToken(request.getParameter("token"));
         builder.setTokenTypeHint(request.getParameter("token_type_hint"));
         builder.setCallback(request.getParameter("callback"));
         return builder;
+    }
+
+    @Override
+    public RevocationRequest.RevokeRequestBuilder create(IdentityRequest.IdentityRequestBuilder builder,
+                                                         HttpServletRequest request,
+                                                         HttpServletResponse response) throws OAuth2ClientException {
+
+        RevocationRequest.RevokeRequestBuilder revokeRequestBuilder = (RevocationRequest.RevokeRequestBuilder)builder;
+        try {
+            super.create(revokeRequestBuilder, request, response);
+        } catch (FrameworkClientException e) {
+            throw OAuth2ClientException.error(e.getMessage(), e);
+        }
+        revokeRequestBuilder.setToken(request.getParameter("token"));
+        revokeRequestBuilder.setTokenTypeHint(request.getParameter("token_type_hint"));
+        revokeRequestBuilder.setCallback(request.getParameter("callback"));
+        return revokeRequestBuilder;
     }
 }

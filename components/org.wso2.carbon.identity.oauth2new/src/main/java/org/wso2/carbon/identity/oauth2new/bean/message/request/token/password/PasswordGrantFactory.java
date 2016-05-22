@@ -21,6 +21,7 @@ package org.wso2.carbon.identity.oauth2new.bean.message.request.token.password;
 import org.apache.commons.lang.StringUtils;
 import org.apache.oltu.oauth2.common.OAuth;
 import org.apache.oltu.oauth2.common.message.types.GrantType;
+import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
 import org.wso2.carbon.identity.oauth2new.bean.message.request.token.TokenRequestFactory;
 import org.wso2.carbon.identity.oauth2new.exception.OAuth2ClientException;
 import org.wso2.carbon.identity.oauth2new.util.OAuth2Util;
@@ -49,9 +50,24 @@ public class PasswordGrantFactory extends TokenRequestFactory {
 
         PasswordGrantRequest.PasswordGrantBuilder builder = new PasswordGrantRequest.PasswordGrantBuilder
                 (request, response);
+        super.create(builder, request, response);
         builder.setUsername(request.getParameter(OAuth.OAUTH_USERNAME));
         builder.setPassword(request.getParameter(OAuth.OAUTH_PASSWORD).toCharArray());
         builder.setScopes(OAuth2Util.buildScopeSet(request.getParameter(OAuth.OAUTH_SCOPE)));
         return builder;
+    }
+
+    @Override
+    public PasswordGrantRequest.PasswordGrantBuilder create(IdentityRequest.IdentityRequestBuilder builder,
+                                                            HttpServletRequest request,
+                                                            HttpServletResponse response)
+            throws OAuth2ClientException {
+
+        PasswordGrantRequest.PasswordGrantBuilder passwordGrantBuilder = (PasswordGrantRequest.PasswordGrantBuilder)builder;
+        super.create(passwordGrantBuilder, request, response);
+        passwordGrantBuilder.setUsername(request.getParameter(OAuth.OAUTH_USERNAME));
+        passwordGrantBuilder.setPassword(request.getParameter(OAuth.OAUTH_PASSWORD).toCharArray());
+        passwordGrantBuilder.setScopes(OAuth2Util.buildScopeSet(request.getParameter(OAuth.OAUTH_SCOPE)));
+        return passwordGrantBuilder;
     }
 }
