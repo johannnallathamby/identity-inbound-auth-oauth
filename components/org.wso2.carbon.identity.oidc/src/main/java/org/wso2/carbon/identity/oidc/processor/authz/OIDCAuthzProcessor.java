@@ -77,7 +77,7 @@ public class OIDCAuthzProcessor extends AuthzProcessor {
         messageContext.addParameter(InboundConstants.ForceAuth, isLoginRequired);
         boolean isPromptNone = ((OIDCAuthzRequest)messageContext.getRequest()).isPromptNone();
         messageContext.addParameter(InboundConstants.PassiveAuth, isPromptNone);
-        return buildResponseForFrameworkLogin(messageContext);
+        return super.initializeResourceOwnerAuthentication(messageContext);
     }
 
 }
