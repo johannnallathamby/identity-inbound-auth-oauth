@@ -23,6 +23,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.joda.time.DateTime;
 import org.opensaml.DefaultBootstrap;
+import org.opensaml.common.xml.SAMLConstants;
 import org.opensaml.saml1.core.Assertion;
 import org.opensaml.saml1.core.Audience;
 import org.opensaml.saml1.core.AudienceRestrictionCondition;
@@ -37,7 +38,9 @@ import org.opensaml.xml.XMLObject;
 import org.opensaml.xml.security.x509.X509Credential;
 import org.opensaml.xml.signature.SignatureValidator;
 import org.opensaml.xml.validation.ValidationException;
+import org.w3c.dom.NodeList;
 import org.wso2.carbon.base.MultitenantConstants;
+import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
 import org.wso2.carbon.identity.application.common.model.FederatedAuthenticatorConfig;
 import org.wso2.carbon.identity.application.common.model.IdentityProvider;
 import org.wso2.carbon.identity.application.common.model.Property;
@@ -167,7 +170,19 @@ public class SAML1BearerGrantHandler extends AbstractAuthorizationGrantHandler {
         try {
             XMLObject samlObject = IdentityUtil.unmarshall(new String(Base64.decodeBase64(
                     tokReqMsgCtx.getOauth2AccessTokenReqDTO().getAssertion())));
-            assertion = (Assertion) samlObject;
+            // Validating for multiple assertions
+            NodeList assertionList = samlObject.getDOM().getElementsByTagNameNS(SAMLConstants.SAML1_NS, "Assertion");
+            if (assertionList.getLength() > 0) {
+                log.error("Invalid schema for SAML Assertion. Nested assertions detected.");
+                return false;
+            }
+
+            if (samlObject instanceof Assertion) {
+                assertion = (Assertion) samlObject;
+            } else {
+                log.error("Only Assertion objects are validated in SAML1Bearer Grant Type");
+                return false;
+            }
         } catch (IdentityException e) {
             if (log.isDebugEnabled()) {
                 log.debug("Error occurred while unmarshalling SAML1.0 assertion", e);
@@ -204,7 +219,10 @@ public class SAML1BearerGrantHandler extends AbstractAuthorizationGrantHandler {
                     }
                     return false;
                 }
-                tokReqMsgCtx.setAuthorizedUser(OAuth2Util.getUserFromUserName(resourceOwnerUserName));
+                AuthenticatedUser user = OAuth2Util.getUserFromUserName(resourceOwnerUserName);
+                user.setAuthenticatedSubjectIdentifier(resourceOwnerUserName);
+                user.setFederatedUser(true);
+                tokReqMsgCtx.setAuthorizedUser(user);
                 if (log.isDebugEnabled()) {
                     log.debug("Resource Owner User Name is set to " + resourceOwnerUserName);
                 }

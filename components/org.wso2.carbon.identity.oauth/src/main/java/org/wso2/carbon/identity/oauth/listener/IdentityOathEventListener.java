@@ -20,16 +20,21 @@ package org.wso2.carbon.identity.oauth.listener;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
 import org.wso2.carbon.identity.core.AbstractIdentityUserOperationEventListener;
 import org.wso2.carbon.identity.core.model.IdentityErrorMsgContext;
 import org.wso2.carbon.identity.core.util.IdentityCoreConstants;
+import org.wso2.carbon.identity.core.util.IdentityTenantUtil;
 import org.wso2.carbon.identity.core.util.IdentityUtil;
 import org.wso2.carbon.identity.oauth.OAuthUtil;
 import org.wso2.carbon.identity.oauth.cache.AuthorizationGrantCache;
 import org.wso2.carbon.identity.oauth.cache.AuthorizationGrantCacheEntry;
 import org.wso2.carbon.identity.oauth.cache.AuthorizationGrantCacheKey;
+import org.wso2.carbon.identity.oauth.util.ClaimCache;
+import org.wso2.carbon.identity.oauth.util.ClaimCacheKey;
+import org.wso2.carbon.identity.oauth.util.ClaimMetaDataCache;
+import org.wso2.carbon.identity.oauth.util.ClaimMetaDataCacheEntry;
+import org.wso2.carbon.identity.oauth.util.ClaimMetaDataCacheKey;
 import org.wso2.carbon.identity.oauth2.IdentityOAuth2Exception;
 import org.wso2.carbon.identity.oauth2.dao.TokenMgtDAO;
 import org.wso2.carbon.identity.oauth2.model.AccessTokenDO;
@@ -73,6 +78,9 @@ public class IdentityOathEventListener extends AbstractIdentityUserOperationEven
         if (!isEnable()) {
             return true;
         }
+
+        removeClaimCacheEntry(username, userStoreManager);
+
         return revokeTokens(username, userStoreManager);
 
     }
@@ -92,13 +100,23 @@ public class IdentityOathEventListener extends AbstractIdentityUserOperationEven
     }
 
     @Override
+    public boolean doPostSetUserClaimValue(String userName, UserStoreManager userStoreManager) throws UserStoreException {
+        if (!isEnable()) {
+            return true;
+        }
+        return revokeTokensOfLockedUser(userName, userStoreManager) && revokeTokensOfDisabledUser(userName, userStoreManager)
+                && removeUserClaimsFromCache(userName, userStoreManager);
+    }
+
+    @Override
     public boolean doPostSetUserClaimValues(String userName, Map<String, String> claims, String profileName,
                                             UserStoreManager userStoreManager) throws UserStoreException {
 
         if (!isEnable()) {
             return true;
         }
-        return revokeTokensOfLockedUser(userName, userStoreManager) && revokeTokensOfDisabledUser(userName, userStoreManager);
+        return revokeTokensOfLockedUser(userName, userStoreManager) && revokeTokensOfDisabledUser(userName, userStoreManager)
+                && removeUserClaimsFromCache(userName, userStoreManager);
     }
 
     @Override
@@ -111,7 +129,25 @@ public class IdentityOathEventListener extends AbstractIdentityUserOperationEven
         return revokeTokensOfLockedUser(userName, userStoreManager) && revokeTokensOfDisabledUser(userName, userStoreManager);
     }
 
-    private boolean revokeTokensOfLockedUser(String userName, UserStoreManager userStoreManager) {
+    @Override
+    public boolean doPostUpdateCredential(String userName, Object credential, UserStoreManager userStoreManager) throws UserStoreException {
+
+        if (!isEnable()) {
+            return true;
+        }
+        return revokeTokens(userName, userStoreManager);
+    }
+
+    @Override
+    public boolean doPostUpdateCredentialByAdmin(String userName, Object credential, UserStoreManager userStoreManager) throws UserStoreException {
+
+        if (!isEnable()) {
+            return true;
+        }
+        return revokeTokens(userName, userStoreManager);
+    }
+
+    private boolean revokeTokensOfLockedUser(String userName, UserStoreManager userStoreManager) throws UserStoreException {
 
         IdentityErrorMsgContext errorContext = IdentityUtil.getIdentityErrorMsg();
 
@@ -121,7 +157,7 @@ public class IdentityOathEventListener extends AbstractIdentityUserOperationEven
         return true;
     }
 
-    private boolean revokeTokensOfDisabledUser(String userName, UserStoreManager userStoreManager) {
+    private boolean revokeTokensOfDisabledUser(String userName, UserStoreManager userStoreManager) throws UserStoreException {
 
         IdentityErrorMsgContext errorContext = IdentityUtil.getIdentityErrorMsg();
 
@@ -131,11 +167,11 @@ public class IdentityOathEventListener extends AbstractIdentityUserOperationEven
         return true;
     }
 
-    private boolean revokeTokens(String username, UserStoreManager userStoreManager){
+    private boolean revokeTokens(String username, UserStoreManager userStoreManager) throws UserStoreException {
         TokenMgtDAO tokenMgtDAO = new TokenMgtDAO();
 
         String userStoreDomain = UserCoreUtil.getDomainName(userStoreManager.getRealmConfiguration());
-        String tenantDomain = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
+        String tenantDomain = IdentityTenantUtil.getTenantDomain(userStoreManager.getTenantId());
         AuthenticatedUser authenticatedUser = new AuthenticatedUser();
         authenticatedUser.setUserStoreDomain(userStoreDomain);
         authenticatedUser.setTenantDomain(tenantDomain);
@@ -211,7 +247,7 @@ public class IdentityOathEventListener extends AbstractIdentityUserOperationEven
     private void removeTokensFromCache(String userName, UserStoreManager userStoreManager) throws
             UserStoreException {
         String userStoreDomain = UserCoreUtil.getDomainName(userStoreManager.getRealmConfiguration());
-        String tenantDomain = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
+        String tenantDomain = IdentityTenantUtil.getTenantDomain(userStoreManager.getTenantId());
         TokenMgtDAO tokenMgtDAO = new TokenMgtDAO();
         Set<String> accessTokens;
         Set<String> authorizationCodes;
@@ -247,5 +283,44 @@ public class IdentityOathEventListener extends AbstractIdentityUserOperationEven
             log.error(errorMsg, e);
         }
 
+    }
+
+    /**
+     * Remove user claims from ClaimCache
+     *
+     * @param userName
+     */
+    private boolean removeUserClaimsFromCache(String userName, UserStoreManager userStoreManager) throws UserStoreException {
+        ClaimCache claimCache = ClaimCache.getInstance();
+        AuthenticatedUser authenticatedUser = new AuthenticatedUser();
+        authenticatedUser.setUserName(userName);
+        authenticatedUser.setTenantDomain(IdentityTenantUtil.getTenantDomain(userStoreManager.getTenantId()));
+        authenticatedUser.setUserStoreDomain(UserCoreUtil.getDomainName(userStoreManager.getRealmConfiguration()));
+        ClaimCacheKey cacheKey = new ClaimCacheKey(authenticatedUser);
+        if (cacheKey != null) {
+            claimCache.clearCacheEntry(cacheKey);
+        }
+        return true;
+    }
+
+    /**
+     * Remove ClaimCache Entry if available.
+     *
+     * @param username
+     * @param userStoreManager
+     */
+    private void removeClaimCacheEntry(String username, UserStoreManager userStoreManager) throws UserStoreException {
+
+        AuthenticatedUser authenticatedUser = new AuthenticatedUser();
+        authenticatedUser.setUserName(username);
+        authenticatedUser.setTenantDomain(IdentityTenantUtil.getTenantDomain(userStoreManager.getTenantId()));
+        authenticatedUser.setUserStoreDomain(UserCoreUtil.getDomainName(userStoreManager.getRealmConfiguration()));
+
+        ClaimMetaDataCacheEntry cacheEntry = ClaimMetaDataCache.getInstance().getValueFromCache(
+                new ClaimMetaDataCacheKey(authenticatedUser));
+        if(cacheEntry == null) {
+            return;
+        }
+        ClaimCache.getInstance().clearCacheEntry(cacheEntry.getClaimCacheKey());
     }
 }

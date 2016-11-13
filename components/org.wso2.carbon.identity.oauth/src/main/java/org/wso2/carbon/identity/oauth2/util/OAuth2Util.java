@@ -18,6 +18,8 @@
 
 package org.wso2.carbon.identity.oauth2.util;
 
+import org.apache.axiom.om.OMElement;
+import org.apache.axiom.om.impl.builder.StAXOMBuilder;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.Charsets;
@@ -25,38 +27,50 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.oltu.oauth2.common.message.types.ResponseType;
+import org.wso2.carbon.base.CarbonBaseConstants;
 import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
 import org.wso2.carbon.identity.application.common.model.User;
+import org.wso2.carbon.identity.core.util.IdentityIOStreamUtils;
 import org.wso2.carbon.identity.core.util.IdentityUtil;
 import org.wso2.carbon.identity.oauth.IdentityOAuthAdminException;
+import org.wso2.carbon.identity.oauth.cache.AppInfoCache;
 import org.wso2.carbon.identity.oauth.cache.CacheEntry;
 import org.wso2.carbon.identity.oauth.cache.OAuthCache;
 import org.wso2.carbon.identity.oauth.cache.OAuthCacheKey;
 import org.wso2.carbon.identity.oauth.common.OAuthConstants;
 import org.wso2.carbon.identity.oauth.common.exception.InvalidOAuthClientException;
 import org.wso2.carbon.identity.oauth.config.OAuthServerConfiguration;
+import org.wso2.carbon.identity.oauth.dao.OAuthAppDAO;
 import org.wso2.carbon.identity.oauth.dao.OAuthAppDO;
 import org.wso2.carbon.identity.oauth.dao.OAuthConsumerDAO;
 import org.wso2.carbon.identity.oauth.internal.OAuthComponentServiceHolder;
 import org.wso2.carbon.identity.oauth2.IdentityOAuth2Exception;
 import org.wso2.carbon.identity.oauth2.authz.OAuthAuthzReqMessageContext;
+import org.wso2.carbon.identity.oauth2.dao.TokenMgtDAO;
 import org.wso2.carbon.identity.oauth2.internal.OAuth2ServiceComponentHolder;
 import org.wso2.carbon.identity.oauth2.model.AccessTokenDO;
 import org.wso2.carbon.identity.oauth2.model.ClientCredentialDO;
 import org.wso2.carbon.identity.oauth2.token.OAuthTokenReqMessageContext;
+import org.wso2.carbon.registry.core.Registry;
+import org.wso2.carbon.registry.core.Resource;
+import org.wso2.carbon.registry.core.exceptions.RegistryException;
 import org.wso2.carbon.user.api.UserStoreException;
 import org.wso2.carbon.user.core.service.RealmService;
 import org.wso2.carbon.user.core.util.UserCoreUtil;
+import org.wso2.carbon.utils.multitenancy.MultitenantConstants;
 import org.wso2.carbon.utils.multitenancy.MultitenantUtils;
 
+import javax.xml.namespace.QName;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Timestamp;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -67,7 +81,9 @@ public class OAuth2Util {
 
     public static final String REMOTE_ACCESS_TOKEN = "REMOTE_ACCESS_TOKEN";
     public static final String JWT_ACCESS_TOKEN = "JWT_ACCESS_TOKEN";
-    
+    public static final String ACCESS_TOKEN_DO = "AccessTokenDo";
+    public static final String OAUTH2_VALIDATION_MESSAGE_CONTEXT = "OAuth2TokenValidationMessageContext";
+
 
     /*
      * OPTIONAL. A JSON string containing a space-separated list of scopes associated with this token, in the format
@@ -130,7 +146,7 @@ public class OAuth2Util {
      */
     public static final String IAT = "iat";
 
-    
+
     private static Log log = LogFactory.getLog(OAuth2Util.class);
     private static boolean cacheEnabled = OAuthServerConfiguration.getInstance().isCacheEnabled();
     private static OAuthCache cache = OAuthCache.getInstance();
@@ -144,9 +160,9 @@ public class OAuth2Util {
     private OAuth2Util(){
 
     }
-    
+
     /**
-     * 
+     *
      * @return
      */
     public static OAuthAuthzReqMessageContext getAuthzRequestContext() {
@@ -157,7 +173,7 @@ public class OAuth2Util {
     }
 
     /**
-     * 
+     *
      * @param context
      */
     public static void setAuthzRequestContext(OAuthAuthzReqMessageContext context) {
@@ -168,7 +184,7 @@ public class OAuth2Util {
     }
 
     /**
-     * 
+     *
      */
     public static void clearAuthzRequestContext() {
 	authzRequestContext.remove();
@@ -176,9 +192,9 @@ public class OAuth2Util {
 	    log.debug("Cleared OAuthAuthzReqMessageContext");
 	}
     }
-    
+
     /**
-     * 
+     *
      * @return
      */
     public static OAuthTokenReqMessageContext getTokenRequestContext() {
@@ -189,7 +205,7 @@ public class OAuth2Util {
     }
 
     /**
-     * 
+     *
      * @param context
      */
     public static void setTokenRequestContext(OAuthTokenReqMessageContext context) {
@@ -200,7 +216,7 @@ public class OAuth2Util {
     }
 
     /**
-     * 
+     *
      */
     public static void clearTokenRequestContext() {
 	tokenRequestContext.remove();
@@ -597,7 +613,7 @@ public class OAuth2Util {
 
         long issuedTime = accessTokenDO.getIssuedTime().getTime();
         currentTime = System.currentTimeMillis();
-        long validityMillis = issuedTime + validityPeriodMillis - (currentTime + timestampSkew);
+        long validityMillis = issuedTime + validityPeriodMillis - (currentTime - timestampSkew);
         if (validityMillis > 1000) {
             return validityMillis;
         } else {
@@ -796,7 +812,7 @@ public class OAuth2Util {
         if(!isPKCESupportEnabled()) {
             return true;
         }
-        if(oAuthAppDO.isPkceMandatory() || referenceCodeChallenge != null){
+        if (oAuthAppDO != null && oAuthAppDO.isPkceMandatory() || referenceCodeChallenge != null) {
 
             //As per RFC 7636 Fallback to 'plain' if no code_challenge_method parameter is sent
             if(challenge_method == null || challenge_method.trim().length() == 0) {
@@ -871,4 +887,187 @@ public class OAuth2Util {
         }
         return false;
     }
+
+    public static void initiateOIDCScopes(int tenantId) {
+        try {
+            Map<String, String> scopes = loadScopeConfigFile();
+            Registry registry = OAuth2ServiceComponentHolder.getRegistryService().getConfigSystemRegistry(tenantId);
+
+            if (!registry
+                    .resourceExists(OAuthConstants.SCOPE_RESOURCE_PATH)) {
+
+                Resource resource = registry.newResource();
+                if (scopes.size() > 0) {
+                    for (Map.Entry<String, String> entry : scopes.entrySet()) {
+                        String valueStr = entry.getValue().toString();
+                        resource.setProperty(entry.getKey(), valueStr);
+                    }
+                }
+
+                registry.put(OAuthConstants.SCOPE_RESOURCE_PATH, resource);
+            }
+        } catch (RegistryException e) {
+            log.error("Error while creating registry collection for :" + OAuthConstants.SCOPE_RESOURCE_PATH, e);
+        }
+    }
+
+    public static List<String> getOIDCScopes(String tenantDomain) {
+        try {
+            int tenantId = OAuthComponentServiceHolder.getInstance().getRealmService().getTenantManager()
+                    .getTenantId(tenantDomain);
+            Registry registry = OAuth2ServiceComponentHolder.getRegistryService().getConfigSystemRegistry(tenantId);
+
+            if (registry.resourceExists(OAuthConstants.SCOPE_RESOURCE_PATH)) {
+                Resource resource = registry.get(OAuthConstants.SCOPE_RESOURCE_PATH);
+                Properties properties = resource.getProperties();
+                Enumeration e = properties.propertyNames();
+                List<String> scopes = new ArrayList();
+                while (e.hasMoreElements()) {
+                    scopes.add((String) e.nextElement());
+                }
+                return scopes;
+            }
+        } catch (RegistryException | UserStoreException e) {
+            log.error("Error while retrieving registry collection for :" + OAuthConstants.SCOPE_RESOURCE_PATH, e);
+        }
+        return new ArrayList<>();
+    }
+
+    public static AccessTokenDO getAccessTokenDOfromTokenIdentifier(String accessTokenIdentifier) throws
+            IdentityOAuth2Exception {
+        boolean cacheHit = false;
+        AccessTokenDO accessTokenDO = null;
+        // check the cache, if caching is enabled.
+        if (OAuthServerConfiguration.getInstance().isCacheEnabled()) {
+            OAuthCache oauthCache = OAuthCache.getInstance();
+            OAuthCacheKey cacheKey = new OAuthCacheKey(accessTokenIdentifier);
+            CacheEntry result = oauthCache.getValueFromCache(cacheKey);
+            // cache hit, do the type check.
+            if (result instanceof AccessTokenDO) {
+                accessTokenDO = (AccessTokenDO) result;
+                cacheHit = true;
+            }
+        }
+        // cache miss, load the access token info from the database.
+        if (accessTokenDO == null) {
+            accessTokenDO = new TokenMgtDAO().retrieveAccessToken(accessTokenIdentifier, false);
+        }
+
+        if (accessTokenDO == null) {
+            throw new IllegalArgumentException("Invalid access token");
+        }
+
+        // add the token back to the cache in the case of a cache miss
+        if (OAuthServerConfiguration.getInstance().isCacheEnabled() && !cacheHit) {
+            OAuthCache oauthCache = OAuthCache.getInstance();
+            OAuthCacheKey cacheKey = new OAuthCacheKey(accessTokenIdentifier);
+            oauthCache.addToCache(cacheKey, accessTokenDO);
+            if (log.isDebugEnabled()) {
+                log.debug("Access Token Info object was added back to the cache.");
+            }
+        }
+
+        return accessTokenDO;
+    }
+
+
+    public static String getClientIdForAccessToken(String accessTokenIdentifier) throws IdentityOAuth2Exception {
+        AccessTokenDO accessTokenDO = getAccessTokenDOfromTokenIdentifier(accessTokenIdentifier);
+        return accessTokenDO.getConsumerKey();
+    }
+
+    private static Map<String, String> loadScopeConfigFile() {
+        Map<String, String> scopes = new HashMap<>();
+        String carbonHome = System.getProperty(CarbonBaseConstants.CARBON_HOME);
+        String confXml =
+                Paths.get(carbonHome, "repository", "conf", "identity", OAuthConstants.OIDC_SCOPE_CONFIG_PATH)
+                        .toString();
+        File configfile = new File(confXml);
+        if (!configfile.exists()) {
+            log.warn("OIDC scope-claim Configuration File is not present at: " + confXml);
+        }
+
+        XMLStreamReader parser = null;
+        InputStream stream = null;
+
+        try {
+            stream = new FileInputStream(configfile);
+            parser = XMLInputFactory.newInstance()
+                    .createXMLStreamReader(stream);
+            StAXOMBuilder builder = new StAXOMBuilder(parser);
+            OMElement documentElement = builder.getDocumentElement();
+            Iterator iterator = documentElement.getChildElements();
+            while (iterator.hasNext()) {
+                OMElement omElement = (OMElement) iterator.next();
+                String configType = omElement.getAttributeValue(new QName(
+                        "id"));
+                scopes.put(configType, loadClaimConfig(omElement));
+            }
+        } catch (XMLStreamException e) {
+            log.warn("Error while loading scope config.", e);
+        } catch (FileNotFoundException e) {
+            log.warn("Error while loading email config.", e);
+        } finally {
+            try {
+                if (parser != null) {
+                    parser.close();
+                }
+                if (stream != null) {
+                    IdentityIOStreamUtils.closeInputStream(stream);
+                }
+            } catch (XMLStreamException e) {
+                log.error("Error while closing XML stream", e);
+            }
+        }
+        return scopes;
+    }
+
+    private static String loadClaimConfig(OMElement configElement) {
+        StringBuilder claimConfig = new StringBuilder();
+        Iterator it = configElement.getChildElements();
+        while (it.hasNext()) {
+            OMElement element = (OMElement) it.next();
+            if ("Claim".equals(element.getLocalName())) {
+                claimConfig.append(element.getText());
+            }
+        }
+        return claimConfig.toString();
+    }
+
+    /**
+     * Get Oauth application information
+     *
+     * @param clientId
+     * @return Oauth app information
+     * @throws IdentityOAuth2Exception
+     * @throws InvalidOAuthClientException
+     */
+    public static OAuthAppDO getAppInformationByClientId(String clientId)
+            throws IdentityOAuth2Exception, InvalidOAuthClientException {
+
+        OAuthAppDO oAuthAppDO = AppInfoCache.getInstance().getValueFromCache(clientId);
+        if (oAuthAppDO != null) {
+            return oAuthAppDO;
+        } else {
+            oAuthAppDO = new OAuthAppDAO().getAppInformation(clientId);
+            AppInfoCache.getInstance().addToCache(clientId, oAuthAppDO);
+            return oAuthAppDO;
+        }
+    }
+
+    /**
+     * Get the tenant domain of an oauth application
+     *
+     * @param oAuthAppDO
+     * @return
+     */
+    public static String getTenantDomainOfOauthApp(OAuthAppDO oAuthAppDO) {
+        String tenantDomain = MultitenantConstants.SUPER_TENANT_DOMAIN_NAME;
+        if (oAuthAppDO != null) {
+            AuthenticatedUser appDeveloper = oAuthAppDO.getUser();
+            tenantDomain = appDeveloper.getTenantDomain();
+        }
+        return tenantDomain;
+    }
+
 }

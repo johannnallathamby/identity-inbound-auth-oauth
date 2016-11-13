@@ -30,6 +30,7 @@ import org.wso2.carbon.identity.oauth.common.OAuthConstants;
 import org.wso2.carbon.identity.oauth.config.OAuthServerConfiguration;
 import org.wso2.carbon.identity.oauth2.IdentityOAuth2Exception;
 import org.wso2.carbon.identity.oauth2.ResponseHeader;
+import org.wso2.carbon.identity.oauth2.dao.SQLQueries;
 import org.wso2.carbon.identity.oauth2.dto.OAuth2AccessTokenReqDTO;
 import org.wso2.carbon.identity.oauth2.dto.OAuth2AccessTokenRespDTO;
 import org.wso2.carbon.identity.oauth2.model.AccessTokenDO;
@@ -98,14 +99,22 @@ public class RefreshGrantHandler extends AbstractAuthorizationGrantHandler {
                 validationDataDO.getAuthorizedUser(),
                 userStoreDomain, OAuth2Util.buildScopeString(validationDataDO.getScope()), true);
 
-        if (accessTokenDO == null){
-            if(log.isDebugEnabled()){
+        if (accessTokenDO == null) {
+            if (log.isDebugEnabled()) {
                 log.debug("Error while retrieving the latest refresh token");
             }
+            if (cacheEnabled) {
+                clearCache(tokenReqDTO.getClientId(), validationDataDO.getAuthorizedUser().toString(),
+                        validationDataDO.getScope(), validationDataDO.getAccessToken());
+            }
             return false;
-        }else if(!refreshToken.equals(accessTokenDO.getRefreshToken())){
-            if(log.isDebugEnabled()){
+        } else if (!refreshToken.equals(accessTokenDO.getRefreshToken())) {
+            if (log.isDebugEnabled()) {
                 log.debug("Refresh token is not the latest.");
+            }
+            if (cacheEnabled) {
+                clearCache(tokenReqDTO.getClientId(), validationDataDO.getAuthorizedUser().toString(),
+                        validationDataDO.getScope(), validationDataDO.getAccessToken());
             }
             return false;
         }
@@ -251,10 +260,14 @@ public class RefreshGrantHandler extends AbstractAuthorizationGrantHandler {
 
         String authorizedUser = tokReqMsgCtx.getAuthorizedUser().toString();
 	    // set the previous access token state to "INACTIVE" and store new access token in single db connection
-	    tokenMgtDAO.invalidateAndCreateNewToken(oldAccessToken.getTokenId(), "INACTIVE", clientId,
+	    tokenMgtDAO.invalidateAndCreateNewToken(oldAccessToken.getTokenId(), OAuthConstants.TokenStates.TOKEN_STATE_INACTIVE, clientId,
 	                                            UUID.randomUUID().toString(), accessTokenDO,
 	                                            userStoreDomain);
-
+        if (!accessToken.equals(accessTokenDO.getAccessToken())) {
+            // Using latest active token.
+            accessToken = accessTokenDO.getAccessToken();
+            refreshToken = accessTokenDO.getRefreshToken();
+        }
         //remove the previous access token from cache and add the new access token info to the cache,
         // if it's enabled.
         if (cacheEnabled) {
@@ -329,5 +342,25 @@ public class RefreshGrantHandler extends AbstractAuthorizationGrantHandler {
         tokenRespDTO.setErrorCode(errorCode);
         tokenRespDTO.setErrorMsg(errorMsg);
         return tokenRespDTO;
+    }
+
+
+    private void clearCache(String clientId, String authorizedUser, String[] scopes, String accessToken) {
+
+        boolean isUsernameCaseSensitive = IdentityUtil.isUserStoreInUsernameCaseSensitive(authorizedUser);
+        String cacheKeyString;
+        if (isUsernameCaseSensitive) {
+            cacheKeyString = clientId + ":" + authorizedUser + ":" + OAuth2Util.buildScopeString(scopes);
+        } else {
+            cacheKeyString = clientId + ":" + authorizedUser.toLowerCase() + ":" + OAuth2Util.buildScopeString(scopes);
+        }
+
+        // Remove the old access token from the OAuthCache
+        OAuthCacheKey oauthCacheKey = new OAuthCacheKey(cacheKeyString);
+        oauthCache.clearCacheEntry(oauthCacheKey);
+
+        // Remove the old access token from the AccessTokenCache
+        OAuthCacheKey accessTokenCacheKey = new OAuthCacheKey(accessToken);
+        oauthCache.clearCacheEntry(accessTokenCacheKey);
     }
 }

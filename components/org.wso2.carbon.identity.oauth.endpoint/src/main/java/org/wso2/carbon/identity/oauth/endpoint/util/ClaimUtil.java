@@ -21,12 +21,20 @@ package org.wso2.carbon.identity.oauth.endpoint.util;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.wso2.carbon.claim.mgt.ClaimManagerHandler;
+import org.wso2.carbon.identity.application.common.model.ClaimMapping;
+import org.wso2.carbon.identity.application.common.model.ServiceProvider;
+import org.wso2.carbon.identity.application.mgt.ApplicationManagementService;
 import org.wso2.carbon.identity.base.IdentityConstants;
+import org.wso2.carbon.identity.claim.metadata.mgt.ClaimMetadataHandler;
 import org.wso2.carbon.identity.core.util.IdentityTenantUtil;
 import org.wso2.carbon.identity.core.util.IdentityUtil;
+import org.wso2.carbon.identity.oauth.dao.OAuthAppDO;
 import org.wso2.carbon.identity.oauth.user.UserInfoEndpointException;
+import org.wso2.carbon.identity.oauth2.dao.TokenMgtDAO;
 import org.wso2.carbon.identity.oauth2.dto.OAuth2TokenValidationResponseDTO;
+import org.wso2.carbon.identity.oauth2.internal.OAuth2ServiceComponentHolder;
+import org.wso2.carbon.identity.oauth2.model.AccessTokenDO;
+import org.wso2.carbon.identity.oauth2.util.OAuth2Util;
 import org.wso2.carbon.user.api.UserStoreException;
 import org.wso2.carbon.user.core.UserRealm;
 import org.wso2.carbon.user.core.UserStoreManager;
@@ -39,6 +47,7 @@ import java.util.Map;
 
 public class ClaimUtil {
     static final String SP_DIALECT = "http://wso2.org/oidc/claim";
+    private final static String INBOUND_AUTH2_TYPE = "oauth2";
     private static final Log log = LogFactory.getLog(ClaimUtil.class);
 
     private ClaimUtil() {
@@ -48,13 +57,13 @@ public class ClaimUtil {
     public static Map<String, Object> getClaimsFromUserStore(OAuth2TokenValidationResponseDTO tokenResponse) throws
             UserInfoEndpointException {
         String username = tokenResponse.getAuthorizedUser();
-        String tenantDomain = MultitenantUtils.getTenantDomain(tokenResponse.getAuthorizedUser());
+        String userTenantDomain = MultitenantUtils.getTenantDomain(tokenResponse.getAuthorizedUser());
         UserRealm realm;
         List<String> claimURIList = new ArrayList<>();
         Map<String, Object> mappedAppClaims = new HashMap<>();
 
         try {
-            realm = IdentityTenantUtil.getRealm(tenantDomain, username);
+            realm = IdentityTenantUtil.getRealm(userTenantDomain, username);
 
             if (realm == null) {
                 log.warn("No valid tenant domain provider. Empty claim returned back");
@@ -65,23 +74,56 @@ public class ClaimUtil {
 
             UserStoreManager userstore = realm.getUserStoreManager();
 
-            // need to get all the requested claims
-            Map<String, String> requestedLocalClaimMap = ClaimManagerHandler.getInstance()
-                    .getMappingsMapFromOtherDialectToCarbon(SP_DIALECT, null, tenantDomain, true);
-            if (MapUtils.isNotEmpty(requestedLocalClaimMap)) {
-                for (String s : requestedLocalClaimMap.keySet()) {
-                    claimURIList.add(s);
+            TokenMgtDAO tokenMgtDAO = new TokenMgtDAO();
+            AccessTokenDO accessTokenDO = tokenMgtDAO.retrieveAccessToken(tokenResponse.getAuthorizationContextToken()
+                    .getTokenString(), false);
+            ApplicationManagementService applicationMgtService = OAuth2ServiceComponentHolder.getApplicationMgtService();
+            String clientId = null;
+            if (accessTokenDO != null) {
+                clientId = accessTokenDO.getConsumerKey();
+            }
 
+            OAuthAppDO oAuthAppDO = OAuth2Util.getAppInformationByClientId(clientId);
+            String spTenantDomain = OAuth2Util.getTenantDomainOfOauthApp(oAuthAppDO);
+
+            String spName = applicationMgtService.getServiceProviderNameByClientId(clientId, INBOUND_AUTH2_TYPE,
+                    spTenantDomain);
+            ServiceProvider serviceProvider = applicationMgtService.getApplicationExcludingFileBasedSPs(spName,
+                    spTenantDomain);
+            if (serviceProvider == null) {
+                return mappedAppClaims;
+            }
+            ClaimMapping[] requestedLocalClaimMap = serviceProvider.getClaimConfig().getClaimMappings();
+            String subjectClaimURI = serviceProvider.getLocalAndOutBoundAuthenticationConfig().getSubjectClaimUri();
+            if (serviceProvider.getClaimConfig().getClaimMappings() != null) {
+                for (ClaimMapping claimMapping : serviceProvider.getClaimConfig().getClaimMappings()) {
+                    if (claimMapping.getRemoteClaim().getClaimUri().equals(subjectClaimURI)) {
+                        subjectClaimURI = claimMapping.getLocalClaim().getClaimUri();
+                        break;
+                    }
+                }
+            }
+            claimURIList.add(subjectClaimURI);
+
+            boolean isSubjectClaimInRequested = false;
+            if (subjectClaimURI != null || requestedLocalClaimMap != null && requestedLocalClaimMap.length > 0) {
+                for (ClaimMapping claimMapping : requestedLocalClaimMap) {
+                    if (claimMapping.isRequested()) {
+                        claimURIList.add(claimMapping.getLocalClaim().getClaimUri());
+                        if (claimMapping.getLocalClaim().getClaimUri().equals(subjectClaimURI)) {
+                            isSubjectClaimInRequested = true;
+                        }
+                    }
                 }
                 if (log.isDebugEnabled()) {
                     log.debug("Requested number of local claims: " + claimURIList.size());
                 }
 
-                spToLocalClaimMappings = ClaimManagerHandler.getInstance().getMappingsMapFromOtherDialectToCarbon
-                        (SP_DIALECT, null, tenantDomain, false);
+                spToLocalClaimMappings = ClaimMetadataHandler.getInstance().getMappingsMapFromOtherDialectToCarbon
+                        (SP_DIALECT, null, userTenantDomain, true);
 
                 Map<String, String> userClaims = userstore.getUserClaimValues(MultitenantUtils.getTenantAwareUsername
-                        (username), claimURIList.toArray(new String[claimURIList.size()]), null);
+                        (username), claimURIList.toArray(new    String[claimURIList.size()]), null);
                 if (log.isDebugEnabled()) {
                     log.debug("User claims retrieved from user store: " + userClaims.size());
                 }
@@ -90,20 +132,26 @@ public class ClaimUtil {
                     return new HashMap<>();
                 }
 
-                for (Map.Entry<String, String> entry : spToLocalClaimMappings.entrySet()) {
-                    String value = userClaims.get(entry.getValue());
+                for (Map.Entry<String, String> entry : userClaims.entrySet()) {
+                    String value = spToLocalClaimMappings.get(entry.getKey());
                     if (value != null) {
-                        mappedAppClaims.put(entry.getKey(), value);
+                        if (entry.getKey().equals(subjectClaimURI)) {
+                            mappedAppClaims.put("sub", entry.getValue());
+                            if (!isSubjectClaimInRequested) {
+                                continue;
+                            }
+                        }
+                        mappedAppClaims.put(value, entry.getValue());
                         if (log.isDebugEnabled() &&
                                 IdentityUtil.isTokenLoggable(IdentityConstants.IdentityTokens.USER_CLAIMS)) {
-                            log.debug("Mapped claim: key -  " + entry.getKey() + " value -" + value);
+                            log.debug("Mapped claim: key -  " + value + " value -" + entry.getValue());
                         }
                     }
                 }
             }
 
         } catch (Exception e) {
-            if(e instanceof UserStoreException){
+            if (e instanceof UserStoreException){
                 if (e.getMessage().contains("UserNotFound")) {
                     if (log.isDebugEnabled()) {
                         log.debug("User " + username + " not found in user store");

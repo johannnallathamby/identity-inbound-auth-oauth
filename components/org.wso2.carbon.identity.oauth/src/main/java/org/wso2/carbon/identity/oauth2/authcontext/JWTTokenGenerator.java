@@ -35,15 +35,21 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.base.MultitenantConstants;
 import org.wso2.carbon.core.util.KeyStoreManager;
-import org.wso2.carbon.identity.oauth.dao.OAuthAppDO;
+import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
+import org.wso2.carbon.identity.base.IdentityException;
 import org.wso2.carbon.identity.core.util.IdentityCoreConstants;
+import org.wso2.carbon.identity.core.util.IdentityTenantUtil;
 import org.wso2.carbon.identity.core.util.IdentityUtil;
 import org.wso2.carbon.identity.oauth.common.exception.InvalidOAuthClientException;
 import org.wso2.carbon.identity.oauth.config.OAuthServerConfiguration;
 import org.wso2.carbon.identity.oauth.dao.OAuthAppDAO;
+import org.wso2.carbon.identity.oauth.dao.OAuthAppDO;
 import org.wso2.carbon.identity.oauth.internal.OAuthComponentServiceHolder;
 import org.wso2.carbon.identity.oauth.util.ClaimCache;
 import org.wso2.carbon.identity.oauth.util.ClaimCacheKey;
+import org.wso2.carbon.identity.oauth.util.ClaimMetaDataCache;
+import org.wso2.carbon.identity.oauth.util.ClaimMetaDataCacheEntry;
+import org.wso2.carbon.identity.oauth.util.ClaimMetaDataCacheKey;
 import org.wso2.carbon.identity.oauth.util.UserClaims;
 import org.wso2.carbon.identity.oauth2.IdentityOAuth2Exception;
 import org.wso2.carbon.identity.oauth2.dto.OAuth2TokenValidationResponseDTO;
@@ -55,6 +61,7 @@ import org.wso2.carbon.user.api.UserRealm;
 import org.wso2.carbon.user.api.UserStoreException;
 import org.wso2.carbon.user.core.UserStoreManager;
 import org.wso2.carbon.user.core.service.RealmService;
+import org.wso2.carbon.user.core.util.UserCoreUtil;
 import org.wso2.carbon.utils.multitenancy.MultitenantUtils;
 
 import java.security.Key;
@@ -112,6 +119,7 @@ public class JWTTokenGenerator implements AuthorizationContextTokenGenerator {
 
     private boolean useMultiValueSeparator = true;
 
+
     //constructor for testing purposes
     public JWTTokenGenerator(boolean includeClaims, boolean enableSigning) {
         this.includeClaims = includeClaims;
@@ -167,16 +175,17 @@ public class JWTTokenGenerator implements AuthorizationContextTokenGenerator {
         int tenantID = ((AccessTokenDO)messageContext.getProperty("AccessTokenDO")).getTenantID();
         String tenantDomain = OAuth2Util.getTenantDomain(tenantID);
         boolean isExistingUser = false;
+        String tenantAwareUsername = null;
 
         RealmService realmService = OAuthComponentServiceHolder.getInstance().getRealmService();
         // TODO : Need to handle situation where federated user name is similar to a one we have in our user store
         if (realmService != null && tenantID != MultitenantConstants.INVALID_TENANT_ID ) {
+            tenantAwareUsername = MultitenantUtils.getTenantAwareUsername(authzUser);
             try {
                 UserRealm userRealm = realmService.getTenantUserRealm(tenantID);
                 if (userRealm != null) {
                     UserStoreManager userStoreManager = (UserStoreManager) userRealm.getUserStoreManager();
-                    isExistingUser = userStoreManager.isExistingUser(MultitenantUtils.getTenantAwareUsername
-                            (authzUser));
+                    isExistingUser = userStoreManager.isExistingUser(tenantAwareUsername);
                 }
             } catch (UserStoreException e) {
                 log.error("Error occurred while loading the realm service", e);
@@ -225,8 +234,13 @@ public class JWTTokenGenerator implements AuthorizationContextTokenGenerator {
             ClaimCacheKey cacheKey = null;
             UserClaims result = null;
 
-            if(requestedClaims != null) {
-                cacheKey = new ClaimCacheKey(authzUser, requestedClaims);
+            AuthenticatedUser authenticatedUser = new AuthenticatedUser();
+            authenticatedUser.setUserName(UserCoreUtil.removeDomainFromName(tenantAwareUsername));
+            authenticatedUser.setUserStoreDomain(IdentityUtil.extractDomainFromName(tenantAwareUsername));
+            authenticatedUser.setTenantDomain(tenantDomain);
+
+            if (requestedClaims != null) {
+                cacheKey = new ClaimCacheKey(authenticatedUser);
                 result = claimsLocalCache.getValueFromCache(cacheKey);
             }
 
@@ -237,6 +251,9 @@ public class JWTTokenGenerator implements AuthorizationContextTokenGenerator {
                 claimValues = claimsRetriever.getClaims(authzUser, requestedClaims);
                 UserClaims userClaims = new UserClaims(claimValues);
                 claimsLocalCache.addToCache(cacheKey, userClaims);
+
+                ClaimMetaDataCache.getInstance().addToCache(new ClaimMetaDataCacheKey(authenticatedUser),
+                        new ClaimMetaDataCacheEntry(cacheKey));
             }
 
             if(isExistingUser) {
@@ -446,6 +463,13 @@ public class JWTTokenGenerator implements AuthorizationContextTokenGenerator {
         Key privateKey = null;
 
         if (!(privateKeys.containsKey(tenantId))) {
+
+            try {
+                IdentityTenantUtil.initializeRegistry(tenantId, tenantDomain);
+            } catch (IdentityException e) {
+                throw new IdentityOAuth2Exception("Error occurred while loading registry for tenant " + tenantDomain, e);
+            }
+
             // get tenant's key store manager
             KeyStoreManager tenantKSM = KeyStoreManager.getInstance(tenantId);
 
@@ -485,6 +509,13 @@ public class JWTTokenGenerator implements AuthorizationContextTokenGenerator {
         Certificate publicCert = null;
 
         if (!(publicCerts.containsKey(tenantId))) {
+
+            try {
+                IdentityTenantUtil.initializeRegistry(tenantId, tenantDomain);
+            } catch (IdentityException e) {
+                throw new IdentityOAuth2Exception("Error occurred while loading registry for tenant " + tenantDomain, e);
+            }
+
             // get tenant's key store manager
             KeyStoreManager tenantKSM = KeyStoreManager.getInstance(tenantId);
 

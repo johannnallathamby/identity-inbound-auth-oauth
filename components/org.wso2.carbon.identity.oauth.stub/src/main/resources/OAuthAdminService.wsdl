@@ -35,6 +35,35 @@
                     </xs:sequence>
                 </xs:complexType>
             </xs:element>
+            <xs:element name="updateConsumerAppState">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="consumerKey" nillable="true" type="xs:string"/>
+                        <xs:element minOccurs="0" name="newState" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="updateOauthSecretKey">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="consumerKey" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="getOauthApplicationState">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="consumerKey" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="getOauthApplicationStateResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="return" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
             <xs:element name="OAuthAdminServiceIdentityOAuthAdminException">
                 <xs:complexType>
                     <xs:sequence>
@@ -53,6 +82,21 @@
                 <xs:complexType>
                     <xs:sequence>
                         <xs:element minOccurs="0" name="return" nillable="true" type="ax2332:OAuthRevocationResponseDTO"></xs:element>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="updateApproveAlwaysForAppConsentByResourceOwner">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="appName" nillable="true" type="xs:string"/>
+                        <xs:element minOccurs="0" name="state" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="updateApproveAlwaysForAppConsentByResourceOwnerResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="return" nillable="true" type="ax2332:OAuthRevocationResponseDTO"/>
                     </xs:sequence>
                 </xs:complexType>
             </xs:element>
@@ -173,6 +217,7 @@
                     <xs:element minOccurs="0" name="oauthConsumerSecret" nillable="true" type="xs:string"></xs:element>
                     <xs:element minOccurs="0" name="pkceMandatory" type="xs:boolean"/>
                     <xs:element minOccurs="0" name="pkceSupportPlain" type="xs:boolean"/>
+                    <xs:element minOccurs="0" name="state" nillable="true" type="xs:string"/>
                     <xs:element minOccurs="0" name="username" nillable="true" type="xs:string"></xs:element>
                 </xs:sequence>
             </xs:complexType>
@@ -220,6 +265,18 @@
     <wsdl:message name="getOAuthApplicationDataResponse">
         <wsdl:part name="parameters" element="ns1:getOAuthApplicationDataResponse"></wsdl:part>
     </wsdl:message>
+    <wsdl:message name="updateConsumerAppStateRequest">
+        <wsdl:part name="parameters" element="ns1:updateConsumerAppState"/>
+    </wsdl:message>
+    <wsdl:message name="updateOauthSecretKeyRequest">
+        <wsdl:part name="parameters" element="ns1:updateOauthSecretKey"/>
+    </wsdl:message>
+    <wsdl:message name="getOauthApplicationStateRequest">
+        <wsdl:part name="parameters" element="ns1:getOauthApplicationState"/>
+    </wsdl:message>
+    <wsdl:message name="getOauthApplicationStateResponse">
+        <wsdl:part name="parameters" element="ns1:getOauthApplicationStateResponse"/>
+    </wsdl:message>
     <wsdl:message name="updateConsumerApplicationRequest">
         <wsdl:part name="parameters" element="ns1:updateConsumerApplication"></wsdl:part>
     </wsdl:message>
@@ -228,6 +285,12 @@
     </wsdl:message>
     <wsdl:message name="getAllOAuthApplicationDataResponse">
         <wsdl:part name="parameters" element="ns1:getAllOAuthApplicationDataResponse"></wsdl:part>
+    </wsdl:message>
+    <wsdl:message name="updateApproveAlwaysForAppConsentByResourceOwnerRequest">
+        <wsdl:part name="parameters" element="ns1:updateApproveAlwaysForAppConsentByResourceOwner"/>
+    </wsdl:message>
+    <wsdl:message name="updateApproveAlwaysForAppConsentByResourceOwnerResponse">
+        <wsdl:part name="parameters" element="ns1:updateApproveAlwaysForAppConsentByResourceOwnerResponse"/>
     </wsdl:message>
     <wsdl:message name="removeOAuthApplicationDataRequest">
         <wsdl:part name="parameters" element="ns1:removeOAuthApplicationData"></wsdl:part>
@@ -276,6 +339,19 @@
             <wsdl:output message="tns:getOAuthApplicationDataResponse" wsaw:Action="urn:getOAuthApplicationDataResponse"></wsdl:output>
             <wsdl:fault message="tns:OAuthAdminServiceException" name="OAuthAdminServiceException" wsaw:Action="urn:getOAuthApplicationDataOAuthAdminServiceException"></wsdl:fault>
         </wsdl:operation>
+        <wsdl:operation name="updateConsumerAppState">
+            <wsdl:input message="tns:updateConsumerAppStateRequest" wsaw:Action="urn:updateConsumerAppState"/>
+            <wsdl:fault message="tns:OAuthAdminServiceIdentityOAuthAdminException" name="OAuthAdminServiceIdentityOAuthAdminException" wsaw:Action="urn:updateConsumerAppStateOAuthAdminServiceIdentityOAuthAdminException"/>
+        </wsdl:operation>
+        <wsdl:operation name="updateOauthSecretKey">
+            <wsdl:input message="tns:updateOauthSecretKeyRequest" wsaw:Action="urn:updateOauthSecretKey"/>
+            <wsdl:fault message="tns:OAuthAdminServiceIdentityOAuthAdminException" name="OAuthAdminServiceIdentityOAuthAdminException" wsaw:Action="urn:updateOauthSecretKeyOAuthAdminServiceIdentityOAuthAdminException"/>
+        </wsdl:operation>
+        <wsdl:operation name="getOauthApplicationState">
+            <wsdl:input message="tns:getOauthApplicationStateRequest" wsaw:Action="urn:getOauthApplicationState"/>
+            <wsdl:output message="tns:getOauthApplicationStateResponse" wsaw:Action="urn:getOauthApplicationStateResponse"/>
+            <wsdl:fault message="tns:OAuthAdminServiceIdentityOAuthAdminException" name="OAuthAdminServiceIdentityOAuthAdminException" wsaw:Action="urn:getOauthApplicationStateOAuthAdminServiceIdentityOAuthAdminException"/>
+        </wsdl:operation>
         <wsdl:operation name="updateConsumerApplication">
             <wsdl:input message="tns:updateConsumerApplicationRequest" wsaw:Action="urn:updateConsumerApplication"></wsdl:input>
             <wsdl:fault message="tns:OAuthAdminServiceException" name="OAuthAdminServiceException" wsaw:Action="urn:updateConsumerApplicationOAuthAdminServiceException"></wsdl:fault>
@@ -284,6 +360,11 @@
             <wsdl:input message="tns:getAllOAuthApplicationDataRequest" wsaw:Action="urn:getAllOAuthApplicationData"></wsdl:input>
             <wsdl:output message="tns:getAllOAuthApplicationDataResponse" wsaw:Action="urn:getAllOAuthApplicationDataResponse"></wsdl:output>
             <wsdl:fault message="tns:OAuthAdminServiceException" name="OAuthAdminServiceException" wsaw:Action="urn:getAllOAuthApplicationDataOAuthAdminServiceException"></wsdl:fault>
+        </wsdl:operation>
+        <wsdl:operation name="updateApproveAlwaysForAppConsentByResourceOwner">
+            <wsdl:input message="tns:updateApproveAlwaysForAppConsentByResourceOwnerRequest" wsaw:Action="urn:updateApproveAlwaysForAppConsentByResourceOwner"/>
+            <wsdl:output message="tns:updateApproveAlwaysForAppConsentByResourceOwnerResponse" wsaw:Action="urn:updateApproveAlwaysForAppConsentByResourceOwnerResponse"/>
+            <wsdl:fault message="tns:OAuthAdminServiceIdentityOAuthAdminException" name="OAuthAdminServiceIdentityOAuthAdminException" wsaw:Action="urn:updateApproveAlwaysForAppConsentByResourceOwnerOAuthAdminServiceIdentityOAuthAdminException"/>
         </wsdl:operation>
         <wsdl:operation name="removeOAuthApplicationData">
             <wsdl:input message="tns:removeOAuthApplicationDataRequest" wsaw:Action="urn:removeOAuthApplicationData"></wsdl:input>
@@ -355,6 +436,36 @@
                 <soap:fault use="literal" name="OAuthAdminServiceException"></soap:fault>
             </wsdl:fault>
         </wsdl:operation>
+        <wsdl:operation name="updateConsumerAppState">
+            <soap:operation soapAction="urn:updateConsumerAppState" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:fault name="OAuthAdminServiceIdentityOAuthAdminException">
+                <soap:fault use="literal" name="OAuthAdminServiceIdentityOAuthAdminException"/>
+            </wsdl:fault>
+        </wsdl:operation>
+        <wsdl:operation name="updateOauthSecretKey">
+            <soap:operation soapAction="urn:updateOauthSecretKey" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:fault name="OAuthAdminServiceIdentityOAuthAdminException">
+                <soap:fault use="literal" name="OAuthAdminServiceIdentityOAuthAdminException"/>
+            </wsdl:fault>
+        </wsdl:operation>
+        <wsdl:operation name="getOauthApplicationState">
+            <soap:operation soapAction="urn:getOauthApplicationState" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+            <wsdl:fault name="OAuthAdminServiceIdentityOAuthAdminException">
+                <soap:fault use="literal" name="OAuthAdminServiceIdentityOAuthAdminException"/>
+            </wsdl:fault>
+        </wsdl:operation>
         <wsdl:operation name="updateConsumerApplication">
             <soap:operation soapAction="urn:updateConsumerApplication" style="document"></soap:operation>
             <wsdl:input>
@@ -374,6 +485,18 @@
             </wsdl:output>
             <wsdl:fault name="OAuthAdminServiceException">
                 <soap:fault use="literal" name="OAuthAdminServiceException"></soap:fault>
+            </wsdl:fault>
+        </wsdl:operation>
+        <wsdl:operation name="updateApproveAlwaysForAppConsentByResourceOwner">
+            <soap:operation soapAction="urn:updateApproveAlwaysForAppConsentByResourceOwner" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+            <wsdl:fault name="OAuthAdminServiceIdentityOAuthAdminException">
+                <soap:fault use="literal" name="OAuthAdminServiceIdentityOAuthAdminException"/>
             </wsdl:fault>
         </wsdl:operation>
         <wsdl:operation name="removeOAuthApplicationData">
@@ -475,6 +598,36 @@
                 <soap12:fault use="literal" name="OAuthAdminServiceException"></soap12:fault>
             </wsdl:fault>
         </wsdl:operation>
+        <wsdl:operation name="updateConsumerAppState">
+            <soap12:operation soapAction="urn:updateConsumerAppState" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:fault name="OAuthAdminServiceIdentityOAuthAdminException">
+                <soap12:fault use="literal" name="OAuthAdminServiceIdentityOAuthAdminException"/>
+            </wsdl:fault>
+        </wsdl:operation>
+        <wsdl:operation name="updateOauthSecretKey">
+            <soap12:operation soapAction="urn:updateOauthSecretKey" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:fault name="OAuthAdminServiceIdentityOAuthAdminException">
+                <soap12:fault use="literal" name="OAuthAdminServiceIdentityOAuthAdminException"/>
+            </wsdl:fault>
+        </wsdl:operation>
+        <wsdl:operation name="getOauthApplicationState">
+            <soap12:operation soapAction="urn:getOauthApplicationState" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+            <wsdl:fault name="OAuthAdminServiceIdentityOAuthAdminException">
+                <soap12:fault use="literal" name="OAuthAdminServiceIdentityOAuthAdminException"/>
+            </wsdl:fault>
+        </wsdl:operation>
         <wsdl:operation name="updateConsumerApplication">
             <soap12:operation soapAction="urn:updateConsumerApplication" style="document"></soap12:operation>
             <wsdl:input>
@@ -494,6 +647,18 @@
             </wsdl:output>
             <wsdl:fault name="OAuthAdminServiceException">
                 <soap12:fault use="literal" name="OAuthAdminServiceException"></soap12:fault>
+            </wsdl:fault>
+        </wsdl:operation>
+        <wsdl:operation name="updateApproveAlwaysForAppConsentByResourceOwner">
+            <soap12:operation soapAction="urn:updateApproveAlwaysForAppConsentByResourceOwner" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+            <wsdl:fault name="OAuthAdminServiceIdentityOAuthAdminException">
+                <soap12:fault use="literal" name="OAuthAdminServiceIdentityOAuthAdminException"/>
             </wsdl:fault>
         </wsdl:operation>
         <wsdl:operation name="removeOAuthApplicationData">
@@ -592,6 +757,27 @@
                 <mime:content type="text/xml" part="parameters"></mime:content>
             </wsdl:input>
         </wsdl:operation>
+        <wsdl:operation name="updateConsumerAppState">
+            <http:operation location="updateConsumerAppState"/>
+            <wsdl:input>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:input>
+        </wsdl:operation>
+        <wsdl:operation name="updateOauthSecretKey">
+            <http:operation location="updateOauthSecretKey"/>
+            <wsdl:input>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:input>
+        </wsdl:operation>
+        <wsdl:operation name="getOauthApplicationState">
+            <http:operation location="getOauthApplicationState"/>
+            <wsdl:input>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:input>
+            <wsdl:output>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:output>
+        </wsdl:operation>
         <wsdl:operation name="getAllOAuthApplicationData">
             <http:operation location="getAllOAuthApplicationData"></http:operation>
             <wsdl:input>
@@ -599,6 +785,15 @@
             </wsdl:input>
             <wsdl:output>
                 <mime:content type="text/xml" part="parameters"></mime:content>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="updateApproveAlwaysForAppConsentByResourceOwner">
+            <http:operation location="updateApproveAlwaysForAppConsentByResourceOwner"/>
+            <wsdl:input>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:input>
+            <wsdl:output>
+                <mime:content type="text/xml" part="parameters"/>
             </wsdl:output>
         </wsdl:operation>
         <wsdl:operation name="removeOAuthApplicationData">

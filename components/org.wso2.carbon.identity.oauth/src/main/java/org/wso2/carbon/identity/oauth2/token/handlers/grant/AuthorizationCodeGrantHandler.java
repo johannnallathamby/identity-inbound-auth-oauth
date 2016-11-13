@@ -83,7 +83,8 @@ public class AuthorizationCodeGrantHandler extends AbstractAuthorizationGrantHan
             authzCodeDO = (AuthzCodeDO) oauthCache.getValueFromCache(cacheKey);
         }
         oAuthAppDO = appInfoCache.getValueFromCache(clientId);
-        if (oAuthAppDO != null) {
+        if (oAuthAppDO == null) {
+            // we need to pull App info from the DB since it was not found in the cache.
             try {
                 oAuthAppDO = new OAuthAppDAO().getAppInformation(clientId);
             } catch (InvalidOAuthClientException e) {
@@ -128,7 +129,9 @@ public class AuthorizationCodeGrantHandler extends AbstractAuthorizationGrantHan
         if (authzCodeDO == null) {
             if (log.isDebugEnabled()) {
                 log.debug("Invalid access token request with " +
-                        "Client Id : " + clientId);
+                        "Client Id : " + clientId +
+                        ", Invalid authorization code provided."
+                );
             }
             return false;
         }
@@ -139,14 +142,14 @@ public class AuthorizationCodeGrantHandler extends AbstractAuthorizationGrantHan
                 if (log.isDebugEnabled()) {
                     log.debug("Invalid access token request with " +
                             "Client Id : " + clientId +
-                            "redirect_uri not present in request");
+                            " redirect_uri not present in request");
                 }
                 return false;
             } else if (!oAuth2AccessTokenReqDTO.getCallbackURI().equals(authzCodeDO.getCallbackUrl())) {
                 if (log.isDebugEnabled()) {
                     log.debug("Invalid access token request with " +
                             "Client Id : " + clientId +
-                            "redirect_uri does not match previously presented redirect_uri to authorization endpoint");
+                            " redirect_uri does not match previously presented redirect_uri to authorization endpoint");
                 }
                 return false;
             }
@@ -170,7 +173,7 @@ public class AuthorizationCodeGrantHandler extends AbstractAuthorizationGrantHan
             }
 
             // remove the authorization code from the database.
-            tokenMgtDAO.expireAuthzCode(authorizationCode);
+            tokenMgtDAO.changeAuthzCodeState(authorizationCode, OAuthConstants.AuthorizationCodeState.EXPIRED);
             if (log.isDebugEnabled()) {
                 log.debug("Expired Authorization code" +
                         " issued for client " + clientId +

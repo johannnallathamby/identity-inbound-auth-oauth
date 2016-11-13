@@ -24,6 +24,7 @@ import java.util.UUID;
 
 import org.apache.axiom.util.base64.Base64Utils;
 import org.apache.commons.io.Charsets;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
@@ -234,9 +235,14 @@ public abstract class AbstractAuthorizationGrantHandler implements Authorization
                     }
                     if (cacheEnabled) {
                         oauthCache.addToCache(cacheKey, existingAccessTokenDO);
+                        // Adding AccessTokenDO to improve validation performance
+                        OAuthCacheKey accessTokenCacheKey = new OAuthCacheKey(existingAccessTokenDO.getAccessToken());
+                        oauthCache.addToCache(accessTokenCacheKey, existingAccessTokenDO);
                         if (log.isDebugEnabled()) {
                             log.debug("Access Token info was added to the cache for the cache key : " +
                                     cacheKey.getCacheKeyString());
+                            log.debug("Access token was added to OAuthCache for cache key : " + accessTokenCacheKey
+                                    .getCacheKeyString());
                         }
                     }
 
@@ -374,6 +380,11 @@ public abstract class AbstractAuthorizationGrantHandler implements Authorization
             // Persist the access token in database
             storeAccessToken(oAuth2AccessTokenReqDTO, userStoreDomain, newAccessTokenDO, newAccessToken,
                     existingAccessTokenDO);
+            if (!newAccessToken.equals(newAccessTokenDO.getAccessToken())) {
+                // Using latest active token.
+                newAccessToken = newAccessTokenDO.getAccessToken();
+                refreshToken = newAccessTokenDO.getRefreshToken();
+            }
 
             if (log.isDebugEnabled()) {
                 log.debug("Persisted Access Token for " +
@@ -388,9 +399,13 @@ public abstract class AbstractAuthorizationGrantHandler implements Authorization
             //update cache with newly added token
             if (cacheEnabled) {
                 oauthCache.addToCache(cacheKey, newAccessTokenDO);
+                // Adding AccessTokenDO to improve validation performance
+                OAuthCacheKey accessTokenCacheKey = new OAuthCacheKey(newAccessToken);
+                oauthCache.addToCache(accessTokenCacheKey, newAccessTokenDO);
                 if (log.isDebugEnabled()) {
-                    log.debug("Access token was added to OAuthCache for cache key : " +
-                            cacheKey.getCacheKeyString());
+                    log.debug("Access token was added to OAuthCache for cache key : " + cacheKey.getCacheKeyString());
+                    log.debug("Access token was added to OAuthCache for cache key : " + accessTokenCacheKey
+                            .getCacheKeyString());
                 }
             }
 
@@ -407,7 +422,7 @@ public abstract class AbstractAuthorizationGrantHandler implements Authorization
                 tokenRespDTO.setExpiresIn(newAccessTokenDO.getValidityPeriod());
             } else {
                 tokenRespDTO.setExpiresInMillis(Long.MAX_VALUE);
-                tokenRespDTO.setExpiresIn(Long.MAX_VALUE);
+                tokenRespDTO.setExpiresIn(Long.MAX_VALUE/1000);
             }
             tokenRespDTO.setAuthorizedScopes(scope);
             return tokenRespDTO;
@@ -477,23 +492,25 @@ public abstract class AbstractAuthorizationGrantHandler implements Authorization
     @Override
     public boolean validateGrant(OAuthTokenReqMessageContext tokReqMsgCtx)
             throws IdentityOAuth2Exception {
+        return true;
+    }
 
+    @Override
+    public boolean isAuthorizedClient(OAuthTokenReqMessageContext tokReqMsgCtx) throws IdentityOAuth2Exception {
         OAuth2AccessTokenReqDTO tokenReqDTO = tokReqMsgCtx.getOauth2AccessTokenReqDTO();
         String grantType = tokenReqDTO.getGrantType();
 
-        // Load application data from the cache
-        AppInfoCache appInfoCache = AppInfoCache.getInstance();
-        OAuthAppDO oAuthAppDO = appInfoCache.getValueFromCache(tokenReqDTO.getClientId());
-        if (oAuthAppDO == null) {
-            try {
-                oAuthAppDO = new OAuthAppDAO().getAppInformation(tokenReqDTO.getClientId());
-                appInfoCache.addToCache(tokenReqDTO.getClientId(), oAuthAppDO);
-            } catch (InvalidOAuthClientException e) {
-                throw new IdentityOAuth2Exception(e.getMessage(), e);
+        OAuthAppDO oAuthAppDO = (OAuthAppDO)tokReqMsgCtx.getProperty("OAuthAppDO");
+
+        if (StringUtils.isBlank(oAuthAppDO.getGrantTypes())) {
+            if (log.isDebugEnabled()) {
+                log.debug("Could not find authorized grant types for client id: " + tokenReqDTO.getClientId());
             }
+            return false;
         }
+
         // If the application has defined a limited set of grant types, then check the grant
-        if (oAuthAppDO.getGrantTypes() != null && !oAuthAppDO.getGrantTypes().contains(grantType)) {
+        if (!oAuthAppDO.getGrantTypes().contains(grantType)) {
             if (log.isDebugEnabled()) {
                 //Do not change this log format as these logs use by external applications
                 log.debug("Unsupported Grant Type : " + grantType + " for client id : " + tokenReqDTO.getClientId());

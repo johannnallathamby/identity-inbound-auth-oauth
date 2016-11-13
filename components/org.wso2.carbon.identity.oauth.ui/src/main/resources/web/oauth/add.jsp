@@ -88,7 +88,10 @@
                 function validate() {
                     var callbackUrl = document.getElementById('callback').value;
                     if ($(jQuery("#grant_code"))[0].checked || $(jQuery("#grant_implicit"))[0].checked) {
-                        if (!isWhiteListed(callbackUrl, ["url"]) || !isNotBlackListed(callbackUrl,
+                        // This is to support providing regex patterns for callback URLs
+                        if (callbackUrl.startsWith("regexp=")) {
+                            // skip validation
+                        } else if (!isWhiteListed(callbackUrl, ["url"]) || !isNotBlackListed(callbackUrl,
                                         ["uri-unsafe-exists"])) {
                             CARBON.showWarningDialog('<fmt:message key="callback.is.not.url"/>');
                             return false;
@@ -151,7 +154,7 @@
 
             </script>
 
-            <form id="addAppForm" method="post" name="addAppform" action="add-finish.jsp"
+            <form id="addAppForm" method="post" name="addAppform" action="add-finish-ajaxprocessor.jsp"
                   target="_self">
                 <table style="width: 100%" class="styledLeft">
                     <thead>

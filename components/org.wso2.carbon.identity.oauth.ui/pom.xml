@@ -19,10 +19,10 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <parent>
-        <groupId>org.wso2.carbon.identity</groupId>
+        <groupId>org.wso2.carbon.identity.inbound.auth.oauth2</groupId>
         <artifactId>identity-inbound-auth-oauth</artifactId>
         <relativePath>../../pom.xml</relativePath>
-        <version>5.1.1-SNAPSHOT</version>
+        <version>5.2.4-SNAPSHOT</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
@@ -50,11 +50,11 @@
             <artifactId>org.wso2.carbon.logging</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.wso2.carbon.identity</groupId>
+            <groupId>org.wso2.carbon.identity.inbound.auth.oauth2</groupId>
             <artifactId>org.wso2.carbon.identity.oauth.stub</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.wso2.carbon.identity</groupId>
+            <groupId>org.wso2.carbon.identity.inbound.auth.oauth2</groupId>
             <artifactId>org.wso2.carbon.identity.oauth.common</artifactId>
         </dependency>
         <dependency>
@@ -66,11 +66,11 @@
             <artifactId>encoder</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.wso2.carbon.identity</groupId>
+            <groupId>org.wso2.carbon.identity.framework</groupId>
             <artifactId>org.wso2.carbon.identity.core</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.wso2.carbon.identity</groupId>
+            <groupId>org.wso2.carbon.identity.framework</groupId>
             <artifactId>org.wso2.carbon.identity.core.ui</artifactId>
         </dependency>
     </dependencies>
@@ -106,22 +106,18 @@
                             org.osgi.service.component; version="${osgi.service.component.imp.pkg.version.range}",
                             org.osgi.service.http; version="${osgi.service.http.imp.pkg.version.range}",
 
-                            org.wso2.carbon.identity.oauth.stub.*;
-                            version="${carbon.identity.package.import.version.range}",
-                            org.wso2.carbon.identity.oauth.common.*;
-                            version="${carbon.identity.package.import.version.range}",
+                            org.wso2.carbon.identity.oauth.stub.*;version="${identity.inbound.auth.oauth.imp.pkg.version.range}",
+                            org.wso2.carbon.identity.oauth.common.*;version="${identity.inbound.auth.oauth.imp.pkg.version.range}",
 
                             org.wso2.carbon.base.api; version="${carbon.base.imp.pkg.version.range}",
-                            org.wso2.carbon.ui; version="${carbon.kernel.package.import.version.range}",
-                            org.wso2.carbon.ui.util; version="${carbon.kernel.package.import.version.range}",
-                            org.wso2.carbon.utils; version="${carbon.kernel.package.import.version.range}",
-                            org.wso2.carbon.identity.core.util.*;
-                            version="${carbon.identity.package.import.version.range}"
+                            org.wso2.carbon.ui; version="${carbon.kernel.imp.pkg.version.range}",
+                            org.wso2.carbon.ui.util; version="${carbon.kernel.imp.pkg.version.range}",
+                            org.wso2.carbon.utils; version="${carbon.kernel.imp.pkg.version.range}",
+                            org.wso2.carbon.identity.core.util.*;version="${carbon.identity.framework.imp.pkg.version.range}"
                         </Import-Package>
                         <Export-Package>
                             !org.wso2.carbon.identity.oauth.ui.internal,
-                            org.wso2.carbon.identity.oauth.ui.*;
-                            version="${carbon.identity.package.export.version}"
+                            org.wso2.carbon.identity.oauth.ui.*;version="${identity.inbound.auth.oauth.exp.pkg.version}"
                         </Export-Package>
                         <Carbon-Component>UIBundle</Carbon-Component>
                     </instructions>

@@ -35,7 +35,7 @@ import org.wso2.carbon.identity.oauth.cache.AuthorizationGrantCacheKey;
 import org.wso2.carbon.identity.oauth.cache.OAuthCacheKey;
 import org.wso2.carbon.identity.oauth.common.OAuthConstants;
 import org.wso2.carbon.identity.oauth.config.OAuthServerConfiguration;
-import org.wso2.carbon.identity.oauth.event.OAuthEventListener;
+import org.wso2.carbon.identity.oauth.event.OAuthEventInterceptor;
 import org.wso2.carbon.identity.oauth.internal.OAuthComponentServiceHolder;
 import org.wso2.carbon.identity.oauth2.IdentityOAuth2Exception;
 import org.wso2.carbon.identity.oauth2.authz.OAuthAuthzReqMessageContext;
@@ -47,7 +47,7 @@ import org.wso2.carbon.identity.openidconnect.IDTokenBuilder;
 
 import java.sql.Timestamp;
 import java.util.Date;
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -59,9 +59,13 @@ public class TokenResponseTypeHandler extends AbstractResponseTypeHandler {
     public OAuth2AuthorizeRespDTO issue(OAuthAuthzReqMessageContext oauthAuthzMsgCtx)
             throws IdentityOAuth2Exception {
 
-        List<OAuthEventListener> oauthListeners = OAuthComponentServiceHolder.getInstance().getoAuthEventListeners();
+        OAuthEventInterceptor oAuthEventInterceptorProxy = OAuthComponentServiceHolder.getInstance()
+                .getOAuthEventInterceptorProxy();
 
-        triggerPreListeners(oauthListeners, oauthAuthzMsgCtx);
+        if (oAuthEventInterceptorProxy != null && oAuthEventInterceptorProxy.isEnabled()) {
+            Map<String, Object> paramMap = new HashMap<>();
+            oAuthEventInterceptorProxy.onPreTokenIssue(oauthAuthzMsgCtx, paramMap);
+        }
 
         OAuth2AuthorizeRespDTO respDTO = new OAuth2AuthorizeRespDTO();
         OAuth2AuthorizeReqDTO authorizationReqDTO = oauthAuthzMsgCtx.getAuthorizationReqDTO();
@@ -139,7 +143,7 @@ public class TokenResponseTypeHandler extends AbstractResponseTypeHandler {
                         respDTO.setScope(oauthAuthzMsgCtx.getApprovedScope());
                         respDTO.setTokenType(accessTokenDO.getTokenType());
                         buildIdToken(oauthAuthzMsgCtx, respDTO);
-                        triggerPostListeners(oauthListeners, oauthAuthzMsgCtx, accessTokenDO, respDTO);
+                        triggerPostListeners(oauthAuthzMsgCtx, accessTokenDO, respDTO);
                         return respDTO;
                     } else {
 
@@ -220,7 +224,7 @@ public class TokenResponseTypeHandler extends AbstractResponseTypeHandler {
                     respDTO.setTokenType(existingAccessTokenDO.getTokenType());
 
                     buildIdToken(oauthAuthzMsgCtx, respDTO);
-                    triggerPostListeners(oauthListeners, oauthAuthzMsgCtx, existingAccessTokenDO, respDTO);
+                    triggerPostListeners(oauthAuthzMsgCtx, existingAccessTokenDO, respDTO);
                     return respDTO;
 
                 } else {
@@ -335,13 +339,21 @@ public class TokenResponseTypeHandler extends AbstractResponseTypeHandler {
             newAccessTokenDO.setAccessToken(accessToken);
             newAccessTokenDO.setRefreshToken(refreshToken);
             newAccessTokenDO.setTokenState(OAuthConstants.TokenStates.TOKEN_STATE_ACTIVE);
-            newAccessTokenDO.setTokenId(UUID.randomUUID().toString());
             newAccessTokenDO.setGrantType(grantType);
+
+            String tokenId = UUID.randomUUID().toString();
+            newAccessTokenDO.setTokenId(tokenId);
+            oauthAuthzMsgCtx.addProperty(OAuth2Util.ACCESS_TOKEN_DO, newAccessTokenDO);
 
             // Persist the access token in database
             try {
                 tokenMgtDAO.storeAccessToken(accessToken, authorizationReqDTO.getConsumerKey(),
                         newAccessTokenDO, existingAccessTokenDO, userStoreDomain);
+                if (!accessToken.equals(newAccessTokenDO.getAccessToken())) {
+                    // Using latest active token.
+                    accessToken = newAccessTokenDO.getAccessToken();
+                    refreshToken = newAccessTokenDO.getRefreshToken();
+                }
             } catch (IdentityException e) {
                 throw new IdentityOAuth2Exception(
                         "Error occurred while storing new access token : " + accessToken, e);
@@ -362,9 +374,13 @@ public class TokenResponseTypeHandler extends AbstractResponseTypeHandler {
             // Add the access token to the cache.
             if (cacheEnabled) {
                 oauthCache.addToCache(cacheKey, newAccessTokenDO);
+                // Adding AccessTokenDO to improve validation performance
+                OAuthCacheKey accessTokenCacheKey = new OAuthCacheKey(accessToken);
+                oauthCache.addToCache(accessTokenCacheKey, newAccessTokenDO);
                 if (log.isDebugEnabled()) {
-                    log.debug("Access Token was added to OAuthCache for " +
-                            "cache key : " + cacheKey.getCacheKeyString());
+                    log.debug("Access Token was added to OAuthCache for cache key : " + cacheKey.getCacheKeyString());
+                    log.debug("Access Token was added to OAuthCache for cache key : " + accessTokenCacheKey
+                            .getCacheKeyString());
                 }
             }
 
@@ -383,27 +399,22 @@ public class TokenResponseTypeHandler extends AbstractResponseTypeHandler {
         }
 
         buildIdToken(oauthAuthzMsgCtx, respDTO);
-        triggerPostListeners(oauthListeners, oauthAuthzMsgCtx, tokenDO, respDTO);
+        triggerPostListeners(oauthAuthzMsgCtx, tokenDO, respDTO);
         return respDTO;
     }
 
-    private void triggerPreListeners(List<OAuthEventListener> oauthListeners, OAuthAuthzReqMessageContext
-            oauthAuthzMsgCtx) throws IdentityOAuth2Exception {
+    private void triggerPostListeners(OAuthAuthzReqMessageContext
+                                              oauthAuthzMsgCtx, AccessTokenDO tokenDO, OAuth2AuthorizeRespDTO respDTO) {
 
-        for (OAuthEventListener oauthListener : oauthListeners) {
-            oauthListener.onPreTokenIssue(oauthAuthzMsgCtx);
-        }
+        OAuthEventInterceptor oAuthEventInterceptorProxy = OAuthComponentServiceHolder.getInstance()
+                .getOAuthEventInterceptorProxy();
 
-    }
-
-    private void triggerPostListeners(List<OAuthEventListener> oauthListeners, OAuthAuthzReqMessageContext
-            oauthAuthzMsgCtx, AccessTokenDO tokenDO, OAuth2AuthorizeRespDTO respDTO) {
-
-        for (OAuthEventListener oauthListener : oauthListeners) {
+        if (oAuthEventInterceptorProxy != null && oAuthEventInterceptorProxy.isEnabled()) {
             try {
-                oauthListener.onPostTokenIssue(oauthAuthzMsgCtx, tokenDO, respDTO);
+                Map<String, Object> paramMap = new HashMap<>();
+                oAuthEventInterceptorProxy.onPostTokenIssue(oauthAuthzMsgCtx, tokenDO, respDTO, paramMap);
             } catch (IdentityOAuth2Exception e) {
-                log.error("Oauth post token issue listener " + oauthListener.getClass().getName() + " failed.", e);
+                log.error("Oauth post token issue listener ", e);
             }
         }
     }
@@ -412,7 +423,7 @@ public class TokenResponseTypeHandler extends AbstractResponseTypeHandler {
             throws IdentityOAuth2Exception {
 
         if (StringUtils.isNotBlank(authzRespDTO.getAccessToken())) {
-            addUserAttributesToCache(authzRespDTO.getAccessToken(), msgCtx.getAuthorizationReqDTO());
+            addUserAttributesToCache(authzRespDTO.getAccessToken(), msgCtx);
         }
 
         if (StringUtils.contains(msgCtx.getAuthorizationReqDTO().getResponseType(), "id_token") &&
@@ -422,13 +433,22 @@ public class TokenResponseTypeHandler extends AbstractResponseTypeHandler {
         }
     }
 
-    private void addUserAttributesToCache(String accessToken, OAuth2AuthorizeReqDTO authorizeReqDTO) {
+    private void addUserAttributesToCache(String accessToken, OAuthAuthzReqMessageContext msgCtx) {
 
+        OAuth2AuthorizeReqDTO authorizeReqDTO = msgCtx.getAuthorizationReqDTO();
         Map<ClaimMapping, String> userAttributes = authorizeReqDTO.getUser().getUserAttributes();
         AuthorizationGrantCacheKey authorizationGrantCacheKey = new AuthorizationGrantCacheKey(accessToken);
         AuthorizationGrantCacheEntry authorizationGrantCacheEntry = new AuthorizationGrantCacheEntry(userAttributes);
+        if (StringUtils.isNotBlank(authorizationGrantCacheEntry.getEssentialClaims())) {
+            authorizationGrantCacheEntry.setEssentialClaims(authorizeReqDTO.getEssentialClaims());
+        }
 
         String sub = userAttributes.get(OAuth2Util.SUB);
+
+        AccessTokenDO accessTokenDO = (AccessTokenDO)msgCtx.getProperty(OAuth2Util.ACCESS_TOKEN_DO);
+        if (accessTokenDO != null && StringUtils.isNotBlank(accessTokenDO.getTokenId())) {
+            authorizationGrantCacheEntry.setTokenId(accessTokenDO.getTokenId());
+        }
 
         if (StringUtils.isBlank(sub)) {
 

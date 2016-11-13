@@ -44,6 +44,24 @@ public class OAuth2Parameters implements Serializable {
     private String pkceCodeChallengeMethod;
     private LinkedHashSet acrValues;
     private String tenantDomain;
+    private long authTime;
+    private String essentialClaims;
+
+    public String getEssentialClaims() {
+        return essentialClaims;
+    }
+
+    public void setEssentialClaims(String essentialClaims) {
+        this.essentialClaims = essentialClaims;
+    }
+
+    public long getAuthTime() {
+        return authTime;
+    }
+
+    public void setAuthTime(long authTime) {
+        this.authTime = authTime;
+    }
 
     public String getApplicationName() {
         return applicationName;

@@ -30,8 +30,9 @@ public class SessionDataCacheEntry extends CacheEntry {
     private static final long serialVersionUID = -4123547630178387354L;
     private AuthenticatedUser loggedInUser;
     private OAuth2Parameters oAuth2Parameters;
-
+    private long authTime;
     private String authenticatedIdPs;
+    private String essentialClaims ;
 
     private String queryString = null;
 
@@ -75,6 +76,22 @@ public class SessionDataCacheEntry extends CacheEntry {
 
     public void setAuthenticatedIdPs(String authenticatedIdPs) {
         this.authenticatedIdPs = authenticatedIdPs;
+    }
+
+    public long getAuthTime() {
+        return authTime;
+    }
+
+    public void setAuthTime(long authTime) {
+        this.authTime = authTime;
+    }
+
+    public String getEssentialClaims() {
+        return essentialClaims;
+    }
+
+    public void setEssentialClaims(String essentialClaims) {
+        this.essentialClaims = essentialClaims;
     }
 
 }
