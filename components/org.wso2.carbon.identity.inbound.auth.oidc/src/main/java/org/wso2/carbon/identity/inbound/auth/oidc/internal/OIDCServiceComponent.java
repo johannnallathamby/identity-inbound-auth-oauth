@@ -37,7 +37,6 @@ import org.wso2.carbon.user.core.service.RealmService;
  * @scr.reference name="oidc.handler.idtoken"
  * interface="org.wso2.carbon.identity.inbound.auth.oidc.handler.IDTokenHandler" cardinality="0..n"
  * policy="dynamic" bind="addIDTokenHandler" unbind="removeIDTokenHandler"
- *
  */
 public class OIDCServiceComponent {
 
