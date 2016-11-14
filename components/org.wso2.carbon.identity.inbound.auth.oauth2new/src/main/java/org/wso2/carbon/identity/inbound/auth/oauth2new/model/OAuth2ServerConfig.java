@@ -32,7 +32,7 @@ public class OAuth2ServerConfig {
 
     private static Log log = LogFactory.getLog(OAuth2ServerConfig.class);
 
-    private static OAuth2ServerConfig instance = new OAuth2ServerConfig();
+    private static volatile OAuth2ServerConfig instance = new OAuth2ServerConfig();
 
     private OAuth2ServerConfig() {
         buildOAuthServerConfig();
@@ -76,6 +76,7 @@ public class OAuth2ServerConfig {
         parseRefreshTokenRenewal(oauthElem);
 
         // read skip consent page config
+        parseSkipConsentPage(oauthElem);
     }
 
     public String getOAuth2AuthzEPUrl() {

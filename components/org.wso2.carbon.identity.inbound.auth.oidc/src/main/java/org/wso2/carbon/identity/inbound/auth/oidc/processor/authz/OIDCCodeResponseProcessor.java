@@ -18,6 +18,7 @@
 
 package org.wso2.carbon.identity.inbound.auth.oidc.processor.authz;
 
+import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.oltu.oauth2.as.issuer.MD5Generator;
 import org.apache.oltu.oauth2.as.issuer.OAuthIssuerImpl;
@@ -34,13 +35,16 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.aut
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.authz.ROApprovalResponse;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2AuthnException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2ConsentException;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AuthzCode;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.OAuth2ServerConfig;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.processor.authz.CodeResponseProcessor;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2ConsentStore;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Util;
-import org.wso2.carbon.identity.inbound.auth.oidc.IDTokenBuilder;
 import org.wso2.carbon.identity.inbound.auth.oidc.OIDC;
 import org.wso2.carbon.identity.inbound.auth.oidc.bean.message.request.authz.OIDCAuthzRequest;
+import org.wso2.carbon.identity.inbound.auth.oidc.bean.message.response.authz.OIDCAuthzResponse;
+import org.wso2.carbon.identity.inbound.auth.oidc.cache.AuthnResultCache;
+import org.wso2.carbon.identity.inbound.auth.oidc.cache.AuthnResultCacheCodeKey;
+import org.wso2.carbon.identity.inbound.auth.oidc.cache.AuthnResultCacheEntry;
 import org.wso2.carbon.identity.inbound.auth.oidc.handler.OIDCHandlerManager;
 
 import java.util.Set;
@@ -80,7 +84,6 @@ public class OIDCCodeResponseProcessor extends CodeResponseProcessor {
             if(authnResult.isAuthenticated()) {
                 authenticatedUser = authnResult.getSubject();
                 messageContext.setAuthzUser(authenticatedUser);
-
             } else {
                 throw OAuth2AuthnException.error("Resource owner authentication failed");
             }
@@ -93,8 +96,10 @@ public class OIDCCodeResponseProcessor extends CodeResponseProcessor {
             } else if (!OAuth2ServerConfig.getInstance().isSkipConsentPage()) {
 
                 String spName = ((ServiceProvider) messageContext.getParameter(OAuth2.OAUTH2_SERVICE_PROVIDER)).getApplicationName();
+                int applicationId = ((ServiceProvider) messageContext.getParameter(OAuth2.OAUTH2_SERVICE_PROVIDER))
+                        .getApplicationID();
 
-                if (!OAuth2ConsentStore.getInstance().hasUserApprovedAppAlways(authenticatedUser, spName)) {
+                if (!hasUserApprovedAppAlways(authenticatedUser, spName, applicationId)) {
                     if(!isPromptNone) {
                         return initiateResourceOwnerConsent(messageContext);
                     } else {
@@ -118,27 +123,46 @@ public class OIDCCodeResponseProcessor extends CodeResponseProcessor {
             messageContext.addParameter(OAuth2.OAUTH2_RESOURCE_OWNER_AUTHZ_REQUEST, identityRequest);
             processConsent(messageContext);
         }
+
+        // This cache is used for later retrieving AuthenticationResult from Token endpoint and Userinfo endpoint
+        // The day we can invoke Authentication Framework via Java APIs, we can get rid of this hack
+        AuthzCode authzCode = (AuthzCode) messageContext.getParameter(OAuth2.AUTHZ_CODE);
+        AuthenticationResult authnResult = (AuthenticationResult) messageContext.getParameter(InboundConstants.RequestProcessor
+                                                                                                      .AUTHENTICATION_RESULT);
+        storeAuthnResultToCache(authzCode.getAuthzCodeId(), authzCode.getAuthzCode(), authnResult);
+
         return buildAuthzResponse(messageContext);
     }
 
     protected AuthzResponse.AuthzResponseBuilder buildAuthzResponse(OAuth2AuthzMessageContext messageContext) {
 
-        AuthzResponse.AuthzResponseBuilder builder = super.buildAuthzResponse(messageContext);
+        AuthzResponse.AuthzResponseBuilder oauth2Builder = super.buildAuthzResponse(messageContext);
+
+        OIDCAuthzResponse.OIDCAuthzResponseBuilder oidcBuilder = new OIDCAuthzResponse.OIDCAuthzResponseBuilder
+                (oauth2Builder, messageContext);
+
+        if(messageContext.getRequest().getResponseType().contains("id_token")) {
+            addIDToken(oidcBuilder, messageContext);
+        }
 
         AuthenticationResult authenticationResult = (AuthenticationResult)messageContext.getParameter(
                 InboundConstants.RequestProcessor.AUTHENTICATION_RESULT);
         if(StringUtils.isNotBlank(authenticationResult.getAuthenticatedIdPs())){
-            builder.getBuilder().setParam(InboundConstants.LOGGED_IN_IDPS, authenticationResult.getAuthenticatedIdPs());
+            oauth2Builder.getBuilder().setParam(InboundConstants.LOGGED_IN_IDPS, authenticationResult.getAuthenticatedIdPs());
         }
-        if(messageContext.getRequest().getResponseType().contains("id_token")) {
-            addIDToken(builder, messageContext);
-        }
-        return builder;
+
+        return oauth2Builder;
     }
 
-    protected void addIDToken(AuthzResponse.AuthzResponseBuilder builder, OAuth2AuthzMessageContext messageContext) {
+    protected void addIDToken(OIDCAuthzResponse.OIDCAuthzResponseBuilder builder, OAuth2AuthzMessageContext messageContext) {
 
-        IDTokenBuilder idTokenBuilder = OIDCHandlerManager.getInstance().buildIDToken(messageContext);
-        builder.getBuilder().setParam("id_token", idTokenBuilder.build());
+        IDTokenClaimsSet idTokenClaimsSet = OIDCHandlerManager.getInstance().buildIDToken(messageContext);
+        builder.setIdTokenClaimsSet(idTokenClaimsSet);
+    }
+
+    protected void storeAuthnResultToCache(String codeId, String code, AuthenticationResult authnResult) {
+        AuthnResultCacheCodeKey key = new AuthnResultCacheCodeKey(codeId, code);
+        AuthnResultCacheEntry entry = new AuthnResultCacheEntry(authnResult);
+        AuthnResultCache.getInstance().addToCache(key,entry);
     }
 }

@@ -19,6 +19,7 @@
 package org.wso2.carbon.identity.inbound.auth.oauth2new.cache;
 
 import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
+import org.wso2.carbon.identity.core.util.IdentityUtil;
 
 import java.io.Serializable;
 import java.util.Set;

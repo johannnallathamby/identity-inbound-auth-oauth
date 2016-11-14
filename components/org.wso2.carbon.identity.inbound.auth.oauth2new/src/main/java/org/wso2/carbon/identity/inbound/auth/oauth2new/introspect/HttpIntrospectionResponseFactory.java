@@ -44,16 +44,9 @@ public class HttpIntrospectionResponseFactory extends HttpIdentityResponseFactor
     @Override
     public HttpIdentityResponse.HttpIdentityResponseBuilder create(IdentityResponse identityResponse) {
 
-        IntrospectionResponse introspectionResponse = (IntrospectionResponse)identityResponse;
-
         HttpIdentityResponse.HttpIdentityResponseBuilder responseBuilder = new
                 HttpIdentityResponse.HttpIdentityResponseBuilder();
-        responseBuilder.setStatusCode(HttpServletResponse.SC_OK);
-        Gson gson = new Gson();
-        String body = gson.toJson(introspectionResponse);
-        responseBuilder.setBody(body);
-        responseBuilder.addHeader(OAuth2.Header.CACHE_CONTROL, OAuth2.HeaderValue.CACHE_CONTROL_NO_STORE);
-        responseBuilder.addHeader(OAuth2.Header.PRAGMA, OAuth2.HeaderValue.PRAGMA_NO_CACHE);
+        create(responseBuilder, identityResponse);
         return responseBuilder;
     }
 

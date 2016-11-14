@@ -44,21 +44,8 @@ public class HttpTokenResponseFactory extends HttpIdentityResponseFactory {
     @Override
     public HttpIdentityResponse.HttpIdentityResponseBuilder create(IdentityResponse identityResponse) {
 
-        TokenResponse tokenResponse = ((TokenResponse)identityResponse);
         HttpIdentityResponse.HttpIdentityResponseBuilder builder = new HttpIdentityResponse.HttpIdentityResponseBuilder();
-        OAuthResponse oauthResponse = null;
-        try {
-            oauthResponse = tokenResponse.getBuilder().buildJSONMessage();
-        } catch (OAuthSystemException e1) {
-            throw OAuth2RuntimeException.error("Error occurred while building JSON message fo token endpoint response");
-        }
-        builder.setStatusCode(oauthResponse.getResponseStatus());
-        builder.setHeaders(oauthResponse.getHeaders());
-        builder.setBody(oauthResponse.getBody());
-        builder.addHeader(OAuth2.Header.CACHE_CONTROL,
-                          OAuth2.HeaderValue.CACHE_CONTROL_NO_STORE);
-        builder.addHeader(OAuth2.Header.PRAGMA,
-                          OAuth2.HeaderValue.PRAGMA_NO_CACHE);
+        create(builder, identityResponse);
         return builder;
     }
 

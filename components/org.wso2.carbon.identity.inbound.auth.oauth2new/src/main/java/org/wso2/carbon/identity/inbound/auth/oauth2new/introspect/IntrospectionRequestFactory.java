@@ -22,6 +22,7 @@ import org.apache.commons.lang.StringUtils;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.FrameworkClientException;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.OAuth2IdentityRequestFactory;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.IntrospectionClientException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2ClientException;
 import org.wso2.carbon.utils.multitenancy.MultitenantConstants;
 
@@ -46,14 +47,14 @@ public class IntrospectionRequestFactory extends OAuth2IdentityRequestFactory {
     @Override
     public IntrospectionRequest.IntrospectionRequestBuilder create(HttpServletRequest request,
                                                                    HttpServletResponse response) throws
-                                                                                                 OAuth2ClientException {
+                                                                                                 IntrospectionClientException {
 
         IntrospectionRequest.IntrospectionRequestBuilder builder = new IntrospectionRequest.IntrospectionRequestBuilder
                 (request, response);
         try {
             super.create(builder, request, response);
         } catch (FrameworkClientException e) {
-            throw OAuth2ClientException.error(e.getMessage(), e);
+            throw IntrospectionClientException.error(e.getMessage(), e);
         }
         builder.setTenantDomain(request.getParameter(MultitenantConstants.TENANT_DOMAIN));
         builder.setToken(request.getParameter("token"));
@@ -64,14 +65,14 @@ public class IntrospectionRequestFactory extends OAuth2IdentityRequestFactory {
     @Override
     public void create(IdentityRequest.IdentityRequestBuilder builder, HttpServletRequest request,
                        HttpServletResponse response)
-            throws OAuth2ClientException{
+            throws IntrospectionClientException {
 
         IntrospectionRequest.IntrospectionRequestBuilder introspectionRequestBuilder =
                 (IntrospectionRequest.IntrospectionRequestBuilder)builder;
         try {
             super.create(builder, request, response);
         } catch (FrameworkClientException e) {
-            throw OAuth2ClientException.error(e.getMessage(), e);
+            throw IntrospectionClientException.error(e.getMessage(), e);
         }
         introspectionRequestBuilder.setToken(request.getParameter("token"));
         introspectionRequestBuilder.setTokenTypeHint(request.getParameter("token_type_hint"));

@@ -19,6 +19,8 @@
 package org.wso2.carbon.identity.inbound.auth.oauth2new.processor.authz;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.identity.application.authentication.framework.exception.FrameworkException;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityMessageContext;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityProcessor;
@@ -32,16 +34,19 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2AuthzM
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.authz.OAuth2AuthzRequest;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.authz.ConsentResponse;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.authz.ROApprovalResponse;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.dao.jdbc.UserConsentDAO;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2ConsentException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2Exception;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2InternalException;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2ConsentStore;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.model.UserConsent;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2AuthnException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.OAuth2ServerConfig;
 
 import java.util.UUID;
 
 public abstract class ROApprovalProcessor extends IdentityProcessor {
+
+    private static final Log log = LogFactory.getLog(ROApprovalProcessor.class);
 
     @Override
     public String getName() {
@@ -89,16 +94,18 @@ public abstract class ROApprovalProcessor extends IdentityProcessor {
             if(authnResult.isAuthenticated()) {
                 authenticatedUser = authnResult.getSubject();
                 messageContext.setAuthzUser(authenticatedUser);
-
             } else {
                 throw OAuth2AuthnException.error("Resource owner authentication failed");
             }
 
             if (!OAuth2ServerConfig.getInstance().isSkipConsentPage()) {
 
-                String spName = ((ServiceProvider) messageContext.getParameter(OAuth2.OAUTH2_SERVICE_PROVIDER)).getApplicationName();
+                String spName = ((ServiceProvider) messageContext.getParameter(OAuth2.OAUTH2_SERVICE_PROVIDER))
+                        .getApplicationName();
+                int applicationId = ((ServiceProvider) messageContext.getParameter(OAuth2.OAUTH2_SERVICE_PROVIDER))
+                        .getApplicationID();
 
-                if (!OAuth2ConsentStore.getInstance().hasUserApprovedAppAlways(authenticatedUser, spName)) {
+                if (!hasUserApprovedAppAlways(authenticatedUser, spName, applicationId)) {
                     return initiateResourceOwnerConsent(messageContext);
                 } else {
                     messageContext.addParameter(OAuth2.CONSENT, "ApproveAlways");
@@ -152,14 +159,18 @@ public abstract class ROApprovalProcessor extends IdentityProcessor {
 
         String consent = messageContext.getRequest().getParameter(OAuth2.CONSENT);
         String spName = ((ServiceProvider)messageContext.getParameter(OAuth2.OAUTH2_SERVICE_PROVIDER)).getApplicationName();
+        int applicationId = ((ServiceProvider)messageContext.getParameter(OAuth2.OAUTH2_SERVICE_PROVIDER))
+                .getApplicationID();
         if (StringUtils.isNotBlank(consent)) {
             if(StringUtils.equals("ApproveAlways", consent)) {
-                OAuth2ConsentStore.getInstance().approveAppAlways(messageContext.getAuthzUser(), spName, true);
+                UserConsentDAO.getInstance().approveAppAlways(new UserConsent(messageContext.getAuthzUser(),
+                                                                              applicationId, true), spName);
             } else {
-
+                // Approve case. Do nothing.
             }
         } else if(StringUtils.equals("Deny", consent)) {
-            OAuth2ConsentStore.getInstance().approveAppAlways(messageContext.getAuthzUser(), spName, false);
+            UserConsentDAO.getInstance().approveAppAlways(new UserConsent(messageContext.getAuthzUser(), applicationId,
+                                                                          false), spName);
             throw OAuth2ConsentException.error("User denied the request");
         } else {
             throw OAuth2InternalException.error("Cannot find consent parameter");
@@ -173,4 +184,19 @@ public abstract class ROApprovalProcessor extends IdentityProcessor {
      * @return OAuth2 authorization endpoint response
      */
     protected abstract ROApprovalResponse.ROApprovalResponseBuilder buildAuthzResponse(OAuth2AuthzMessageContext messageContext);
+
+    protected boolean hasUserApprovedAppAlways(AuthenticatedUser authzUser, String appName, int applicationId) {
+
+        boolean hasApproved = false;
+        try {
+            UserConsent userConsent = UserConsentDAO.getInstance().getUserConsent(authzUser, applicationId);
+            if(userConsent != null) {
+                hasApproved = userConsent.isTrustedAlways();
+            }
+        } catch (OAuth2InternalException e) {
+            log.error("Error occurred while checking previous consent of user: " + authzUser + " for application: " +
+                      appName, e);
+        }
+        return hasApproved;
+    }
 }

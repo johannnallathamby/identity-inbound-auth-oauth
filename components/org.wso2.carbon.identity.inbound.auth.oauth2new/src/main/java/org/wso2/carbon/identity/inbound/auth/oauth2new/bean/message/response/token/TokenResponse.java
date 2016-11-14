@@ -24,7 +24,7 @@ import org.wso2.carbon.identity.application.authentication.framework.inbound.Ide
 
 public class TokenResponse extends IdentityResponse {
 
-    private OAuthASResponse.OAuthTokenResponseBuilder builder;
+    protected OAuthASResponse.OAuthTokenResponseBuilder builder;
 
     public OAuthASResponse.OAuthTokenResponseBuilder getBuilder() {
         return builder;
@@ -37,7 +37,7 @@ public class TokenResponse extends IdentityResponse {
 
     public static class TokenResponseBuilder extends IdentityResponseBuilder {
 
-        private OAuthASResponse.OAuthTokenResponseBuilder builder;
+        protected OAuthASResponse.OAuthTokenResponseBuilder builder;
 
         public TokenResponseBuilder(IdentityMessageContext context) {
             super(context);

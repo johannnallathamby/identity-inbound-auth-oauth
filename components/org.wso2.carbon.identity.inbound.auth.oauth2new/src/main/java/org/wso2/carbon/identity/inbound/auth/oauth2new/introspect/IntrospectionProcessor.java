@@ -18,7 +18,6 @@
 
 package org.wso2.carbon.identity.inbound.auth.oauth2new.introspect;
 
-import org.apache.commons.lang.StringUtils;
 import org.wso2.carbon.identity.application.authentication.framework.exception.FrameworkException;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityMessageContext;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
@@ -54,10 +53,7 @@ public class IntrospectionProcessor extends OAuth2IdentityRequestProcessor {
 
     @Override
     public boolean canHandle(IdentityRequest identityRequest) {
-        if(StringUtils.isNotBlank(identityRequest.getParameter("token"))) {
-            return true;
-        }
-        return false;
+        return identityRequest instanceof IntrospectionRequest ? true : false;
     }
 
     @Override

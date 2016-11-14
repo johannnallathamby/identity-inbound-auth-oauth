@@ -24,6 +24,7 @@ import org.apache.oltu.oauth2.common.OAuth;
 import org.wso2.carbon.identity.application.authentication.framework.exception.FrameworkException;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityMessageContext;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2TokenMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.token.OAuth2TokenRequest;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.token.TokenResponse;
@@ -161,6 +162,7 @@ public class TokenProcessor extends OAuth2IdentityRequestProcessor {
      * @throws OAuth2Exception
      */
     protected AccessToken issueAccessToken(OAuth2TokenMessageContext messageContext) {
-        return HandlerManager.getInstance().issueAccessToken(messageContext);
+        AccessToken accessToken = HandlerManager.getInstance().issueAccessToken(messageContext);
+        return accessToken;
     }
 }

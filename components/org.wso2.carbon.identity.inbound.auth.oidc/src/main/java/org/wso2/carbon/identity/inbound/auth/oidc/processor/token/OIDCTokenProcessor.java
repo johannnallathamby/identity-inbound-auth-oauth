@@ -19,21 +19,33 @@
 package org.wso2.carbon.identity.inbound.auth.oidc.processor.token;
 
 
+import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.oltu.oauth2.common.OAuth;
 import org.wso2.carbon.identity.application.authentication.framework.exception.FrameworkException;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityMessageContext;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
+import org.wso2.carbon.identity.application.authentication.framework.inbound.InboundConstants;
+import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticationResult;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2TokenMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.token.OAuth2TokenRequest;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.token.TokenResponse;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.common.ClientType;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.dao.jdbc.JDBCOAuth2DAO;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2ClientException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2Exception;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.HandlerManager;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AccessToken;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AuthzCode;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.processor.token.TokenProcessor;
-import org.wso2.carbon.identity.inbound.auth.oidc.IDTokenBuilder;
 import org.wso2.carbon.identity.inbound.auth.oidc.OIDC;
+import org.wso2.carbon.identity.inbound.auth.oidc.bean.message.response.token.OIDCTokenResponse;
+import org.wso2.carbon.identity.inbound.auth.oidc.cache.AuthnResultCache;
+import org.wso2.carbon.identity.inbound.auth.oidc.cache.AuthnResultCacheAccessTokenKey;
+import org.wso2.carbon.identity.inbound.auth.oidc.cache.AuthnResultCacheCodeKey;
+import org.wso2.carbon.identity.inbound.auth.oidc.cache.AuthnResultCacheEntry;
 import org.wso2.carbon.identity.inbound.auth.oidc.handler.OIDCHandlerManager;
 
 import java.util.HashMap;
@@ -42,6 +54,8 @@ import java.util.HashMap;
  * InboundRequestProcessor for OAuth2 Token Endpoint
  */
 public class OIDCTokenProcessor extends TokenProcessor {
+
+    private static final Log log = LogFactory.getLog(OIDCTokenProcessor.class);
 
     @Override
     public String getName() {
@@ -87,6 +101,14 @@ public class OIDCTokenProcessor extends TokenProcessor {
 
         AccessToken accessToken = issueAccessToken(messageContext);
 
+        // This cache is used for later retrieving AuthenticationResult from Token endpoint and Userinfo endpoint
+        // The day we can invoke Authentication Framework via Java APIs, we can get rid of this hack
+        AuthzCode authzCode = (AuthzCode) messageContext.getParameter(OAuth2.AUTHZ_CODE);
+        if (authzCode != null) {
+            replaceEntryWithAccessToken(authzCode.getAuthzCodeId(), authzCode.getAuthzCode(),
+                                        accessToken.getAccessTokenId(), accessToken.getAccessToken());
+        }
+
         return buildTokenResponse(accessToken, messageContext);
 
     }
@@ -127,18 +149,22 @@ public class OIDCTokenProcessor extends TokenProcessor {
     protected TokenResponse.TokenResponseBuilder buildTokenResponse(AccessToken accessToken,
                                                                     OAuth2TokenMessageContext messageContext) {
 
-        TokenResponse.TokenResponseBuilder builder = super.buildTokenResponse(accessToken, messageContext);
+        TokenResponse.TokenResponseBuilder oauth2Builder = super.buildTokenResponse(accessToken, messageContext);
+
+        OIDCTokenResponse.OIDCTokenResponseBuilder oidcBuilder = new OIDCTokenResponse.OIDCTokenResponseBuilder
+                (oauth2Builder, messageContext);
+
         if(accessToken.getScopes().contains(OIDC.OPENID_SCOPE)){
-            addIDToken(builder, messageContext);
+            addIDToken(oidcBuilder, messageContext);
         }
-        return builder;
+
+        return oauth2Builder;
     }
 
-    protected void addIDToken(TokenResponse.TokenResponseBuilder builder, OAuth2TokenMessageContext messageContext) {
+    protected void addIDToken(OIDCTokenResponse.OIDCTokenResponseBuilder builder, OAuth2TokenMessageContext messageContext) {
 
-        IDTokenBuilder idTokenBuilder = OIDCHandlerManager.getInstance().buildIDToken(messageContext);
-        String idToken = idTokenBuilder.build();
-        builder.getBuilder().setParam("id_token", idToken);
+        IDTokenClaimsSet idTokenClaimsSet = OIDCHandlerManager.getInstance().buildIDToken(messageContext);
+        builder.setIdTokenClaimsSet(idTokenClaimsSet);
     }
 
     /**
@@ -149,6 +175,28 @@ public class OIDCTokenProcessor extends TokenProcessor {
      */
     protected AccessToken issueAccessToken(OAuth2TokenMessageContext messageContext) {
 
-        return HandlerManager.getInstance().issueAccessToken(messageContext);
+        AccessToken accessToken = HandlerManager.getInstance().issueAccessToken(messageContext);
+        messageContext.addParameter(OIDC.ACCESS_TOKEN, accessToken);
+        return accessToken;
+    }
+
+    protected void storeAuthnResultToCache(String tokenId, String token, AuthenticationResult authnResult) {
+        AuthnResultCacheAccessTokenKey key = new AuthnResultCacheAccessTokenKey(tokenId, token);
+        AuthnResultCacheEntry entry = new AuthnResultCacheEntry(authnResult);
+        AuthnResultCache.getInstance().addToCache(key, entry);
+    }
+
+    protected void replaceEntryWithAccessToken(String codeId, String code, String accessTokenId, String accessToken) {
+
+        AuthnResultCacheCodeKey codeKey = new AuthnResultCacheCodeKey(codeId, code);
+        AuthnResultCacheEntry entry = AuthnResultCache.getInstance().getValueFromCache(codeKey);
+        if(entry == null) {
+            log.fatal("AuthzCode entry could not be found for codeId: " + codeId +". Couldn't replace AuthnResult " +
+                      "against new access token: " + accessTokenId);
+            return;
+        }
+
+        AuthnResultCacheAccessTokenKey tokenKey = new AuthnResultCacheAccessTokenKey(accessTokenId, accessToken);
+        AuthnResultCache.getInstance().addToCache(tokenKey, entry);
     }
 }

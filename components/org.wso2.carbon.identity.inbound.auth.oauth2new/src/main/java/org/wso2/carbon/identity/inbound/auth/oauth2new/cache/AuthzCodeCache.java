@@ -27,12 +27,12 @@ import org.wso2.carbon.utils.CarbonUtils;
  */
 public class AuthzCodeCache extends BaseCache<String, AuthzCode> {
 
-    private static final String OAUTH2_AUTHZ_CODE_CACHE_NAME = "OAuth2AuthzCodeCache";
+    private static final String AUTHZ_CODE_CACHE_NAME = "AuthzCodeCache";
 
     private static volatile AuthzCodeCache instance;
 
     private AuthzCodeCache() {
-        super(OAUTH2_AUTHZ_CODE_CACHE_NAME);
+        super(AUTHZ_CODE_CACHE_NAME);
     }
 
     public static AuthzCodeCache getInstance() {

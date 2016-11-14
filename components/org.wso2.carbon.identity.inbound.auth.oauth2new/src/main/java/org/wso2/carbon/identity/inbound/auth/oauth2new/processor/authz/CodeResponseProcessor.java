@@ -59,9 +59,6 @@ public class CodeResponseProcessor extends ROApprovalProcessor {
 
     protected AuthzResponse.AuthzResponseBuilder buildAuthzResponse(OAuth2AuthzMessageContext messageContext) {
 
-        // Select the given redirect_uri; there an be multiple registered
-        String redirectURI = null;
-
         Timestamp timestamp = new Timestamp(new Date().getTime());
 
         long authzCodeValidity = OAuth2ServerConfig.getInstance().getAuthzCodeValidity();
@@ -80,13 +77,16 @@ public class CodeResponseProcessor extends ROApprovalProcessor {
         }
 
         AuthzCode authzCode = new AuthzCode(authorizationCode, messageContext.getRequest().getClientId(),
-                                            redirectURI, messageContext.getAuthzUser(), timestamp, authzCodeValidity, OAuth2.TokenState.ACTIVE);
+                                            messageContext.getRequest().getRedirectURI(),
+                                            messageContext.getAuthzUser(),timestamp, authzCodeValidity,
+                                            OAuth2.TokenState.ACTIVE);
 
         HandlerManager.getInstance().getOAuth2DAO(messageContext).storeAuthzCode(authzCode, messageContext);
+        messageContext.addParameter(OAuth2.AUTHZ_CODE, authzCode);
 
         OAuthASResponse.OAuthAuthorizationResponseBuilder oltuRespBuilder = OAuthASResponse
                 .authorizationResponse(null, HttpServletResponse.SC_FOUND)
-                .location(redirectURI)
+                .location(messageContext.getRequest().getRedirectURI())
                 .setCode(authorizationCode)
                 .setExpiresIn(Long.toString(authzCodeValidity))
                 .setParam(OAuth.OAUTH_STATE, messageContext.getRequest().getState());

@@ -25,6 +25,8 @@ import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
 import org.apache.oltu.oauth2.common.message.OAuthResponse;
 import org.apache.oltu.oauth2.common.message.types.ResponseType;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
+import org.wso2.carbon.identity.application.common.model.ServiceProvider;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2AuthzMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.authz.AuthzResponse;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.HandlerManager;
@@ -65,12 +67,9 @@ public class TokenResponseProcessor extends ROApprovalProcessor {
 
         String state = messageContext.getRequest().getState();
 
-        // read redirect_uri from application.mgt
-        String redirectURI = null;
-
         OAuthASResponse.OAuthAuthorizationResponseBuilder oltuRespBuilder = OAuthASResponse
                 .authorizationResponse(null, HttpServletResponse.SC_FOUND)
-                .location(redirectURI)
+                .location(messageContext.getRequest().getRedirectURI())
                 .setAccessToken(accessToken.getAccessToken())
                 .setExpiresIn(Long.toString(expiry))
                 .setParam(OAuth.OAUTH_TOKEN_TYPE, OAuth.OAUTH_HEADER_NAME)

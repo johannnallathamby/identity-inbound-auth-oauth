@@ -53,7 +53,8 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
     private static final Log log = LogFactory.getLog(JDBCOAuth2DAO.class);
 
     @Override
-    public AccessToken getLatestActiveOrExpiredAccessToken(String consumerKey, AuthenticatedUser authzUser, Set<String> scopes, OAuth2MessageContext messageContext) {
+    public AccessToken getLatestActiveOrExpiredAccessToken(String consumerKey, AuthenticatedUser authzUser,
+                                                           Set<String> scopes, OAuth2MessageContext messageContext) {
         return null;
     }
 
@@ -62,7 +63,11 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
                                  String authzCode, OAuth2MessageContext messageContext) {
 
         Connection connection = IdentityDatabaseUtil.getDBConnection();
+
+        // can we generate this access_token_id before hand and save it in authz_code table ?
         String accessTokenId = UUID.randomUUID().toString();
+        newAccessToken.setAccessTokenId(accessTokenId);
+
         try {
             if (oldAccessToken != null) {
                 updateAccessTokenState(connection, oldAccessToken, OAuth2.TokenState.EXPIRED, messageContext);
@@ -70,17 +75,18 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
             if (authzCode != null) {
                 updateAuthzCodeState(connection, authzCode, OAuth2.TokenState.INACTIVE, messageContext);
             }
-            storeAccessToken(connection, accessTokenId, newAccessToken, messageContext);
+            storeAccessToken(connection, newAccessToken, messageContext);
             updateAccessTokenForAuthzCode(connection, authzCode, accessTokenId, messageContext);
             connection.commit();
         } catch (SQLException e) {
+            IdentityDatabaseUtil.rollBack(connection);
             throw OAuth2RuntimeException.error("Error occurred while storing access token", e);
         } finally {
             IdentityDatabaseUtil.closeAllConnections(connection, null, null);
         }
     }
 
-    protected void storeAccessToken(Connection connection, String accessTokenId, AccessToken newAccessToken,
+    protected void storeAccessToken(Connection connection, AccessToken newAccessToken,
                                     OAuth2MessageContext messageContext) {
 
         String sql = SQLQueries.INSERT_OAUTH2_ACCESS_TOKEN;
@@ -102,7 +108,7 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
             prepStmt.setLong(9, newAccessToken.getRefreshTokenValidity());
             prepStmt.setString(10, OAuth2Util.hashScopes(newAccessToken.getScopes()));
             prepStmt.setString(11, newAccessToken.getAccessTokenState());
-            prepStmt.setString(13, accessTokenId);
+            prepStmt.setString(13, newAccessToken.getAccessTokenId());
             prepStmt.setString(14, newAccessToken.getGrantType());
             prepStmt.setString(15, newAccessToken.getAuthzUser().getAuthenticatedSubjectIdentifier());
             prepStmt.setString(16, processor.getProcessedClientId(newAccessToken.getClientId()));
@@ -112,7 +118,7 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
 
             if (CollectionUtils.isNotEmpty(newAccessToken.getScopes())) {
                 for (String scope : newAccessToken.getScopes()) {
-                    prepStmt.setString(1, accessTokenId);
+                    prepStmt.setString(1, newAccessToken.getAccessTokenId());
                     prepStmt.setString(2, scope);
                     prepStmt.setInt(3, tenantId);
                     prepStmt.execute();
@@ -120,6 +126,7 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
             }
 
         } catch (SQLException e) {
+            IdentityDatabaseUtil.rollBack(connection);
             throw OAuth2RuntimeException.error(e.getMessage(), e);
         } finally {
             IdentityDatabaseUtil.closeAllConnections(null, null, prepStmt);
@@ -158,20 +165,10 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
     public void updateAccessTokenState(String accessToken, String tokenState, OAuth2TokenMessageContext messageContext) {
 
         Connection connection = IdentityDatabaseUtil.getDBConnection();
-        String sqlQuery = SQLQueries.UPDATE_ACCESS_TOKEN_STATE_BY_CODE;
-        TokenPersistenceProcessor processor = HandlerManager.getInstance().getTokenPersistenceProcessor(messageContext);
-        PreparedStatement ps = null;
         try {
-            ps = connection.prepareStatement(sqlQuery);
-            ps.setString(1, tokenState);
-            ps.setString(2, UUID.randomUUID().toString());
-            ps.setString(3, processor.getProcessedAccessToken(accessToken));
-            connection.commit();
-        } catch (SQLException e) {
-            IdentityDatabaseUtil.rollBack(connection);
-            throw OAuth2RuntimeException.error(e.getMessage(), e);
+            updateAccessTokenState(connection, accessToken, tokenState, messageContext);
         } finally {
-            IdentityDatabaseUtil.closeAllConnections(connection, null, ps);
+            IdentityDatabaseUtil.closeConnection(connection);
         }
     }
 
@@ -188,6 +185,7 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
             prepStmt.setString(3, processor.getProcessedAccessToken(accessToken));
             prepStmt.executeUpdate();
         } catch (SQLException e) {
+            IdentityDatabaseUtil.rollBack(connection);
             throw OAuth2RuntimeException.error(e.getMessage(), e);
         } finally {
             IdentityDatabaseUtil.closeStatement(prepStmt);
@@ -236,6 +234,7 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
             prepStmt.setString(1, processor.getProcessedRefreshToken(refreshToken));
             resultSet = prepStmt.executeQuery();
             int iterateId = 0;
+            String accessTokenId = null;
             String bearerToken = null;
             String userName = null;
             int tenantId;
@@ -252,27 +251,28 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
             AuthenticatedUser user = new AuthenticatedUser();
             while (resultSet.next()) {
                 if (iterateId == 0) {
+                    accessTokenId = resultSet.getString(1);
                     bearerToken = processor.getPreprocessedAccessToken(
-                            resultSet.getString(1));
-                    userName = resultSet.getString(2);
-                    tenantId = resultSet.getInt(3);
-                    userDomain = resultSet.getString(4);
-                    scopeSet = OAuth2Util.buildScopeSet(resultSet.getString(5));
-                    accessTokenState = resultSet.getString(6);
-                    accessTokenIssuedTime = resultSet.getTimestamp(7,
+                            resultSet.getString(2));
+                    userName = resultSet.getString(3);
+                    tenantId = resultSet.getInt(4);
+                    userDomain = resultSet.getString(5);
+                    scopeSet = OAuth2Util.buildScopeSet(resultSet.getString(6));
+                    accessTokenState = resultSet.getString(7);
+                    accessTokenIssuedTime = resultSet.getTimestamp(8,
                             Calendar.getInstance(TimeZone.getTimeZone("UTC")));
-                    accessTokenValidity = resultSet.getLong(8);
-                    refreshTokenIssuedTime = resultSet.getTimestamp(9);
-                    refreshTokenValidity = resultSet.getLong(10);
-                    grantType = resultSet.getString(11);
-                    subjectIdentifier = resultSet.getString(12);
-                    clientId = resultSet.getString(13);
+                    accessTokenValidity = resultSet.getLong(9);
+                    refreshTokenIssuedTime = resultSet.getTimestamp(10);
+                    refreshTokenValidity = resultSet.getLong(11);
+                    grantType = resultSet.getString(12);
+                    subjectIdentifier = resultSet.getString(13);
+                    clientId = resultSet.getString(14);
                     user.setUserName(userName);
                     user.setUserStoreDomain(userDomain);
                     user.setTenantDomain(IdentityTenantUtil.getTenantDomain(tenantId));
                     user.setAuthenticatedSubjectIdentifier(subjectIdentifier);
                 } else {
-                    scopeSet.add(resultSet.getString(5));
+                    scopeSet.add(resultSet.getString(6));
                 }
                 iterateId++;
             }
@@ -288,6 +288,7 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
             }
             connection.commit();
         } catch (SQLException e) {
+            IdentityDatabaseUtil.rollBack(connection);
             throw OAuth2RuntimeException.error("Error when validating a refresh token", e);
         } finally {
             IdentityDatabaseUtil.closeAllConnections(connection, resultSet, prepStmt);
@@ -302,9 +303,13 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
         Connection connection = IdentityDatabaseUtil.getDBConnection();
         PreparedStatement prepStmt = null;
         TokenPersistenceProcessor processor = HandlerManager.getInstance().getTokenPersistenceProcessor(messageContext);
+
+        String authzCodeId = UUID.randomUUID().toString();
+        authzCode.setAuthzCodeId(authzCodeId);
+
         try {
             prepStmt = connection.prepareStatement(SQLQueries.STORE_AUTHORIZATION_CODE);
-            prepStmt.setString(1, UUID.randomUUID().toString());
+            prepStmt.setString(1, authzCodeId);
             prepStmt.setString(2, processor.getProcessedAuthzCode(authzCode.getAuthzCode()));
             prepStmt.setString(3, authzCode.getRedirectURI());
             prepStmt.setString(4, OAuth2Util.buildScopeString(authzCode.getScopes()));
@@ -317,9 +322,11 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
             prepStmt.setLong(9, authzCode.getValidityPeriod());
             prepStmt.setString(10, authzCode.getAuthzUser().getAuthenticatedSubjectIdentifier());
             prepStmt.setString(11, processor.getPreprocessedClientId(authzCode.getClientId()));
+
             prepStmt.execute();
             connection.commit();
         } catch (SQLException e) {
+            IdentityDatabaseUtil.rollBack(connection);
             throw OAuth2RuntimeException.error("Error when storing the authorization code for consumer key : " +
                     authzCode.getClientId(), e);
         } finally {
@@ -340,17 +347,18 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
             prepStmt.setString(1, processor.getProcessedAuthzCode(authzCode));
             resultSet = prepStmt.executeQuery();
             if (resultSet.next()) {
-                String authorizedUser = resultSet.getString(1);
-                String userStoreDomain = resultSet.getString(2);
-                int tenantId = resultSet.getInt(3);
+                String authzCodeId = resultSet.getString(1);
+                String authorizedUser = resultSet.getString(2);
+                String userStoreDomain = resultSet.getString(3);
+                int tenantId = resultSet.getInt(4);
                 String tenantDomain = IdentityTenantUtil.getTenantDomain(tenantId);
-                String scopeString = resultSet.getString(4);
-                String callbackUrl = resultSet.getString(5);
-                Timestamp issuedTime = resultSet.getTimestamp(6, Calendar.getInstance(TimeZone.getTimeZone("UTC")));
-                long validityPeriod = resultSet.getLong(7);
-                String codeState = resultSet.getString(8);
-                String subjectIdentifier = resultSet.getString(9);
-                String clientId = resultSet.getString(10);
+                String scopeString = resultSet.getString(5);
+                String callbackUrl = resultSet.getString(6);
+                Timestamp issuedTime = resultSet.getTimestamp(7, Calendar.getInstance(TimeZone.getTimeZone("UTC")));
+                long validityPeriod = resultSet.getLong(8);
+                String codeState = resultSet.getString(9);
+                String subjectIdentifier = resultSet.getString(10);
+                String clientId = resultSet.getString(11);
                 AuthenticatedUser user = new AuthenticatedUser();
                 user.setUserName(authorizedUser);
                 user.setTenantDomain(tenantDomain);
@@ -358,10 +366,12 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
                 user.setAuthenticatedSubjectIdentifier(subjectIdentifier);
                 authorizationCode =  new AuthzCode(authzCode, clientId, callbackUrl, user,
                         issuedTime, validityPeriod, codeState);
+                authorizationCode.setAuthzCodeId(authzCodeId);
                 authorizationCode.setScopes(OAuth2Util.buildScopeSet(scopeString));
             }
             connection.commit();
         } catch (SQLException e) {
+            IdentityDatabaseUtil.rollBack(connection);
             throw OAuth2RuntimeException.error("Error when validating an authorization code", e);
         } finally {
             IdentityDatabaseUtil.closeAllConnections(connection, resultSet, prepStmt);
@@ -373,22 +383,14 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
     public void updateAuthzCodeState(String authzCode, String state, OAuth2MessageContext messageContext) {
 
         Connection connection = IdentityDatabaseUtil.getDBConnection();
-        TokenPersistenceProcessor processor = HandlerManager.getInstance().getTokenPersistenceProcessor(messageContext);
-        PreparedStatement prepStmt = null;
         try {
-            prepStmt = connection.prepareStatement(SQLQueries.UPDATE_AUTHZ_CODE_STATE);
-            prepStmt.setString(1, state);
-            prepStmt.setString(2, processor.getProcessedAuthzCode(authzCode));
-            connection.commit();
-        } catch (SQLException e) {
-            IdentityDatabaseUtil.rollBack(connection);
-            throw OAuth2RuntimeException.error(e.getMessage(), e);
+            updateAuthzCodeState(connection, authzCode, state, messageContext);
         } finally {
-            IdentityDatabaseUtil.closeAllConnections(connection, null, prepStmt);
+            IdentityDatabaseUtil.closeConnection(connection);
         }
     }
 
-    public void updateAuthzCodeState(Connection connection, String authzCode,
+    protected void updateAuthzCodeState(Connection connection, String authzCode,
                                      String state, OAuth2MessageContext messageContext) {
 
         TokenPersistenceProcessor processor = HandlerManager.getInstance().getTokenPersistenceProcessor(messageContext);
@@ -423,6 +425,7 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
             prepStmt.setString(2, authzCode);
             prepStmt.executeUpdate();
         } catch (SQLException e) {
+            IdentityDatabaseUtil.rollBack(connection);
             throw OAuth2RuntimeException.error("Error while updating Access Token against authorization code for " +
                     "access token with ID : " + newAccessTokenId, e);
         } finally {
@@ -464,6 +467,7 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
                 distinctConsumerKeys.add(consumerKey);
             }
         } catch (SQLException e) {
+            IdentityDatabaseUtil.rollBack(connection);
             throw OAuth2RuntimeException.error("Error occurred while retrieving all distinct Client IDs " +
                     "authorized by User ID : " + authzUser + " until now", e);
         } finally {
@@ -488,19 +492,20 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
             Set<String> scopes = new HashSet<>();
             while (resultSet.next()) {
                 if (iterateId == 0) {
-                    String clientId = processor.getPreprocessedClientId(resultSet.getString(1));
-                    String authorizedUser = resultSet.getString(2);
-                    int tenantId = resultSet.getInt(3);
-                    String userDomain = resultSet.getString(4);
-                    scopes = OAuth2Util.buildScopeSet(resultSet.getString(5));
-                    Timestamp accessTokenIssuedTime = resultSet.getTimestamp(6,
+                    String accessTokenId = resultSet.getString(1);
+                    String clientId = processor.getPreprocessedClientId(resultSet.getString(2));
+                    String authorizedUser = resultSet.getString(3);
+                    int tenantId = resultSet.getInt(4);
+                    String userDomain = resultSet.getString(5);
+                    scopes = OAuth2Util.buildScopeSet(resultSet.getString(6));
+                    Timestamp accessTokenIssuedTime = resultSet.getTimestamp(7,
                             Calendar.getInstance(TimeZone.getTimeZone
                                     ("UTC")));
-                    Timestamp refreshTokenIssuedTime = resultSet.getTimestamp(7,
+                    Timestamp refreshTokenIssuedTime = resultSet.getTimestamp(8,
                             Calendar.getInstance(TimeZone.getTimeZone("UTC")));
-                    long accessTokenValidity = resultSet.getLong(8);
-                    long refreshTokenValidity = resultSet.getLong(9);
-                    String refreshToken = resultSet.getString(10);
+                    long accessTokenValidity = resultSet.getLong(9);
+                    long refreshTokenValidity = resultSet.getLong(10);
+                    String refreshToken = resultSet.getString(11);
                     String grantType = resultSet.getString(12);
                     String subjectIdentifier = resultSet.getString(13);
                     String tokenState = resultSet.getString(14);
@@ -513,16 +518,18 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
 
                     accessToken = new AccessToken(bearerToken, clientId, subjectIdentifier, grantType, tokenState,
                             accessTokenIssuedTime, accessTokenValidity);
+                    accessToken.setAccessTokenId(accessTokenId);
                     accessToken.setRefreshToken(refreshToken);
                     accessToken.setRefreshTokenIssuedTime(refreshTokenIssuedTime);
                     accessToken.setRefreshTokenValidity(refreshTokenValidity);
                 } else {
-                    scopes.add(resultSet.getString(5));
+                    scopes.add(resultSet.getString(6));
                 }
                 iterateId++;
             }
             connection.commit();
         } catch (SQLException e) {
+            IdentityDatabaseUtil.rollBack(connection);
             throw OAuth2RuntimeException.error(e.getMessage(), e);
         } finally {
             IdentityDatabaseUtil.closeAllConnections(connection, resultSet, prepStmt);
@@ -564,6 +571,7 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
             ps.execute();
             connection.commit();
         } catch (SQLException e) {
+            IdentityDatabaseUtil.rollBack(connection);
             IdentityDatabaseUtil.rollBack(connection);
             throw OAuth2RuntimeException.error(e.getMessage(), e);
         }  finally {

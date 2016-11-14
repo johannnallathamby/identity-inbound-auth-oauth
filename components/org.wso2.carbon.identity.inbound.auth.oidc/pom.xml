@@ -39,6 +39,14 @@
             <artifactId>servlet-api</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.wso2.orbit.org.apache.oltu.oauth2</groupId>
+            <artifactId>oltu</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.nimbusds</groupId>
+            <artifactId>oauth2-oidc-sdk</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.wso2.carbon.identity.framework</groupId>
             <artifactId>org.wso2.carbon.identity.application.authentication.framework</artifactId>
         </dependency>
@@ -68,6 +76,7 @@
                         </Private-Package>
                         <Import-Package>
                             org.apache.oltu.*;version="${oltu.package.import.version.range}",
+                            com.nimbusds.openid.connect.sdk.*;version=${nimbusds.oauth2.oidc.sdk.imp.pkg.version.range},
                             org.wso2.carbon.identity.inbound.auth.oauth2new.*;version="${identity.inbound.auth.oauth.imp.pkg.version.range}"
                         </Import-Package>
                         <Export-Package>

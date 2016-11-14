@@ -22,10 +22,14 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
+import org.wso2.carbon.identity.application.common.model.FederatedAuthenticatorConfig;
+import org.wso2.carbon.identity.application.common.model.Property;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AccessToken;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.OAuth2ServerConfig;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class OAuth2Util {
@@ -149,5 +153,15 @@ public class OAuth2Util {
             builder.append(":").append(OAuth2Util.buildScopeString(scopes));
         }
         return builder.toString();
+    }
+
+    public static List<String> getPropertyValuesOfPropertyNameStartsWith(Property[] properties, String propNameStartsWith) {
+        List<String> propValueSet = new ArrayList<String>();
+        for (Property prop : properties) {
+            if (prop.getName().startsWith(propNameStartsWith)) {
+                propValueSet.add(prop.getValue());
+            }
+        }
+        return propValueSet;
     }
 }

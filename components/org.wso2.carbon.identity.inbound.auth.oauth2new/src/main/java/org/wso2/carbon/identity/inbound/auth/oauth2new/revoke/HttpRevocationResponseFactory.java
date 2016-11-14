@@ -44,21 +44,9 @@ public class HttpRevocationResponseFactory extends HttpIdentityResponseFactory {
     @Override
     public HttpIdentityResponse.HttpIdentityResponseBuilder create(IdentityResponse identityResponse) {
 
-        RevocationResponse revocationResponse = (RevocationResponse)identityResponse;
-
         HttpIdentityResponse.HttpIdentityResponseBuilder responseBuilder = new
                 HttpIdentityResponse.HttpIdentityResponseBuilder();
-        responseBuilder.setStatusCode(HttpServletResponse.SC_OK);
-        if (StringUtils.isNotBlank(revocationResponse.getCallback())) {
-            responseBuilder.setBody(revocationResponse.getCallback() + "();");
-        }
-        responseBuilder.addHeader(OAuth2.Header.CACHE_CONTROL, OAuth2.HeaderValue.CACHE_CONTROL_NO_STORE);
-        responseBuilder.addHeader(OAuth2.Header.PRAGMA, OAuth2.HeaderValue.PRAGMA_NO_CACHE);
-        if (StringUtils.isNotBlank(revocationResponse.getCallback())) {
-            responseBuilder.setContentType("application/javascript");
-        } else {
-            responseBuilder.setContentType("text/html");
-        }
+        create(responseBuilder, identityResponse);
         return responseBuilder;
     }
 

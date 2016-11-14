@@ -20,7 +20,13 @@ package org.wso2.carbon.identity.inbound.auth.oauth2new.listener;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.wso2.carbon.identity.application.common.cache.CacheEntry;
 import org.wso2.carbon.identity.application.common.listener.AbstractCacheListener;
+import org.wso2.carbon.identity.base.IdentityConstants;
+import org.wso2.carbon.identity.core.util.IdentityUtil;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.cache.AccessTokenCache;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.cache.AuthorizationGrantCache;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.cache.AuthorizationGrantCacheKey;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AccessToken;
 
 import javax.cache.event.CacheEntryEvent;
@@ -38,11 +44,15 @@ import javax.cache.event.CacheEntryRemovedListener;
 public class OAuth2CacheListener extends AbstractCacheListener<String, AccessToken>
         implements CacheEntryRemovedListener<String, AccessToken> {
 
-    private static Log log = LogFactory.getLog(OAuth2CacheListener.class);
-
     @Override
     public void entryRemoved(CacheEntryEvent<? extends String, ? extends AccessToken> cacheEntryEvent)
             throws CacheEntryListenerException {
 
+        // Need to override AuthenticatedUser's equals and hashcode method to support case insensitivity of usernames
+        AccessToken accessToken = cacheEntryEvent.getValue();
+        AccessTokenCache.getInstance().clearCacheEntry(accessToken.getAccessToken());
+        AuthorizationGrantCacheKey key = new AuthorizationGrantCacheKey(accessToken.getClientId(), accessToken.getAuthzUser(),
+                                                                        accessToken.getScopes());
+        AuthorizationGrantCache.getInstance().clearCacheEntry(key);
     }
 }

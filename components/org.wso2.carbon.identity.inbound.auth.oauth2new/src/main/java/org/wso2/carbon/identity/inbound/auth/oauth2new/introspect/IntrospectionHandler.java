@@ -20,6 +20,7 @@ package org.wso2.carbon.identity.inbound.auth.oauth2new.introspect;
 
 import org.apache.oltu.oauth2.common.OAuth;
 import org.apache.oltu.oauth2.common.message.types.GrantType;
+import org.wso2.carbon.identity.application.common.model.ServiceProvider;
 import org.wso2.carbon.identity.core.handler.AbstractIdentityMessageHandler;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2ClientException;
@@ -88,7 +89,17 @@ public class IntrospectionHandler extends AbstractIdentityMessageHandler {
             builder.setActive(true);
             builder.setScope(OAuth2Util.buildScopeString(accessToken.getScopes()));
             builder.setClientId(accessToken.getClientId());
-            builder.setUsername(accessToken.getAuthzUser().getAuthenticatedSubjectIdentifier());
+            ServiceProvider sp = (ServiceProvider) messageContext.getParameter(OAuth2.OAUTH2_SERVICE_PROVIDER);
+            if(!accessToken.getAuthzUser().isFederatedUser()) {
+                boolean useTenantDomain = sp.getLocalAndOutBoundAuthenticationConfig()
+                        .isUseTenantDomainInLocalSubjectIdentifier();
+                boolean useUserstoreDomain = sp.getLocalAndOutBoundAuthenticationConfig()
+                        .isUseUserstoreDomainInLocalSubjectIdentifier();
+                builder.setUsername(accessToken.getAuthzUser().getUsernameAsSubjectIdentifier(useUserstoreDomain,
+                                                                                              useTenantDomain));
+            } else {
+                builder.setUsername(accessToken.getAuthzUser().getAuthenticatedSubjectIdentifier());
+            }
             builder.setTokenType(OAuth.OAUTH_ACCESS_TOKEN);
             builder.setExp((accessToken.getAccessTokenIssuedTime().getTime() + accessToken.getAccessTokenValidity())
                     / 1000);

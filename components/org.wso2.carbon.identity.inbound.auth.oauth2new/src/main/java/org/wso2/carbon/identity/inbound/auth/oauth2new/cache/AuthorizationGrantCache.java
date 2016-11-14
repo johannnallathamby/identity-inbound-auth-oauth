@@ -28,12 +28,12 @@ import org.wso2.carbon.utils.CarbonUtils;
  */
 public class AuthorizationGrantCache extends BaseCache<AuthorizationGrantCacheKey, AccessToken> {
 
-    private static final String OAUTH2_AUTHORIZATION_GRANT_CACHE_NAME = "OAuth2AuthorizationGrantCache";
+    private static final String AUTHORIZATION_GRANT_CACHE_NAME = "AuthzGrantCache";
 
     private static volatile AuthorizationGrantCache instance;
 
     private AuthorizationGrantCache() {
-        super(OAUTH2_AUTHORIZATION_GRANT_CACHE_NAME);
+        super(AUTHORIZATION_GRANT_CACHE_NAME);
         super.addListener(new OAuth2CacheListener());
     }
 

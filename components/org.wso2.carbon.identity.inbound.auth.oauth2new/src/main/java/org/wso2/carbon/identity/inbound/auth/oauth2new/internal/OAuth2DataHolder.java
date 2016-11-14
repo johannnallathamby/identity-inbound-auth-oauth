@@ -18,6 +18,7 @@
 
 package org.wso2.carbon.identity.inbound.auth.oauth2new.internal;
 
+import org.wso2.carbon.identity.application.mgt.ApplicationManagementService;
 import org.wso2.carbon.identity.core.util.IdentityCoreInitializedEvent;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.dao.OAuth2DAOHandler;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.client.ClientAuthHandler;
@@ -31,12 +32,13 @@ import org.wso2.carbon.user.core.service.RealmService;
 import java.util.ArrayList;
 import java.util.List;
 
-public class OAuth2ServiceComponentHolder {
+public class OAuth2DataHolder {
 
-    private static OAuth2ServiceComponentHolder instance = new OAuth2ServiceComponentHolder();
+    private static OAuth2DataHolder instance = new OAuth2DataHolder();
     private RealmService realmService;
     private RegistryService registryService;
     private IdentityCoreInitializedEvent identityCoreInitializedEvent;
+    private ApplicationManagementService appMgtService;
     private List<ClientAuthHandler> clientAuthHandlers = new ArrayList<>();
     private List<AccessTokenResponseIssuer> accessTokenIssuers = new ArrayList<>();
     private List<TokenPersistenceProcessor> tokenPersistenceProcessors = new ArrayList<>();
@@ -44,11 +46,11 @@ public class OAuth2ServiceComponentHolder {
     private List<AuthorizationGrantHandler> grantHandlers = new ArrayList<>();
     private List<IntrospectionHandler> introspectionHandlers = new ArrayList<>();
 
-    private OAuth2ServiceComponentHolder() {
+    private OAuth2DataHolder() {
 
     }
 
-    public static OAuth2ServiceComponentHolder getInstance() {
+    public static OAuth2DataHolder getInstance() {
         return instance;
     }
 
@@ -74,6 +76,14 @@ public class OAuth2ServiceComponentHolder {
 
     public IdentityCoreInitializedEvent getIdentityCoreInitializedEvent() {
         return identityCoreInitializedEvent;
+    }
+
+    public void setAppMgtService(ApplicationManagementService appMgtService) {
+        this.appMgtService = appMgtService;
+    }
+
+    public ApplicationManagementService getAppMgtService() {
+        return appMgtService;
     }
 
     public List<ClientAuthHandler> getClientAuthHandlers() {

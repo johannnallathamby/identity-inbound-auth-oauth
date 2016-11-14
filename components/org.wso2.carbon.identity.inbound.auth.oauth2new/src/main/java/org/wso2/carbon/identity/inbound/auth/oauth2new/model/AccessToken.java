@@ -28,6 +28,9 @@ public class AccessToken implements Serializable {
 
     private static final long serialVersionUID = 5894325130475788975L;
 
+    // This will be populated only at the persistent layer
+    private String accessTokenId;
+
     private String accessToken;
 
     private String refreshToken;
@@ -64,11 +67,13 @@ public class AccessToken implements Serializable {
         this.accessTokenValidity = accessTokenValidity;
     }
 
+    // Clone's the access token. Needed this method because there is no method to set state on an existing access token.
     public static AccessToken createAccessToken(AccessToken accessToken, String tokenState) {
 
         AccessToken newAccessToken = new AccessToken(accessToken.getAccessToken(), accessToken.getClientId(),
                 accessToken.getSubjectIdentifier(), accessToken.getGrantType(), tokenState,
                 accessToken.getAccessTokenIssuedTime(), accessToken.getAccessTokenValidity());
+        newAccessToken.setAccessTokenId(accessToken.getAccessTokenId());
         newAccessToken.setAuthzUser(accessToken.getAuthzUser());
         newAccessToken.setScopes(accessToken.getScopes());
         newAccessToken.setRefreshToken(accessToken.getRefreshToken());
@@ -79,6 +84,10 @@ public class AccessToken implements Serializable {
 
     public String getAccessToken() {
         return accessToken;
+    }
+
+    public String getAccessTokenId() {
+        return accessTokenId;
     }
 
     public String getRefreshToken() {
@@ -125,6 +134,10 @@ public class AccessToken implements Serializable {
         return refreshTokenValidity;
     }
 
+    public void setAccessTokenId(String accessTokenId) {
+        this.accessTokenId = accessTokenId;
+    }
+
     public void setRefreshToken(String refreshToken) {
         this.refreshToken = refreshToken;
     }
@@ -148,7 +161,8 @@ public class AccessToken implements Serializable {
     @Override
     public String toString() {
         return "AccessToken{" +
-                "clientId='" + clientId + '\'' +
+                "accessTokenId='" + accessTokenId + '\'' +
+                ", clientId='" + clientId + '\'' +
                 ", subjectIdentifier='" + subjectIdentifier + '\'' +
                 ", authzUser=" + authzUser +
                 ", scopes=" + scopes +

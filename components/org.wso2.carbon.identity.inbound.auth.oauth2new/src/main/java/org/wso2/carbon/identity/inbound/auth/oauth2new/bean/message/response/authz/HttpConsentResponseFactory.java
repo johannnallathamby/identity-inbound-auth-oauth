@@ -50,34 +50,9 @@ public class HttpConsentResponseFactory extends HttpIdentityResponseFactory {
     @Override
     public HttpIdentityResponse.HttpIdentityResponseBuilder create(IdentityResponse identityResponse) {
 
-        ConsentResponse consentResponse = (ConsentResponse)identityResponse;
-
-        String consentPageURL = OAuth2ServerConfig.getInstance().getConsentPageURL();
-        String queryString = null;
-        try {
-            queryString = IdentityUtil.buildQueryString(consentResponse.getParameterMap());
-        } catch (UnsupportedEncodingException e) {
-            throw OAuth2RuntimeException.error(e.getMessage(), e);
-        }
-        String applicationName = consentResponse.getApplicationName();
-        String authenticatedSubjectId = consentResponse.getAuthenticatedSubjectId();
-        String requestedScopes =  OAuth2Util.buildScopeString(consentResponse.getRequestedScopes());
-        String sessionDataKeyConsent = consentResponse.getSessionDataKeyConsent();
-        try {
-            consentPageURL += queryString + OAuth2.LOGGED_IN_USER + "=" +
-                           URLEncoder.encode(authenticatedSubjectId, "UTF-8") +
-                           "&application=" + URLEncoder.encode(applicationName, "ISO-8859-1") +
-                           "&" + OAuth.OAUTH_SCOPE + "=" + URLEncoder.encode(requestedScopes, "ISO-8859-1") +
-                           "&" + OAuth2.SESSION_DATA_KEY_CONSENT + "=" + URLEncoder
-                                   .encode(sessionDataKeyConsent, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            throw OAuth2RuntimeException.error(e.getMessage(), e);
-        }
-
         HttpIdentityResponse.HttpIdentityResponseBuilder builder = new HttpIdentityResponse
                 .HttpIdentityResponseBuilder();
-        builder.setStatusCode(HttpServletResponse.SC_FOUND);
-        builder.setRedirectURL(consentPageURL);
+        create(builder, identityResponse);
         return builder;
     }
 

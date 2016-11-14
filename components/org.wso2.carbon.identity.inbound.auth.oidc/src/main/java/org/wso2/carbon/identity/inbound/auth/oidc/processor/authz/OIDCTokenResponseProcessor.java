@@ -18,6 +18,7 @@
 
 package org.wso2.carbon.identity.inbound.auth.oidc.processor.authz;
 
+import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.oltu.oauth2.common.OAuth;
 import org.wso2.carbon.identity.application.authentication.framework.exception.FrameworkException;
@@ -32,13 +33,17 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.aut
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.authz.ROApprovalResponse;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2AuthnException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2ConsentException;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AccessToken;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AuthzCode;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.OAuth2ServerConfig;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.processor.authz.TokenResponseProcessor;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2ConsentStore;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Util;
-import org.wso2.carbon.identity.inbound.auth.oidc.IDTokenBuilder;
 import org.wso2.carbon.identity.inbound.auth.oidc.OIDC;
 import org.wso2.carbon.identity.inbound.auth.oidc.bean.message.request.authz.OIDCAuthzRequest;
+import org.wso2.carbon.identity.inbound.auth.oidc.bean.message.response.authz.OIDCAuthzResponse;
+import org.wso2.carbon.identity.inbound.auth.oidc.cache.AuthnResultCache;
+import org.wso2.carbon.identity.inbound.auth.oidc.cache.AuthnResultCacheAccessTokenKey;
+import org.wso2.carbon.identity.inbound.auth.oidc.cache.AuthnResultCacheEntry;
 import org.wso2.carbon.identity.inbound.auth.oidc.handler.OIDCHandlerManager;
 
 import java.util.Set;
@@ -86,8 +91,10 @@ public class OIDCTokenResponseProcessor extends TokenResponseProcessor {
             } else if (!OAuth2ServerConfig.getInstance().isSkipConsentPage()) {
 
                 String spName = ((ServiceProvider) messageContext.getParameter(OAuth2.OAUTH2_SERVICE_PROVIDER)).getApplicationName();
+                int applicationId = ((ServiceProvider) messageContext.getParameter(OAuth2.OAUTH2_SERVICE_PROVIDER))
+                        .getApplicationID();
 
-                if (!OAuth2ConsentStore.getInstance().hasUserApprovedAppAlways(authenticatedUser, spName)) {
+                if (!hasUserApprovedAppAlways(authenticatedUser, spName, applicationId)) {
                     if(!isPromptNone) {
                         return initiateResourceOwnerConsent(messageContext);
                     } else {
@@ -111,32 +118,52 @@ public class OIDCTokenResponseProcessor extends TokenResponseProcessor {
             messageContext.addParameter(OAuth2.OAUTH2_RESOURCE_OWNER_AUTHZ_REQUEST, identityRequest);
             processConsent(messageContext);
         }
+
+        // This cache is used for later retrieving AuthenticationResult from Token endpoint and Userinfo endpoint
+        // The day we can invoke Authentication Framework via Java APIs, we can get rid of this hack
+        AccessToken accessToken = (AccessToken) messageContext.getParameter(OIDC.ACCESS_TOKEN);
+        AuthenticationResult authnResult = (AuthenticationResult) messageContext.getParameter(InboundConstants.RequestProcessor
+                                                                                                      .AUTHENTICATION_RESULT);
+        storeAuthnResultToCache(accessToken.getAccessTokenId(), accessToken.getAccessToken(), authnResult);
+
         return buildAuthzResponse(messageContext);
     }
 
     protected AuthzResponse.AuthzResponseBuilder buildAuthzResponse(OAuth2AuthzMessageContext messageContext) {
 
-        AuthzResponse.AuthzResponseBuilder builder = super.buildAuthzResponse(messageContext);
+        AuthzResponse.AuthzResponseBuilder oauth2Builder = super.buildAuthzResponse(messageContext);
+
+        OIDCAuthzResponse.OIDCAuthzResponseBuilder oidcBuilder = new OIDCAuthzResponse.OIDCAuthzResponseBuilder
+                (oauth2Builder, messageContext);
+
+        if(messageContext.getRequest().getResponseType().contains("id_token")) {
+            addIDToken(oidcBuilder, messageContext);
+        }
+
         AuthenticationResult authenticationResult = (AuthenticationResult)messageContext.getParameter(
                 InboundConstants.RequestProcessor.AUTHENTICATION_RESULT);
         if(StringUtils.isNotBlank(authenticationResult.getAuthenticatedIdPs())){
-            builder.getBuilder().setParam(InboundConstants.LOGGED_IN_IDPS, authenticationResult.getAuthenticatedIdPs());
+            oauth2Builder.getBuilder().setParam(InboundConstants.LOGGED_IN_IDPS, authenticationResult.getAuthenticatedIdPs());
         }
-        if(messageContext.getRequest().getResponseType().contains("id_token")) {
-            addIDToken(builder, messageContext);
-        }
-        return builder;
+
+        return oauth2Builder;
     }
 
-    protected void addIDToken(AuthzResponse.AuthzResponseBuilder builder, OAuth2AuthzMessageContext messageContext) {
+    protected void addIDToken(OIDCAuthzResponse.OIDCAuthzResponseBuilder builder, OAuth2AuthzMessageContext
+            messageContext) {
 
-        IDTokenBuilder idTokenBuilder = OIDCHandlerManager.getInstance().buildIDToken(messageContext);
-        String idToken = idTokenBuilder.build();
-        builder.getBuilder().setParam("id_token", idToken);
+        IDTokenClaimsSet idTokenClaimsSet = OIDCHandlerManager.getInstance().buildIDToken(messageContext);
+        builder.setIdTokenClaimsSet(idTokenClaimsSet);
     }
 
     protected boolean issueRefreshToken(OAuth2AuthzMessageContext messageContext) {
         return false;
+    }
+
+    protected void storeAuthnResultToCache(String tokenId, String token, AuthenticationResult authnResult) {
+        AuthnResultCacheAccessTokenKey key = new AuthnResultCacheAccessTokenKey(tokenId, token);
+        AuthnResultCacheEntry entry = new AuthnResultCacheEntry(authnResult);
+        AuthnResultCache.getInstance().addToCache(key, entry);
     }
 
 }

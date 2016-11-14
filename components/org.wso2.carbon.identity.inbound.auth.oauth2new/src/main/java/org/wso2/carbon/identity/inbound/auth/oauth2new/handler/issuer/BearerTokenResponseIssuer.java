@@ -29,6 +29,7 @@ import org.wso2.carbon.identity.core.bean.context.MessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2MessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2RuntimeException;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.HandlerManager;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AccessToken;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AuthzCode;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.OAuth2ServerConfig;
@@ -126,12 +127,10 @@ public class BearerTokenResponseIssuer extends AccessTokenResponseIssuer {
 
         AuthzCode authzCode = (AuthzCode)messageContext.getParameter(OAuth2.AUTHZ_CODE);
         boolean markAccessTokenExpired = (Boolean)messageContext.getParameter(MARK_ACCESS_TOKEN_EXPIRED);
-
-        // if authzCode != null, invalidate it
-        // if markAccessTokenExpired == true, mark it expired
-        // if persist new access token
-        // All the above should go as a single transaction
-
+        AccessToken previousAccessToken = (AccessToken) messageContext.getParameter(OAuth2.PREV_ACCESS_TOKEN);
+        HandlerManager.getInstance().getOAuth2DAO(messageContext).storeAccessToken(accessToken,
+                markAccessTokenExpired ? previousAccessToken.getAccessToken() : null,
+                authzCode != null ? authzCode.getAuthzCode() : null, messageContext);
     }
 
 

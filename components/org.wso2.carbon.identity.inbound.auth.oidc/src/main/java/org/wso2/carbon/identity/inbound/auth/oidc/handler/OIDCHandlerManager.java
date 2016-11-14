@@ -18,10 +18,10 @@
 
 package org.wso2.carbon.identity.inbound.auth.oidc.handler;
 
+import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
 import org.wso2.carbon.identity.core.handler.MessageHandlerComparator;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2MessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2RuntimeException;
-import org.wso2.carbon.identity.inbound.auth.oidc.IDTokenBuilder;
 import org.wso2.carbon.identity.inbound.auth.oidc.internal.OIDCServiceComponentHolder;
 
 import java.util.Collections;
@@ -39,15 +39,15 @@ public class OIDCHandlerManager {
         return instance;
     }
 
-    public IDTokenBuilder buildIDToken(OAuth2MessageContext messageContext) {
+    public IDTokenClaimsSet buildIDToken(OAuth2MessageContext messageContext) {
 
         List<IDTokenHandler> handlers = OIDCServiceComponentHolder.getInstance().getIDTokenHandlers();
         Collections.sort(handlers, new MessageHandlerComparator(messageContext));
         for(IDTokenHandler handler:handlers){
-            if(handler.canHandle(messageContext)){
+            if(handler.isEnabled(messageContext) && handler.canHandle(messageContext)){
                 return handler.buildIDToken(messageContext);
             }
         }
-        throw OAuth2RuntimeException.error("Cannot find IntrospectionHandler to handle this request");
+        throw OAuth2RuntimeException.error("Cannot find IDTokenHandler to handle this request");
     }
 }

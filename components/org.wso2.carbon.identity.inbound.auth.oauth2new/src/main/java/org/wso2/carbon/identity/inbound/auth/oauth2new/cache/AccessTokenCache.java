@@ -28,12 +28,12 @@ import org.wso2.carbon.utils.CarbonUtils;
  */
 public class AccessTokenCache extends BaseCache<String, AccessToken> {
 
-    private static final String OAUTH2_ACCESS_TOKEN_CACHE_NAME = "OAuth2AccessTokenCache";
+    private static final String ACCESS_TOKEN_CACHE_NAME = "AccessTokenCache";
 
     private static volatile AccessTokenCache instance;
 
     private AccessTokenCache() {
-        super(OAUTH2_ACCESS_TOKEN_CACHE_NAME);
+        super(ACCESS_TOKEN_CACHE_NAME);
         super.addListener(new OAuth2CacheListener());
     }
 

@@ -31,7 +31,7 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2ClientExc
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2Exception;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2RuntimeException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2AuthnException;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.internal.OAuth2ServiceComponentHolder;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.internal.OAuth2DataHolder;
 import org.wso2.carbon.user.api.UserStoreException;
 import org.wso2.carbon.user.api.UserStoreManager;
 import org.wso2.carbon.user.core.service.RealmService;
@@ -77,7 +77,7 @@ public class PasswordGrantHandler extends AuthorizationGrantHandler {
 
         }
 
-        RealmService realmService = OAuth2ServiceComponentHolder.getInstance().getRealmService();
+        RealmService realmService = OAuth2DataHolder.getInstance().getRealmService();
         UserStoreManager userStoreManager = null;
         boolean authStatus;
         try {

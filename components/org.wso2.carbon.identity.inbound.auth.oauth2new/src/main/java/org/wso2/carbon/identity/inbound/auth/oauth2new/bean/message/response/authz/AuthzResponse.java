@@ -6,7 +6,7 @@ import org.wso2.carbon.identity.application.authentication.framework.inbound.Ide
 
 public class AuthzResponse extends ROApprovalResponse {
 
-    private OAuthASResponse.OAuthAuthorizationResponseBuilder builder;
+    protected OAuthASResponse.OAuthAuthorizationResponseBuilder builder;
 
     protected AuthzResponse(IdentityResponseBuilder builder) {
         super(builder);
@@ -23,7 +23,7 @@ public class AuthzResponse extends ROApprovalResponse {
             super(context);
         }
 
-        private OAuthASResponse.OAuthAuthorizationResponseBuilder builder;
+        protected OAuthASResponse.OAuthAuthorizationResponseBuilder builder;
 
         public OAuthASResponse.OAuthAuthorizationResponseBuilder getBuilder() {
             return builder;

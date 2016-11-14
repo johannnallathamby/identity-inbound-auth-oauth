@@ -23,14 +23,24 @@ import org.wso2.carbon.identity.application.authentication.framework.exception.F
 import org.wso2.carbon.identity.application.authentication.framework.inbound.FrameworkLoginResponse;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityMessageContext;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
+import org.wso2.carbon.identity.application.common.IdentityApplicationManagementException;
+import org.wso2.carbon.identity.application.common.model.InboundAuthenticationRequestConfig;
+import org.wso2.carbon.identity.application.common.model.Property;
 import org.wso2.carbon.identity.application.common.model.ServiceProvider;
+import org.wso2.carbon.identity.application.common.util.IdentityApplicationConstants;
+import org.wso2.carbon.identity.application.common.util.IdentityApplicationManagementUtil;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2AuthzMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.authz.OAuth2AuthzRequest;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2ClientException;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2InternalException;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2RuntimeException;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.internal.OAuth2DataHolder;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.processor.OAuth2IdentityRequestProcessor;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Util;
 
 import java.util.HashMap;
+import java.util.List;
 
 /*
  * InboundRequestProcessor for OAuth2 Authorization Endpoint
@@ -77,7 +87,35 @@ public class AuthzProcessor extends OAuth2IdentityRequestProcessor {
         String clientId = messageContext.getRequest().getClientId();
 
         ServiceProvider serviceProvider = null;
+        try {
+            serviceProvider = OAuth2DataHolder.getInstance().getAppMgtService()
+                    .getServiceProviderByClientId(clientId, "oauth2", messageContext.getRequest().getTenantDomain());
+        } catch (IdentityApplicationManagementException e) {
+            throw OAuth2RuntimeException.error("Error occurred while retrieving service provider.");
+        }
+        if(serviceProvider == null) {
+            throw OAuth2ClientException.error("Invalid Client ID: " + clientId);
+        }
         // Validate clientId, redirect_uri, response_type allowed
+        for(InboundAuthenticationRequestConfig config:serviceProvider.getInboundAuthenticationConfig()
+                .getInboundAuthenticationRequestConfigs()) {
+            if(IdentityApplicationConstants.OAuth2.NAME.equals(config.getInboundAuthType())) {
+                Property[] properties = config.getProperties();
+                String redirect_uri = IdentityApplicationManagementUtil.getPropertyValue(properties,
+                                                                                         IdentityApplicationConstants.OAuth2.CALLBACK_URL);
+                if(!messageContext.getRequest().getRedirectURI().equals(redirect_uri)) {
+                    throw OAuth2ClientException.error("Invalid Redirect URI: " + redirect_uri);
+                }
+
+                List<String> responseTypes = OAuth2Util.getPropertyValuesOfPropertyNameStartsWith(properties,
+                                                                                                  "response_type");
+                if(!responseTypes.contains(messageContext.getRequest().getResponseType())) {
+                    throw OAuth2ClientException.error("Invalid Response Type: " + messageContext.getRequest()
+                            .getResponseType());
+                }
+
+            }
+        }
         messageContext.addParameter(OAuth2.OAUTH2_SERVICE_PROVIDER, serviceProvider);
     }
 

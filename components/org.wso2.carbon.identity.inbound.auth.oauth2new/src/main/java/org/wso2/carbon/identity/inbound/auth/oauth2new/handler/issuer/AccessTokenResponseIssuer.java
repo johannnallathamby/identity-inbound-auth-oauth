@@ -96,7 +96,11 @@ public abstract class AccessTokenResponseIssuer extends AbstractIdentityMessageH
                                            Set<String> scopes, OAuth2MessageContext messageContext) {
 
         OAuth2DAO dao = HandlerManager.getInstance().getOAuth2DAO(messageContext);
-        AccessToken accessToken = dao.getLatestActiveOrExpiredAccessToken(clientId, authzUser, scopes, messageContext);
+        // for refresh_token grant
+        AccessToken accessToken = (AccessToken) messageContext.getParameter(OAuth2.PREV_ACCESS_TOKEN);
+        if(accessToken == null) {
+            accessToken = dao.getLatestActiveOrExpiredAccessToken(clientId, authzUser, scopes, messageContext);
+        }
         boolean isAccessTokenValid = false;
         boolean isRefreshTokenValid = false;
         boolean markAccessTokenExpired = false;

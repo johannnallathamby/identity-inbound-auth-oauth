@@ -28,6 +28,9 @@ public class AuthzCode implements Serializable {
 
     private static final long serialVersionUID = 6826100815294824101L;
 
+    // This will be populated only at the persistent layer
+    private String authzCodeId;
+
     private String authzCode;
 
     private String clientId;
@@ -43,6 +46,9 @@ public class AuthzCode implements Serializable {
     private long validityPeriod;
 
     private String codeState;
+
+    // This will be populated only at the persistent layer
+    private String accessTokenId;
 
     public AuthzCode(String authzCode, String clientId, String redirectURI, AuthenticatedUser authzUser,
                      Timestamp issuedTime, long validityPeriod, String codeState) {
@@ -60,8 +66,13 @@ public class AuthzCode implements Serializable {
         AuthzCode newAuthzCode = new AuthzCode(authzCode.getAuthzCode(), authzCode.getClientId(),
                 authzCode.getRedirectURI(), authzCode.getAuthzUser(), authzCode.getIssuedTime(),
                 authzCode.getValidityPeriod(), codeState);
+        newAuthzCode.setAuthzCodeId(authzCode.getAuthzCodeId());
         newAuthzCode.setScopes(authzCode.getScopes());
         return newAuthzCode;
+    }
+
+    public String getAuthzCodeId() {
+        return authzCodeId;
     }
 
     public String getAuthzCode() {
@@ -96,21 +107,34 @@ public class AuthzCode implements Serializable {
         return codeState;
     }
 
+    public String getAccessTokenId() {
+        return accessTokenId;
+    }
+
+    public void setAuthzCodeId(String authzCodeId) {
+        this.authzCodeId = authzCodeId;
+    }
+
     public void setScopes(Set<String> scopes) {
         this.scopes = scopes;
+    }
+
+    public void setAccessTokenId(String accessTokenId) {
+        this.accessTokenId = accessTokenId;
     }
 
     @Override
     public String toString() {
         return "AuthzCode{" +
-                ", clientId='" + clientId + '\'' +
-                ", redirectURI='" + redirectURI + '\'' +
-                ", authzUser=" + authzUser +
-                ", scopes=" + scopes +
-                ", issuedTime=" + issuedTime +
-                ", validityPeriod=" + validityPeriod +
-                ", codeState='" + codeState + '\'' +
-                '}';
+               "authzCodeId='" + authzCodeId + '\'' +
+               ", clientId='" + clientId + '\'' +
+               ", redirectURI='" + redirectURI + '\'' +
+               ", authzUser=" + authzUser +
+               ", scopes=" + scopes +
+               ", issuedTime=" + issuedTime +
+               ", validityPeriod=" + validityPeriod +
+               ", codeState='" + codeState + '\'' +
+               ", accessTokenId='" + accessTokenId + '\'' +
+               '}';
     }
-
 }
