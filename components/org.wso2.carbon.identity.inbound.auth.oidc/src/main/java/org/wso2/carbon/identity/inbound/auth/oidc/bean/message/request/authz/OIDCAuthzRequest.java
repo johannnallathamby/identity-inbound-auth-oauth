@@ -22,21 +22,24 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.auth
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class OIDCAuthzRequest extends OAuth2AuthzRequest {
 
     private static final long serialVersionUID = -3009563708954787261L;
 
-    private String nonce;
-    private String display;
-    private String idTokenHint;
-    private String loginHint;
-    private Set<String> prompts;
-    private boolean isLoginRequired = false;
-    private boolean isConsentRequired = false;
-    private boolean isPromptNone = false;
+    protected String nonce;
+    protected String display;
+    protected String idTokenHint;
+    protected String loginHint;
+    protected Set<String> prompts;
+    protected List<String> acrValues;
+    protected boolean isLoginRequired = false;
+    protected boolean isConsentRequired = false;
+    protected boolean isPromptNone = false;
 
     protected OIDCAuthzRequest(OIDCAuthzRequestBuilder builder) {
         super(builder);
@@ -70,6 +73,10 @@ public class OIDCAuthzRequest extends OAuth2AuthzRequest {
         return prompts;
     }
 
+    public List<String> getAcrValues() {
+        return acrValues;
+    }
+
     public boolean isLoginRequired() {
         return this.isLoginRequired;
     }
@@ -84,14 +91,15 @@ public class OIDCAuthzRequest extends OAuth2AuthzRequest {
 
     public static class OIDCAuthzRequestBuilder extends AuthzRequestBuilder {
 
-        private String nonce;
-        private String display;
-        private String idTokenHint;
-        private String loginHint;
-        private Set<String> prompts = new HashSet<>();
-        private boolean isLoginRequired = false;
-        private boolean isConsentRequired = false;
-        private boolean isPromptNone = false;
+        protected String nonce;
+        protected String display;
+        protected String idTokenHint;
+        protected String loginHint;
+        protected Set<String> prompts = new HashSet<>();
+        protected List<String> acrValues = new ArrayList();
+        protected boolean isLoginRequired = false;
+        protected boolean isConsentRequired = false;
+        protected boolean isPromptNone = false;
 
         public OIDCAuthzRequestBuilder(HttpServletRequest request, HttpServletResponse response) {
             super(request, response);
@@ -128,6 +136,16 @@ public class OIDCAuthzRequest extends OAuth2AuthzRequest {
 
         public OIDCAuthzRequestBuilder addPrompt(String prompt) {
             this.prompts.add(prompt);
+            return this;
+        }
+
+        public OIDCAuthzRequestBuilder setAcrValues(List<String> acrValues) {
+            this.acrValues = acrValues;
+            return this;
+        }
+
+        public OIDCAuthzRequestBuilder addAcrValue(String acrValue) {
+            this.acrValues.add(acrValue);
             return this;
         }
 

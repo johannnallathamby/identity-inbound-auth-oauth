@@ -982,7 +982,8 @@ public class OAuthServerConfiguration {
                 ConfigElements.OAUTH1_REQUEST_TOKEN_URL));
         if (elem != null) {
             if(StringUtils.isNotBlank(elem.getText())) {
-                oauth1RequestTokenUrl = IdentityUtil.fillURLPlaceholders(elem.getText());
+                oauth1RequestTokenUrl = IdentityUtil.fillURLPlaceholders(elem.getText()
+                );
             }
         }
         elem = oauthConfigElem.getFirstChildWithName(getQNameWithIdentityNS(

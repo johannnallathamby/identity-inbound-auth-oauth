@@ -28,15 +28,24 @@ import com.nimbusds.openid.connect.sdk.claims.ACR;
 import com.nimbusds.openid.connect.sdk.claims.AccessTokenHash;
 import com.nimbusds.openid.connect.sdk.claims.AuthorizedParty;
 import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
+import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.wso2.carbon.identity.application.common.model.ClaimMapping;
 import org.wso2.carbon.identity.application.common.model.ServiceProvider;
 import org.wso2.carbon.identity.core.handler.AbstractIdentityMessageHandler;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2AuthzMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2MessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2TokenMessageContext;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.HandlerManager;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AccessToken;
 import org.wso2.carbon.identity.inbound.auth.oidc.OIDC;
+import org.wso2.carbon.identity.inbound.auth.oidc.bean.context.UserinfoMessageContext;
+import org.wso2.carbon.identity.inbound.auth.oidc.bean.message.request.authz.OIDCAuthzRequest;
+import org.wso2.carbon.identity.inbound.auth.oidc.cache.AuthnResultCache;
+import org.wso2.carbon.identity.inbound.auth.oidc.cache.AuthnResultCacheAccessTokenKey;
+import org.wso2.carbon.identity.inbound.auth.oidc.cache.AuthnResultCacheEntry;
 import org.wso2.carbon.identity.inbound.auth.oidc.model.OIDCServerConfig;
 import org.wso2.carbon.identity.inbound.auth.oidc.util.OIDCUtils;
 
@@ -83,13 +92,25 @@ public class IDTokenHandler extends AbstractIdentityMessageHandler {
         String tenantDomain = messageContext.getRequest().getTenantDomain();
         String clientId = messageContext.getRequest().getClientId();
         String atHash = null;
-        String accessToken = null;
-        if (!JWSAlgorithm.NONE.equals(OIDCServerConfig.getInstance().getIdTokenSigAlg()) &&
-            !"id_token".equalsIgnoreCase(messageContext.getRequest().getResponseType()) &&
-            !"none".equalsIgnoreCase(messageContext.getRequest().getResponseType())) {
-            atHash = OIDCUtils.calculateAtHash(OIDCServerConfig.getInstance().getIdTokenSigAlg(), accessToken);
+        AccessToken accessToken = (AccessToken)messageContext.getParameter(OIDC.ACCESS_TOKEN);
+        if(accessToken != null) {
+            if (!JWSAlgorithm.NONE.equals(OIDCServerConfig.getInstance().getIdTokenSigAlg()) &&
+                !OIDC.ID_TOKEN.equalsIgnoreCase(messageContext.getRequest().getResponseType()) &&
+                !OIDC.NONE.equalsIgnoreCase(messageContext.getRequest().getResponseType())) {
+                atHash = OIDCUtils.calculateAtHash(OIDCServerConfig.getInstance().getIdTokenSigAlg(),
+                                                   accessToken.getAccessToken());
+            }
         }
-        return buildIDToken(subject, username, clientId, atHash, tenantDomain);
+        AuthnResultCacheEntry cacheEntry = getNonceAcrAuthTime(accessToken.getAccessTokenId(), accessToken.getAccessToken());
+        String nonce = null;
+        List<String> acrValues = new ArrayList();
+        long authTime = 0;
+        if(cacheEntry != null) {
+            nonce = cacheEntry.getNonce();
+            acrValues = cacheEntry.getAcrValues();
+            authTime = cacheEntry.getAuthTime();
+        }
+        return buildIDToken(subject, username, clientId, atHash, nonce, acrValues, authTime, tenantDomain);
     }
 
     protected IDTokenClaimsSet buildIDToken(OAuth2TokenMessageContext messageContext) {
@@ -110,26 +131,31 @@ public class IDTokenHandler extends AbstractIdentityMessageHandler {
         String tenantDomain = messageContext.getRequest().getTenantDomain();
         String clientId = messageContext.getClientId();
         String atHash = null;
-        String accessToken = null;
+        AccessToken accessToken = (AccessToken)messageContext.getParameter(OIDC.ACCESS_TOKEN);;
         if (!JWSAlgorithm.NONE.equals(OIDCServerConfig.getInstance().getIdTokenSigAlg())) {
-            atHash = OIDCUtils.calculateAtHash(OIDCServerConfig.getInstance().getIdTokenSigAlg(), accessToken);
+            atHash = OIDCUtils.calculateAtHash(OIDCServerConfig.getInstance().getIdTokenSigAlg(),
+                                               accessToken.getAccessToken());
         }
-        return buildIDToken(subject, username, clientId, atHash, tenantDomain);
+        AuthnResultCacheEntry cacheEntry = getNonceAcrAuthTime(accessToken.getAccessTokenId(), accessToken
+                .getAccessToken());
+        String nonce = null;
+        List<String> acrValues = new ArrayList();
+        long authTime = 0;
+        if(cacheEntry != null) {
+            nonce = cacheEntry.getNonce();
+            acrValues = cacheEntry.getAcrValues();
+            authTime = cacheEntry.getAuthTime();
+        }
+        return buildIDToken(subject, username, clientId, atHash, nonce, acrValues, authTime, tenantDomain);
     }
 
-    protected IDTokenClaimsSet buildIDToken(String subject, String username, String clientId, String atHash,
-                                            String tenantDomain) {
-
+    protected IDTokenClaimsSet buildIDToken(String subject, String username, String clientId, String atHash, String
+            nonce, List<String> acrValues, long authTime, String tenantDomain) {
 
         String idTokenIssuer = OIDCUtils.getIDTokenIssuer(tenantDomain);
         long idTokenLifeTimeInMillis = OIDCServerConfig.getInstance().getIdTokenExpiry() * 1000;
         long curTimeInMillis = Calendar.getInstance().getTimeInMillis();
         long idTokenExpiryTimeInMillis = curTimeInMillis + idTokenLifeTimeInMillis;
-
-        // Get AuthzCode from MessageContext if authz_code grant type
-        String nonceValue = null;
-        LinkedHashSet<String> acrValue = null;
-        long authTime = 0;
 
         Set<String> audiences = OIDCServerConfig.getInstance().getIdTokenAudiences();
         audiences.add(clientId);
@@ -149,15 +175,22 @@ public class IDTokenHandler extends AbstractIdentityMessageHandler {
         if(atHash != null){
             idTokenClaimSet.setAccessTokenHash(new AccessTokenHash(atHash));
         }
-        if (nonceValue != null) {
-            idTokenClaimSet.setNonce(new Nonce(nonceValue));
+        if (nonce != null) {
+            idTokenClaimSet.setNonce(new Nonce(nonce));
         }
-        if (acrValue != null) {
+        if (acrValues != null) {
             idTokenClaimSet.setACR(new ACR("urn:mace:incommon:iap:silver"));
         }
         if (log.isDebugEnabled()) {
             log.debug(idTokenClaimSet.toJSONObject().toJSONString());
         }
         return idTokenClaimSet;
+    }
+
+    protected AuthnResultCacheEntry getNonceAcrAuthTime(String accessTokenId, String accessToken) {
+
+        AuthnResultCacheAccessTokenKey cacheKey = new AuthnResultCacheAccessTokenKey(accessTokenId, accessToken);
+        AuthnResultCacheEntry cacheEntry = AuthnResultCache.getInstance().getValueFromCache(cacheKey);
+        return cacheEntry;
     }
 }

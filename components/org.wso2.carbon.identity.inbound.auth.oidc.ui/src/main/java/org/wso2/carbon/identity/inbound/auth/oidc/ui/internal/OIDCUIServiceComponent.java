@@ -22,10 +22,14 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.osgi.service.component.ComponentContext;
 import org.wso2.carbon.identity.application.mgt.AbstractInboundAuthenticatorConfig;
+import org.wso2.carbon.identity.core.util.IdentityCoreInitializedEvent;
 import org.wso2.carbon.identity.inbound.auth.oidc.ui.OIDCInboundAuthenticatorConfig;
 
 /**
  * @scr.component name="oidc.ui.component" immediate="true"
+ * @scr.reference name="identityCoreInitializedEventService"
+ * interface="org.wso2.carbon.identity.core.util.IdentityCoreInitializedEvent" cardinality="1..1"
+ * policy="dynamic" bind="setIdentityCoreInitializedEventService" unbind="unsetIdentityCoreInitializedEventService"
  */
 public class OIDCUIServiceComponent {
 
@@ -33,10 +37,14 @@ public class OIDCUIServiceComponent {
 
     protected void activate(ComponentContext context) {
 
-        context.getBundleContext().registerService(AbstractInboundAuthenticatorConfig.class.getName(),
-                                                   new OIDCInboundAuthenticatorConfig(), null);
-        if (log.isDebugEnabled()) {
-            log.debug("OIDC UI bundle is activated");
+        try {
+            context.getBundleContext().registerService(AbstractInboundAuthenticatorConfig.class.getName(),
+                                                       new OIDCInboundAuthenticatorConfig(), null);
+            if (log.isDebugEnabled()) {
+                log.debug("OIDC UI bundle is activated");
+            }
+        } catch (Throwable e) {
+            log.error("Error occurred while registering OIDCInboundAuthenticatorConfig");
         }
     }
 
@@ -45,5 +53,15 @@ public class OIDCUIServiceComponent {
         if (log.isDebugEnabled()) {
             log.debug("OIDC UI bundle is deactivated");
         }
+    }
+
+    protected void setIdentityCoreInitializedEventService(IdentityCoreInitializedEvent identityCoreInitializedEvent) {
+        /* reference IdentityCoreInitializedEvent service to guarantee that this component will wait until identity core
+         is started */
+    }
+
+    protected void unsetIdentityCoreInitializedEventService(IdentityCoreInitializedEvent identityCoreInitializedEvent) {
+        /* reference IdentityCoreInitializedEvent service to guarantee that this component will wait until identity core
+         is started */
     }
 }

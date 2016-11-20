@@ -26,14 +26,11 @@ import org.apache.oltu.oauth2.common.OAuth;
 import org.wso2.carbon.identity.application.authentication.framework.exception.FrameworkException;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityMessageContext;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
-import org.wso2.carbon.identity.application.authentication.framework.inbound.InboundConstants;
-import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticationResult;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2TokenMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.token.OAuth2TokenRequest;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.token.TokenResponse;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.common.ClientType;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.dao.jdbc.JDBCOAuth2DAO;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2.ClientType;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2ClientException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2Exception;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.HandlerManager;
@@ -49,6 +46,7 @@ import org.wso2.carbon.identity.inbound.auth.oidc.cache.AuthnResultCacheEntry;
 import org.wso2.carbon.identity.inbound.auth.oidc.handler.OIDCHandlerManager;
 
 import java.util.HashMap;
+import java.util.List;
 
 /*
  * InboundRequestProcessor for OAuth2 Token Endpoint
@@ -101,12 +99,15 @@ public class OIDCTokenProcessor extends TokenProcessor {
 
         AccessToken accessToken = issueAccessToken(messageContext);
 
-        // This cache is used for later retrieving AuthenticationResult from Token endpoint and Userinfo endpoint
+        // Here we are replacing the AuthenticationResultCacheEntry with AccessTokenKey to be able to read it from
+        // Userinfo endpoint.
         // The day we can invoke Authentication Framework via Java APIs, we can get rid of this hack
         AuthzCode authzCode = (AuthzCode) messageContext.getParameter(OAuth2.AUTHZ_CODE);
         if (authzCode != null) {
             replaceEntryWithAccessToken(authzCode.getAuthzCodeId(), authzCode.getAuthzCode(),
                                         accessToken.getAccessTokenId(), accessToken.getAccessToken());
+        } else {
+            // need to think how to generate Userinfo response for password grant type
         }
 
         return buildTokenResponse(accessToken, messageContext);
@@ -178,12 +179,6 @@ public class OIDCTokenProcessor extends TokenProcessor {
         AccessToken accessToken = HandlerManager.getInstance().issueAccessToken(messageContext);
         messageContext.addParameter(OIDC.ACCESS_TOKEN, accessToken);
         return accessToken;
-    }
-
-    protected void storeAuthnResultToCache(String tokenId, String token, AuthenticationResult authnResult) {
-        AuthnResultCacheAccessTokenKey key = new AuthnResultCacheAccessTokenKey(tokenId, token);
-        AuthnResultCacheEntry entry = new AuthnResultCacheEntry(authnResult);
-        AuthnResultCache.getInstance().addToCache(key, entry);
     }
 
     protected void replaceEntryWithAccessToken(String codeId, String code, String accessTokenId, String accessToken) {

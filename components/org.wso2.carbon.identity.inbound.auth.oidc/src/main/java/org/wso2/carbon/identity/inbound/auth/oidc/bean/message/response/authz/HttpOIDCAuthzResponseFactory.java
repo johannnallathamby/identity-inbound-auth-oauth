@@ -28,12 +28,14 @@ import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
 import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
 import org.apache.oltu.oauth2.common.message.OAuthResponse;
+import org.apache.oltu.oauth2.common.message.types.ResponseType;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.HttpIdentityResponse;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityResponse;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.authz.AuthzResponse;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.authz.HttpAuthzResponseFactory;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2RuntimeException;
+import org.wso2.carbon.identity.inbound.auth.oidc.OIDC;
 import org.wso2.carbon.identity.inbound.auth.oidc.bean.message.response.token.OIDCTokenResponse;
 import org.wso2.carbon.identity.inbound.auth.oidc.model.OIDCServerConfig;
 import org.wso2.carbon.identity.inbound.auth.oidc.util.OIDCUtils;
@@ -77,6 +79,11 @@ public class HttpOIDCAuthzResponseFactory extends HttpAuthzResponseFactory {
                                                "response");
         }
         builder.setStatusCode(response.getResponseStatus());
+        String redirectUri = response.getLocationUri();
+        if(!((OIDCAuthzResponse) identityResponse).getResponseType().contains(ResponseType.CODE.toString())) {
+           redirectUri = redirectUri.replace("?","#");
+        }
+        builder.setRedirectURL(response.getLocationUri());
         builder.setHeaders(response.getHeaders());
         builder.addHeader(OAuth2.Header.CACHE_CONTROL,
                           OAuth2.HeaderValue.CACHE_CONTROL_NO_STORE);

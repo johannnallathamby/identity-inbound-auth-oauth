@@ -22,6 +22,23 @@ import org.apache.commons.lang.StringUtils;
 
 public class OAuth2 {
 
+    public enum ClientType {
+
+        PUBLIC("PUBLIC"),
+        CONFIDENTIAL("CONFIDENTIAL");
+
+        private String value;
+
+        ClientType(String value) {
+            this.value = value;
+        }
+
+        @Override
+        public String toString() {
+            return value;
+        }
+    }
+
     public static final long UNASSIGNED_VALIDITY_PERIOD = -1l;
 
     public static class TokenState {

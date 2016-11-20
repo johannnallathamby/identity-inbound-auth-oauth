@@ -47,6 +47,7 @@ import org.wso2.carbon.identity.inbound.auth.oidc.cache.AuthnResultCacheCodeKey;
 import org.wso2.carbon.identity.inbound.auth.oidc.cache.AuthnResultCacheEntry;
 import org.wso2.carbon.identity.inbound.auth.oidc.handler.OIDCHandlerManager;
 
+import java.util.List;
 import java.util.Set;
 
 /*
@@ -129,7 +130,11 @@ public class OIDCCodeResponseProcessor extends CodeResponseProcessor {
         AuthzCode authzCode = (AuthzCode) messageContext.getParameter(OAuth2.AUTHZ_CODE);
         AuthenticationResult authnResult = (AuthenticationResult) messageContext.getParameter(InboundConstants.RequestProcessor
                                                                                                       .AUTHENTICATION_RESULT);
-        storeAuthnResultToCache(authzCode.getAuthzCodeId(), authzCode.getAuthzCode(), authnResult);
+        String nonce = ((OIDCAuthzRequest)messageContext.getRequest()).getNonce();
+        List<String> acrValues = ((OIDCAuthzRequest)messageContext.getRequest()).getAcrValues();
+        long authTime = (Long)authnResult.getProperty("auth_time");
+        storeAuthnResultToCache(authzCode.getAuthzCodeId(), authzCode.getAuthzCode(), authnResult, nonce, acrValues,
+                                authTime);
 
         return buildAuthzResponse(messageContext);
     }
@@ -160,9 +165,13 @@ public class OIDCCodeResponseProcessor extends CodeResponseProcessor {
         builder.setIdTokenClaimsSet(idTokenClaimsSet);
     }
 
-    protected void storeAuthnResultToCache(String codeId, String code, AuthenticationResult authnResult) {
+    protected void storeAuthnResultToCache(String codeId, String code, AuthenticationResult authnResult, String
+            nonce, List<String> acrValues, long authTime) {
         AuthnResultCacheCodeKey key = new AuthnResultCacheCodeKey(codeId, code);
         AuthnResultCacheEntry entry = new AuthnResultCacheEntry(authnResult);
+        entry.setNonce(nonce);
+        entry.setAcrValues(acrValues);
+        entry.setAuthTime(authTime);
         AuthnResultCache.getInstance().addToCache(key,entry);
     }
 }

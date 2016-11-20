@@ -22,14 +22,18 @@ import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2AuthzMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.authz.AuthzResponse;
 
+import java.util.Set;
+
 public class OIDCAuthzResponse extends AuthzResponse {
 
     protected IDTokenClaimsSet idTokenClaimsSet;
+    protected String responseType;
     protected String tenantDomain;
 
     protected OIDCAuthzResponse(OIDCAuthzResponseBuilder builder) {
         super(builder);
-        this.idTokenClaimsSet = (builder).idTokenClaimsSet;
+        this.idTokenClaimsSet = builder.idTokenClaimsSet;
+        this.responseType = builder.responseType;
         this.tenantDomain = builder.tenantDomain;
     }
 
@@ -41,15 +45,21 @@ public class OIDCAuthzResponse extends AuthzResponse {
         return tenantDomain;
     }
 
+    public String getResponseType() {
+        return responseType;
+    }
+
     public static class OIDCAuthzResponseBuilder extends AuthzResponseBuilder {
 
         protected IDTokenClaimsSet idTokenClaimsSet;
+        protected String responseType;
         protected String tenantDomain;
 
         public OIDCAuthzResponseBuilder(AuthzResponseBuilder authzResponseBuilder,
                                         OAuth2AuthzMessageContext messageContext) {
             super(messageContext);
             this.tenantDomain = messageContext.getRequest().getTenantDomain();
+            this.responseType = messageContext.getRequest().getResponseType();
             this.builder = authzResponseBuilder.getBuilder();
         }
 

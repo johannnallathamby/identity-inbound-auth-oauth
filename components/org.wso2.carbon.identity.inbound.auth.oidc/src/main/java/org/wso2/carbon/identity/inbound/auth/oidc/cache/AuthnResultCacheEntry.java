@@ -21,9 +21,14 @@ package org.wso2.carbon.identity.inbound.auth.oidc.cache;
 import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticationResult;
 import org.wso2.carbon.identity.application.common.cache.CacheEntry;
 
+import java.util.List;
+
 public class AuthnResultCacheEntry extends CacheEntry {
 
     AuthenticationResult authnResult;
+    String nonce;
+    List<String> acrValues;
+    long authTime = 0;
 
     public AuthnResultCacheEntry(AuthenticationResult authnResult) {
         this.authnResult = authnResult;
@@ -31,5 +36,29 @@ public class AuthnResultCacheEntry extends CacheEntry {
 
     public AuthenticationResult getAuthnResult() {
         return authnResult;
+    }
+
+    public void setNonce(String nonce) {
+        this.nonce = nonce;
+    }
+
+    public String getNonce() {
+        return nonce;
+    }
+
+    public void setAcrValues(List<String> acrValues) {
+        this.acrValues = acrValues;
+    }
+
+    public List<String> getAcrValues() {
+        return acrValues;
+    }
+
+    public void setAuthTime(long authTime) {
+        this.authTime = authTime;
+    }
+
+    public long getAuthTime() {
+        return authTime;
     }
 }

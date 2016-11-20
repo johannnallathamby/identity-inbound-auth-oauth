@@ -22,27 +22,30 @@ import org.wso2.carbon.identity.application.common.model.Property;
 import org.wso2.carbon.identity.application.common.util.IdentityApplicationConstants;
 import org.wso2.carbon.identity.application.mgt.AbstractInboundAuthenticatorConfig;
 
+/**
+ * OIDC UI AuthenticatorConfig
+ */
 public class OIDCInboundAuthenticatorConfig extends AbstractInboundAuthenticatorConfig {
 
     @Override
     public String getName() {
-        return IdentityApplicationConstants.OAuth2.NAME;
+        return "test";
     }
 
     @Override
     public String getConfigName() {
-        return IdentityApplicationConstants.OAuth2.NAME;
+        return "test";
     }
 
     @Override
     public String getFriendlyName() {
-        return "OAuth2/OIDC Inbound Configuration";
+        return "OAuth2/OpenID Connect Inbound Configuration";
     }
 
     @Override
     public Property[] getConfigurationProperties() {
 
-        Property[] configProperties = new Property[7];
+        Property[] configProperties = new Property[15];
 
         Property clientId = new Property();
         clientId.setName(IdentityApplicationConstants.OAuth2.CLIENT_ID);
@@ -74,53 +77,123 @@ public class OIDCInboundAuthenticatorConfig extends AbstractInboundAuthenticator
         redirectURI.setRequired(false);
         configProperties[2] = redirectURI;
 
-        Property allowedGrantTypes = new Property();
-        allowedGrantTypes.setName("allowed_grant_types");
-        allowedGrantTypes.setDescription("OAuth2/OpenID Connect Grant types allowed for this service provider.");
-        allowedGrantTypes.setDisplayName("Allowed Grant Types");
-        allowedGrantTypes.setDisplayOrder(4);
-        allowedGrantTypes.setAdvanced(false);
-        allowedGrantTypes.setConfidential(false);
-        allowedGrantTypes.setRequired(true);
-        allowedGrantTypes.setDefaultValue("all");
-        allowedGrantTypes.setValue("all");
-        configProperties[3] = allowedGrantTypes;
+        Property supportedGrantType1 = new Property();
+        supportedGrantType1.setName("supported_grant_type.1");
+        supportedGrantType1.setDisplayName("authorization_code");
+        supportedGrantType1.setDisplayOrder(4);
+        supportedGrantType1.setType("checkbox");
+        supportedGrantType1.setRequired(false);
+        supportedGrantType1.setDefaultValue("true");
+        supportedGrantType1.setValue("true");
+        configProperties[3] = supportedGrantType1;
 
-        Property allowedResponseTypes = new Property();
-        allowedResponseTypes.setName("allowed_response_types");
-        allowedResponseTypes.setDescription("OAuth2/OpenID Connect Response types allowed for this service provider.");
-        allowedResponseTypes.setDisplayName("Allowed Response Types");
-        allowedResponseTypes.setDisplayOrder(5);
-        allowedResponseTypes.setAdvanced(false);
-        allowedResponseTypes.setConfidential(false);
-        allowedResponseTypes.setRequired(true);
-        allowedResponseTypes.setDefaultValue("all");
-        allowedResponseTypes.setValue("all");
-        configProperties[4] = allowedResponseTypes;
+        Property supportedGrantType2 = new Property();
+        supportedGrantType2.setName("supported_grant_type.2");
+        supportedGrantType2.setDisplayName("password");
+        supportedGrantType2.setDisplayOrder(5);
+        supportedGrantType2.setType("checkbox");
+        supportedGrantType2.setRequired(false);
+        supportedGrantType2.setDefaultValue("true");
+        supportedGrantType2.setValue("true");
+        configProperties[4] = supportedGrantType2;
+
+        Property supportedGrantType3 = new Property();
+        supportedGrantType3.setName("supported_grant_type.3");
+        supportedGrantType3.setDisplayName("client_credentials");
+        supportedGrantType3.setDisplayOrder(6);
+        supportedGrantType3.setType("checkbox");
+        supportedGrantType3.setRequired(false);
+        supportedGrantType3.setDefaultValue("true");
+        supportedGrantType3.setValue("true");
+        configProperties[5] = supportedGrantType3;
+
+        Property supportedGrantType4 = new Property();
+        supportedGrantType4.setName("supported_grant_type.4");
+        supportedGrantType4.setDisplayName("refresh_token");
+        supportedGrantType4.setDisplayOrder(7);
+        supportedGrantType4.setType("checkbox");
+        supportedGrantType4.setRequired(false);
+        supportedGrantType4.setDefaultValue("true");
+        supportedGrantType4.setValue("true");
+        configProperties[6] = supportedGrantType4;
+
+        Property supportedGrantType5 = new Property();
+        supportedGrantType5.setName("supported_grant_type.5");
+        supportedGrantType5.setDisplayName("urn:ietf:params:oauth:grant-type:saml2-bearer");
+        supportedGrantType5.setDisplayOrder(8);
+        supportedGrantType5.setType("checkbox");
+        supportedGrantType5.setRequired(false);
+        supportedGrantType5.setDefaultValue("true");
+        supportedGrantType5.setValue("true");
+        configProperties[7] = supportedGrantType5;
+
+        Property supportedResponseType1 = new Property();
+        supportedResponseType1.setName("supported_response_type.1");
+        supportedResponseType1.setDisplayName("code");
+        supportedResponseType1.setDisplayOrder(9);
+        supportedResponseType1.setType("checkbox");
+        supportedResponseType1.setRequired(false);
+        supportedResponseType1.setDefaultValue("true");
+        supportedResponseType1.setValue("true");
+        configProperties[8] = supportedResponseType1;
+
+        Property supportedResponseType2 = new Property();
+        supportedResponseType2.setName("supported_response_type.2");
+        supportedResponseType2.setDisplayName("token");
+        supportedResponseType2.setDisplayOrder(10);
+        supportedResponseType2.setType("checkbox");
+        supportedResponseType2.setRequired(false);
+        supportedResponseType2.setDefaultValue("true");
+        supportedResponseType2.setValue("true");
+        configProperties[9] = supportedResponseType2;
+
+        Property supportedResponseType3 = new Property();
+        supportedResponseType3.setName("supported_response_type.3");
+        supportedResponseType3.setDisplayName("id_token token");
+        supportedResponseType3.setDisplayOrder(11);
+        supportedResponseType3.setType("checkbox");
+        supportedResponseType3.setRequired(false);
+        supportedResponseType3.setDefaultValue("true");
+        supportedResponseType3.setValue("true");
+        configProperties[10] = supportedResponseType3;
+
+        Property supportedResponseType4 = new Property();
+        supportedResponseType4.setName("supported_response_type.4");
+        supportedResponseType4.setDisplayName("id_token");
+        supportedResponseType4.setType("checkbox");
+        supportedResponseType4.setDisplayOrder(12);
+        supportedResponseType4.setRequired(false);
+        supportedResponseType4.setDefaultValue("true");
+        supportedResponseType4.setValue("true");
+        configProperties[11] = supportedResponseType4;
 
         Property pkceMandatory = new Property();
         pkceMandatory.setName("pkce_mandatory");
         pkceMandatory.setDescription("Only allow applications that bear PKCE Code Challenge with them.");
         pkceMandatory.setDisplayName("PKCE Mandatory");
-        pkceMandatory.setDisplayOrder(6);
-        pkceMandatory.setAdvanced(false);
-        pkceMandatory.setConfidential(false);
-        pkceMandatory.setRequired(false);
+        pkceMandatory.setDisplayOrder(13);
+        pkceMandatory.setType("checkbox");
         pkceMandatory.setDefaultValue("false");
         pkceMandatory.setValue("false");
-        configProperties[5] = pkceMandatory;
+        configProperties[12] = pkceMandatory;
 
         Property pkcePlainAllowed = new Property();
         pkcePlainAllowed.setName("pkce_plain_allowed");
         pkcePlainAllowed.setDescription("Server supports 'S256' PKCE tranformation algorithm by default.");
         pkcePlainAllowed.setDisplayName("Support PKCE 'Plain' Transform Algorithm");
-        pkcePlainAllowed.setDisplayOrder(7);
-        pkcePlainAllowed.setAdvanced(false);
-        pkcePlainAllowed.setConfidential(false);
-        pkcePlainAllowed.setRequired(false);
+        pkcePlainAllowed.setDisplayOrder(14);
+        pkcePlainAllowed.setType("checkbox");
         pkcePlainAllowed.setDefaultValue("false");
         pkcePlainAllowed.setValue("false");
-        configProperties[6] = pkcePlainAllowed;
+        configProperties[13] = pkcePlainAllowed;
+
+        Property clientSecretState = new Property();
+        clientSecretState.setName("client_secret_state");
+        clientSecretState.setDisplayOrder(15);
+        clientSecretState.setType("hidden");
+        clientSecretState.setDefaultValue("ACTIVE");
+        clientSecretState.setValue("ACTIVE");
+        configProperties[14] = clientSecretState;
 
         return configProperties;
     }
