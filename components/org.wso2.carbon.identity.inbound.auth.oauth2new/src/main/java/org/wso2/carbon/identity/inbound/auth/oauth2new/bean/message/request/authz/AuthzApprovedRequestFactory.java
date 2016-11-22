@@ -51,14 +51,7 @@ public class AuthzApprovedRequestFactory extends OAuth2IdentityRequestFactory {
 
         AuthzApprovedRequest.AuthzApprovedRequestBuilder builder = new AuthzApprovedRequest.AuthzApprovedRequestBuilder
                 (request, response);
-        try {
-            super.create(builder, request, response);
-        } catch (FrameworkClientException e) {
-            throw OAuth2ClientException.error(e.getMessage(), e);
-        }
-        builder.setSessionDataKey(request.getParameter(InboundConstants.RequestProcessor
-                .CONTEXT_KEY));
-        builder.setConsent(request.getParameter(OAuth2.CONSENT));
+        create(builder, request, response);
         return builder;
     }
 

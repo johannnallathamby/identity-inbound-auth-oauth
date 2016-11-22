@@ -26,7 +26,7 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2Exception
 /*
  * To authenticate OAuth2 clients
  */
-public class AuthorizationGrantHandler extends AbstractIdentityMessageHandler {
+public abstract class AuthorizationGrantHandler extends AbstractIdentityMessageHandler {
 
     @Override
     public String getName() {

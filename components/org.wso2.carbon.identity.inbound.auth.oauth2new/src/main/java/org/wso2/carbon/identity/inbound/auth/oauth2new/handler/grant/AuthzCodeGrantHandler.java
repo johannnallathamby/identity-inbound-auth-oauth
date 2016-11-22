@@ -18,8 +18,16 @@
 
 package org.wso2.carbon.identity.inbound.auth.oauth2new.handler.grant;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.oltu.oauth2.common.message.types.GrantType;
+import org.wso2.carbon.identity.application.common.model.InboundAuthenticationRequestConfig;
+import org.wso2.carbon.identity.application.common.model.Property;
+import org.wso2.carbon.identity.application.common.model.ServiceProvider;
+import org.wso2.carbon.identity.application.common.util.IdentityApplicationConstants;
+import org.wso2.carbon.identity.application.common.util.IdentityApplicationManagementUtil;
 import org.wso2.carbon.identity.core.bean.context.MessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2TokenMessageContext;
@@ -30,8 +38,20 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.HandlerManager;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.dao.OAuth2DAO;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AuthzCode;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.OAuth2ServerConfig;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.processor.authz.ROApprovalProcessor;
+
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class AuthzCodeGrantHandler extends AuthorizationGrantHandler {
+
+    private static final Log log = LogFactory.getLog(AuthzCodeGrantHandler.class);
+
+    //Precompile PKCE Regex pattern for performance improvement
+    private static Pattern pkceCodeVerifierPattern = Pattern.compile("[\\w\\-\\._~]+");
 
     @Override
     public String getName() {
@@ -82,8 +102,103 @@ public class AuthzCodeGrantHandler extends AuthorizationGrantHandler {
             throw OAuth2ClientException.error("Authorization code expired");
         }
 
+        ServiceProvider sp = (ServiceProvider)messageContext.getParameter(OAuth2.OAUTH2_SERVICE_PROVIDER);
+        sp.getInboundAuthenticationConfig().getInboundAuthenticationRequestConfigs();
+        boolean isPkceMandatory = false;
+        boolean isPkcePlainAllowed = false;
+        for(InboundAuthenticationRequestConfig config:sp.getInboundAuthenticationConfig()
+                .getInboundAuthenticationRequestConfigs()) {
+            if(IdentityApplicationConstants.OAuth2.NAME.equals(config.getInboundAuthType())) {
+                Property[] properties = config.getProperties();
+                isPkceMandatory = Boolean.parseBoolean(IdentityApplicationManagementUtil.getPropertyValue(properties,
+                                                                                                         "pkce_mandatory"));
+                isPkcePlainAllowed = Boolean.parseBoolean(IdentityApplicationManagementUtil.getPropertyValue(properties,
+                                                                                                             "pkce_plain_allowed"));
+                break;
+            }
+        }
+        doPKCEValidation(authzCode.getPkceCodeChallenge(), ((AuthzCodeGrantRequest) messageContext.getRequest())
+                                 .getPKCECodeVerifier(), authzCode.getPkceCodeChallengeMethod(), isPkceMandatory,
+                         isPkcePlainAllowed);
+
         messageContext.setAuthzUser(messageContext.getAuthzUser());
         messageContext.setApprovedScopes(authzCode.getScopes());
         messageContext.addParameter(OAuth2.AUTHZ_CODE, authzCode);
+    }
+
+    protected void doPKCEValidation(String referenceCodeChallenge, String codeVerifier, String challenge_method,
+                                    boolean isPkceMandatory, boolean isPkcePlainAllowed) throws OAuth2ClientException {
+
+        if (isPkceMandatory || referenceCodeChallenge != null) {
+
+            //As per RFC 7636 Fallback to 'plain' if no code_challenge_method parameter is sent
+            if(challenge_method == null || challenge_method.trim().length() == 0) {
+                challenge_method = "plain";
+            }
+
+            //if app with no PKCE code verifier arrives
+            if ((codeVerifier == null || codeVerifier.trim().length() == 0)) {
+                //if pkce is mandatory, throw error
+                if(isPkceMandatory) { // if pkce mandatory for client
+                    throw OAuth2ClientException.error("No PKCE code verifier found.PKCE is mandatory for this " +
+                                                      "oAuth 2.0 application.");
+                } else {
+                    //PKCE is optional, see if the authz code was requested with a PKCE challenge
+                    if(referenceCodeChallenge == null || referenceCodeChallenge.trim().length() == 0) {
+                        //since no PKCE challenge was provided
+                        return;
+                    } else {
+                        throw OAuth2ClientException.error("Empty PKCE code_verifier sent. This authorization code " +
+                                                          "requires a PKCE verification to obtain an access token.");
+                    }
+                }
+            }
+            //verify that the code verifier is upto spec as per RFC 7636
+            if(!validatePKCECodeVerifier(codeVerifier)) {
+                throw OAuth2ClientException.error("Code verifier used is not up to RFC 7636 specifications.");
+            }
+            if (OAuth2.PKCE_PLAIN_CHALLENGE.equals(challenge_method)) {
+                //if the current application explicitly doesn't support plain, throw exception
+                if(!isPkcePlainAllowed) { // if pkce plain is supported
+                    throw OAuth2ClientException.error("This application does not allow 'plain' transformation algorithm.");
+                }
+                if (!referenceCodeChallenge.equals(codeVerifier)) {
+                    throw OAuth2ClientException.error("code_verifier verification failed.");
+                }
+            } else if (OAuth2.PKCE_S256_CHALLENGE.equals(challenge_method)) {
+
+                try {
+                    MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
+
+                    byte[] hash = messageDigest.digest(codeVerifier.getBytes(StandardCharsets.US_ASCII));
+                    //Trim the base64 string to remove trailing CR LF characters.
+                    String referencePKCECodeChallenge = new String(Base64.encodeBase64URLSafe(hash),
+                                                                   StandardCharsets.UTF_8).trim();
+                    if (!referencePKCECodeChallenge.equals(referenceCodeChallenge)) {
+                        throw OAuth2ClientException.error("code verifier verification failed.");
+                    }
+                } catch (NoSuchAlgorithmException e) {
+                    throw OAuth2ClientException.error("Failed to create SHA256 Message Digest.");
+                }
+            } else {
+                //Invalid OAuth2 token response
+                throw OAuth2ClientException.error("Invalid OAuth2 Token Response. Invalid PKCE Code Challenge Method: '"
+                                                  + challenge_method + "'");
+            }
+        }
+        //pkce validation successful
+    }
+
+    /**
+     * Verifies if the PKCE code verifier is upto specification as per RFC 7636
+     * @param codeVerifier PKCE Code Verifier sent with the token request
+     * @return
+     */
+    private boolean validatePKCECodeVerifier(String codeVerifier) {
+        Matcher pkceCodeVerifierMatcher = pkceCodeVerifierPattern.matcher(codeVerifier);
+        if(!pkceCodeVerifierMatcher.matches() || (codeVerifier.length() < 43 || codeVerifier.length() > 128)) {
+            return false;
+        }
+        return true;
     }
 }

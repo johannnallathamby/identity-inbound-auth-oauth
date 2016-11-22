@@ -50,13 +50,7 @@ public class RefreshGrantFactory extends TokenRequestFactory {
 
         RefreshGrantRequest.RefreshGrantBuilder builder = new RefreshGrantRequest.RefreshGrantBuilder
                 (request, response);
-        try {
-            super.create(builder, request, response);
-        } catch (OAuth2ClientException e) {
-            throw OAuth2ClientException.error(e.getMessage(), e);
-        }
-        builder.setRefreshToken(request.getParameter(OAuth.OAUTH_REFRESH_TOKEN));
-        builder.setScopes(OAuth2Util.buildScopeSet(request.getParameter(OAuth.OAUTH_SCOPE)));
+        create(builder, request, response);
         return builder;
     }
 

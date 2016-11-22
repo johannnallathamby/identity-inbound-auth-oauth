@@ -35,7 +35,7 @@ public class OAuth2ServerConfig {
     private static volatile OAuth2ServerConfig instance = new OAuth2ServerConfig();
 
     private OAuth2ServerConfig() {
-        buildOAuthServerConfig();
+        buildOAuth2ServerConfig();
     }
 
     public static OAuth2ServerConfig getInstance() {
@@ -56,7 +56,7 @@ public class OAuth2ServerConfig {
     private boolean isRefreshTokenRenewalEnabled = true;
     private boolean isSkipConsentPage = false;
 
-    private void buildOAuthServerConfig() {
+    private void buildOAuth2ServerConfig() {
 
         IdentityConfigParser configParser = IdentityConfigParser.getInstance();
         OMElement oauthElem = configParser.getConfigElement(CONFIG_ELEM_OAUTH);

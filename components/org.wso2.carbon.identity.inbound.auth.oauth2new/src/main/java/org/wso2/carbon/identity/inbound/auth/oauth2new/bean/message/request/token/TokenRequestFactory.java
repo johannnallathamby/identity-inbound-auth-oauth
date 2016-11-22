@@ -47,12 +47,7 @@ public class TokenRequestFactory extends OAuth2IdentityRequestFactory {
                                                          HttpServletResponse response) throws OAuth2ClientException {
 
         OAuth2TokenRequest.TokenRequestBuilder builder = new OAuth2TokenRequest.TokenRequestBuilder(request, response);
-        try {
-            super.create(builder, request, response);
-        } catch (FrameworkClientException e) {
-            throw OAuth2ClientException.error(e.getMessage(), e);
-        }
-        builder.setGrantType(request.getParameter(OAuth.OAUTH_GRANT_TYPE));
+        create(builder, request, response);
         return builder;
     }
 

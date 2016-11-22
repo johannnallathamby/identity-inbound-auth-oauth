@@ -321,7 +321,9 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
                     Calendar.getInstance(TimeZone.getTimeZone("UTC")));
             prepStmt.setLong(9, authzCode.getValidityPeriod());
             prepStmt.setString(10, authzCode.getAuthzUser().getAuthenticatedSubjectIdentifier());
-            prepStmt.setString(11, processor.getPreprocessedClientId(authzCode.getClientId()));
+            prepStmt.setString(11, authzCode.getPkceCodeChallenge());
+            prepStmt.setString(12, authzCode.getPkceCodeChallengeMethod());
+            prepStmt.setString(13, processor.getPreprocessedClientId(authzCode.getClientId()));
 
             prepStmt.execute();
             connection.commit();
@@ -359,6 +361,8 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
                 String codeState = resultSet.getString(9);
                 String subjectIdentifier = resultSet.getString(10);
                 String clientId = resultSet.getString(11);
+                String pkceCodeChallenge = resultSet.getString(12);
+                String pkceCodeChallengeMethod = resultSet.getString(13);
                 AuthenticatedUser user = new AuthenticatedUser();
                 user.setUserName(authorizedUser);
                 user.setTenantDomain(tenantDomain);
@@ -368,6 +372,8 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
                         issuedTime, validityPeriod, codeState);
                 authorizationCode.setAuthzCodeId(authzCodeId);
                 authorizationCode.setScopes(OAuth2Util.buildScopeSet(scopeString));
+                authorizationCode.setPkceCodeChallenge(pkceCodeChallenge);
+                authorizationCode.setPkceCodeChallengeMethod(pkceCodeChallengeMethod);
             }
             connection.commit();
         } catch (SQLException e) {

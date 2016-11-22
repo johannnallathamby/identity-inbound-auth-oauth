@@ -29,11 +29,14 @@ public class OAuth2AuthzRequest extends OAuth2IdentityRequest {
 
     private static final long serialVersionUID = 6738091486923517921L;
 
-    private String responseType;
-    private String clientId;
-    private String redirectURI;
-    private String state;
-    private Set<String> scopes = new HashSet<>();
+    protected String responseType;
+    protected String clientId;
+    protected String redirectURI;
+    protected String state;
+    protected Set<String> scopes = new HashSet<>();
+    protected String pkceCodeChallenge;
+
+    protected String pkceCodeChallengeMethod;
 
     protected OAuth2AuthzRequest(AuthzRequestBuilder builder) {
         super(builder);
@@ -42,6 +45,8 @@ public class OAuth2AuthzRequest extends OAuth2IdentityRequest {
         this.redirectURI = builder.redirectURI;
         this.state = builder.state;
         this.scopes = builder.scopes;
+        this.pkceCodeChallenge = builder.pkceCodeChallenge;
+        this.pkceCodeChallengeMethod = builder.pkceCodeChallengeMethod;
     }
 
     public String getResponseType() {
@@ -64,13 +69,23 @@ public class OAuth2AuthzRequest extends OAuth2IdentityRequest {
         return scopes;
     }
 
+    public String getPkceCodeChallenge() {
+        return pkceCodeChallenge;
+    }
+
+    public String getPkceCodeChallengeMethod() {
+        return pkceCodeChallengeMethod;
+    }
+
     public static class AuthzRequestBuilder extends OAuth2IdentityRequestBuilder {
 
-        private String responseType;
-        private String clientId;
-        private String redirectURI;
-        private String state;
-        private Set<String> scopes = new HashSet<>();
+        protected String responseType;
+        protected String clientId;
+        protected String redirectURI;
+        protected String state;
+        protected Set<String> scopes = new HashSet<>();
+        protected String pkceCodeChallenge;
+        protected String pkceCodeChallengeMethod;
 
         public AuthzRequestBuilder(HttpServletRequest request, HttpServletResponse response) {
             super(request, response);
@@ -107,6 +122,16 @@ public class OAuth2AuthzRequest extends OAuth2IdentityRequest {
 
         public AuthzRequestBuilder addScope(String scope) {
             this.scopes.add(scope);
+            return this;
+        }
+
+        public AuthzRequestBuilder setPkceCodeChallenge(String pkceCodeChallenge) {
+            this.pkceCodeChallenge = pkceCodeChallenge;
+            return this;
+        }
+
+        public AuthzRequestBuilder setPkceCodeChallengeMethod(String pkceCodeChallengeMethod) {
+            this.pkceCodeChallengeMethod = pkceCodeChallengeMethod;
             return this;
         }
 

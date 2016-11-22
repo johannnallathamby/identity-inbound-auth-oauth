@@ -50,10 +50,7 @@ public class PasswordGrantFactory extends TokenRequestFactory {
 
         PasswordGrantRequest.PasswordGrantBuilder builder = new PasswordGrantRequest.PasswordGrantBuilder
                 (request, response);
-        super.create(builder, request, response);
-        builder.setUsername(request.getParameter(OAuth.OAUTH_USERNAME));
-        builder.setPassword(request.getParameter(OAuth.OAUTH_PASSWORD).toCharArray());
-        builder.setScopes(OAuth2Util.buildScopeSet(request.getParameter(OAuth.OAUTH_SCOPE)));
+        create(builder, request, response);
         return builder;
     }
 

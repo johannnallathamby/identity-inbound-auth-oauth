@@ -48,5 +48,6 @@ public class OIDC {
     public static final String IDP_ENTITY_ID = "IdPEntityId";
     public static final String NONE = "none";
 
-
+    public static final String OIDC_SCOPE_CONFIG_FILE_NAME = "oidc-scope-config.xml";
+    public static final String OIDC_SCOPE_CONFIG_RESOURCE_PATH = "/oidc";
 }

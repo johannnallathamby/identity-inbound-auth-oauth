@@ -51,8 +51,7 @@ public class ClientCredentialsGrantFactory extends TokenRequestFactory {
 
         ClientCredentialsGrantRequest.ClientCredentialsGrantBuilder builder = new ClientCredentialsGrantRequest
                 .ClientCredentialsGrantBuilder(request, response);
-        super.create(builder, request, response);
-        builder.setScopes(OAuth2Util.buildScopeSet(request.getParameter(OAuth.OAUTH_SCOPE)));
+        create(builder, request, response);
         return builder;
     }
 

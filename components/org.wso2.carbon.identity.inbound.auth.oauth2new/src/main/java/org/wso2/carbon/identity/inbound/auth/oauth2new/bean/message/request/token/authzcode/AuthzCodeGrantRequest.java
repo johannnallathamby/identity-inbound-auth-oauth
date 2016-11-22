@@ -29,11 +29,13 @@ public class AuthzCodeGrantRequest extends OAuth2TokenRequest {
 
     private String code;
     private String redirectURI;
+    private String pkceCodeVerifier;
 
     protected AuthzCodeGrantRequest(AuthzCodeGrantBuilder builder) {
         super(builder);
         this.code = builder.code;
         this.redirectURI = builder.redirectURI;
+        this.pkceCodeVerifier = builder.pkceCodeVerifier;
     }
 
     public String getCode() {
@@ -44,10 +46,15 @@ public class AuthzCodeGrantRequest extends OAuth2TokenRequest {
         return redirectURI;
     }
 
+    public String getPKCECodeVerifier() {
+        return pkceCodeVerifier;
+    }
+
     public static class AuthzCodeGrantBuilder extends TokenRequestBuilder {
 
         private String code;
         private String redirectURI;
+        private String pkceCodeVerifier;
 
         public AuthzCodeGrantBuilder(HttpServletRequest request, HttpServletResponse response) {
             super(request, response);
@@ -63,6 +70,11 @@ public class AuthzCodeGrantRequest extends OAuth2TokenRequest {
 
         public AuthzCodeGrantBuilder setRedirectURI(String redirectURI) {
             this.redirectURI = redirectURI;
+            return this;
+        }
+
+        public AuthzCodeGrantBuilder setPKCECodeVerifier(String pkceCodeVerifier) {
+            this.pkceCodeVerifier = pkceCodeVerifier;
             return this;
         }
 

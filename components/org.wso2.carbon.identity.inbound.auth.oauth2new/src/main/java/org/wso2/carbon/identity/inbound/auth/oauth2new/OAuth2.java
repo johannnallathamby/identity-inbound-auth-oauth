@@ -78,4 +78,10 @@ public class OAuth2 {
     public static final String OAUTH2_RESOURCE_OWNER_AUTHZ_REQUEST = "OAuth2ResourceOwnerAuthzRequest";
     public static final String QUERY_STRING = "QUERY_STRING";
     public static final String PREV_ACCESS_TOKEN = "PreviousAccessToken";
+    public static final String PKCE_CODE_CHALLENGE = "code_challenge";
+    public static final String PKCE_CODE_CHALLENGE_METHOD = "code_challenge_method";
+    public static final String PKCE_CODE_VERIFIER = "code_verifier";
+    public static final String PKCE_S256_CHALLENGE = "S256";
+    public static final String PKCE_PLAIN_CHALLENGE = "plain";
+
 }

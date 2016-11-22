@@ -50,6 +50,10 @@ public class AuthzCode implements Serializable {
     // This will be populated only at the persistent layer
     private String accessTokenId;
 
+    private String pkceCodeChallenge;
+
+    private String pkceCodeChallengeMethod;
+
     public AuthzCode(String authzCode, String clientId, String redirectURI, AuthenticatedUser authzUser,
                      Timestamp issuedTime, long validityPeriod, String codeState) {
 
@@ -68,6 +72,8 @@ public class AuthzCode implements Serializable {
                 authzCode.getValidityPeriod(), codeState);
         newAuthzCode.setAuthzCodeId(authzCode.getAuthzCodeId());
         newAuthzCode.setScopes(authzCode.getScopes());
+        newAuthzCode.setPkceCodeChallenge(authzCode.getPkceCodeChallenge());
+        newAuthzCode.setPkceCodeChallengeMethod(authzCode.getPkceCodeChallengeMethod());
         return newAuthzCode;
     }
 
@@ -123,6 +129,22 @@ public class AuthzCode implements Serializable {
         this.accessTokenId = accessTokenId;
     }
 
+    public String getPkceCodeChallenge() {
+        return pkceCodeChallenge;
+    }
+
+    public void setPkceCodeChallenge(String pkceCodeChallenge) {
+        this.pkceCodeChallenge = pkceCodeChallenge;
+    }
+
+    public String getPkceCodeChallengeMethod() {
+        return pkceCodeChallengeMethod;
+    }
+
+    public void setPkceCodeChallengeMethod(String pkceCodeChallengeMethod) {
+        this.pkceCodeChallengeMethod = pkceCodeChallengeMethod;
+    }
+
     @Override
     public String toString() {
         return "AuthzCode{" +
@@ -135,6 +157,7 @@ public class AuthzCode implements Serializable {
                ", validityPeriod=" + validityPeriod +
                ", codeState='" + codeState + '\'' +
                ", accessTokenId='" + accessTokenId + '\'' +
+               ", pkceCodeChallengeMethod='" + pkceCodeChallengeMethod + '\'' +
                '}';
     }
 }

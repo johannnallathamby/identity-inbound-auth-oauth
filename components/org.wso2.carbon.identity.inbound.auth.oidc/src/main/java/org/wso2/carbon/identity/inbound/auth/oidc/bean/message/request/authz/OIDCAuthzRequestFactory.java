@@ -58,23 +58,7 @@ public class OIDCAuthzRequestFactory extends AuthzRequestFactory {
 
         OIDCAuthzRequest.OIDCAuthzRequestBuilder builder = new OIDCAuthzRequest.OIDCAuthzRequestBuilder
                 (request, response);
-        super.create(builder, request, response);
-        builder.setNonce(request.getParameter(OIDC.NONCE));
-        builder.setDisplay(request.getParameter(OIDC.DISPLAY));
-        builder.setIdTokenHint(request.getParameter(OIDC.ID_TOKEN_HINT));
-        builder.setLoginHint(request.getParameter(OIDC.LOGIN_HINT));
-        Set<String> prompts = OAuth2Util.buildScopeSet(request.getParameter(OIDC.PROMPT));
-        if(prompts.contains(OIDC.Prompt.NONE) && prompts.size() > 1){
-            throw OAuth2ClientException.error("Prompt value 'none' cannot be used with other " +
-            "prompts. Prompt: " + request.getParameter(OIDC.PROMPT));
-        }
-        builder.setPrompts(prompts);
-        if (prompts.contains(OIDC.Prompt.LOGIN)) {
-            builder.setLoginRequired(true);
-        }
-        if(prompts.contains(OIDC.Prompt.CONSENT)) {
-            builder.setConsentRequired(true);
-        }
+        create(builder, request, response);
         return builder;
     }
 

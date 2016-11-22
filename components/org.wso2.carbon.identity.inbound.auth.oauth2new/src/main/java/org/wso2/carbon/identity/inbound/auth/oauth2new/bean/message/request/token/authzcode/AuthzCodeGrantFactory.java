@@ -22,6 +22,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.oltu.oauth2.common.OAuth;
 import org.apache.oltu.oauth2.common.message.types.GrantType;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.token.TokenRequestFactory;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2ClientException;
 
@@ -49,9 +50,7 @@ public class AuthzCodeGrantFactory extends TokenRequestFactory {
 
         AuthzCodeGrantRequest.AuthzCodeGrantBuilder builder = new AuthzCodeGrantRequest.AuthzCodeGrantBuilder
                 (request, response);
-        super.create(builder, request, response);
-        builder.setCode(request.getParameter(OAuth.OAUTH_CODE));
-        builder.setRedirectURI(request.getParameter(OAuth.OAUTH_REDIRECT_URI));
+        create(builder, request, response);
         return builder;
     }
 
@@ -64,5 +63,6 @@ public class AuthzCodeGrantFactory extends TokenRequestFactory {
         super.create(authzCodeGrantBuilder, request, response);
         authzCodeGrantBuilder.setCode(request.getParameter(OAuth.OAUTH_CODE));
         authzCodeGrantBuilder.setRedirectURI(request.getParameter(OAuth.OAUTH_REDIRECT_URI));
+        authzCodeGrantBuilder.setPKCECodeVerifier(request.getParameter(OAuth2.PKCE_CODE_VERIFIER));
     }
 }

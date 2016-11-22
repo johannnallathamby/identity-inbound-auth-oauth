@@ -20,9 +20,14 @@ package org.wso2.carbon.identity.inbound.auth.oidc.internal;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
+import org.wso2.carbon.base.MultitenantConstants;
+import org.wso2.carbon.identity.inbound.auth.oidc.dao.OIDCDAO;
 import org.wso2.carbon.identity.inbound.auth.oidc.handler.IDTokenHandler;
+import org.wso2.carbon.identity.inbound.auth.oidc.model.OIDCServerConfig;
 import org.wso2.carbon.registry.core.service.RegistryService;
+import org.wso2.carbon.stratos.common.listeners.TenantMgtListener;
 import org.wso2.carbon.user.core.service.RealmService;
 
 /**
@@ -44,15 +49,30 @@ public class OIDCServiceComponent {
 
     protected void activate(ComponentContext context) {
 
-        if (log.isDebugEnabled()) {
-            log.debug("OIDC bundle is activated");
+        try {
+            ServiceRegistration scopesInitListenerReg = context.getBundleContext().registerService(
+                    TenantMgtListener.class.getName(), new ScopesInitListener(), null);
+            if (scopesInitListenerReg != null) {
+                if (log.isDebugEnabled()) {
+                    log.debug(" ScopesInitListener is registered");
+                }
+            } else {
+                log.error("ScopesInitListener could not be registered");
+            }
+            OIDCDAO.storeScopes(OIDCServerConfig.getInstance().getScopes(), MultitenantConstants
+                    .SUPER_TENANT_DOMAIN_NAME, MultitenantConstants.SUPER_TENANT_ID);
+            if (log.isDebugEnabled()) {
+                log.debug("Inbound OIDC Authenticator bundle is activated");
+            }
+        } catch (Throwable e) {
+            log.error("Error occurred while activating Inbound OIDC Authenticator bundle");
         }
     }
 
     protected void deactivate(ComponentContext context) {
 
         if (log.isDebugEnabled()) {
-            log.debug("OIDC bundle is deactivated");
+            log.debug("Inbound OIDC Authenticator bundle is deactivated");
         }
     }
 

@@ -1,19 +1,50 @@
+/*
+ *  Copyright (c) 2015, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *
+ *  WSO2 Inc. licenses this file to you under the Apache License,
+ *  Version 2.0 (the "License"); you may not use this file except
+ *  in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 package org.wso2.carbon.identity.inbound.auth.oidc.model;
 
 import com.nimbusds.jose.Algorithm;
 import com.nimbusds.jose.JWSAlgorithm;
 import org.apache.axiom.om.OMElement;
+import org.apache.axiom.om.impl.builder.StAXOMBuilder;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.identity.core.util.IdentityConfigParser;
 import org.wso2.carbon.identity.core.util.IdentityCoreConstants;
+import org.wso2.carbon.identity.core.util.IdentityIOStreamUtils;
 import org.wso2.carbon.identity.core.util.IdentityUtil;
+import org.wso2.carbon.identity.inbound.auth.oidc.OIDC;
 
 import javax.xml.namespace.QName;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 
 public class OIDCServerConfig {
@@ -39,6 +70,8 @@ public class OIDCServerConfig {
     private int idTokenExpiry = 300;
     private Algorithm idTokenSigAlg = JWSAlgorithm.RS256;
     private Set<String> idTokenAudiences = Collections.EMPTY_SET;
+
+    private Map<String,String> scopes = new HashMap();
 
 
     private OIDCServerConfig() {
@@ -113,6 +146,62 @@ public class OIDCServerConfig {
         }
     }
 
+    private void buildScopeConfig() {
+
+        String identityConfPath = IdentityUtil.getIdentityConfigDirPath();
+        String confXml =
+                Paths.get(identityConfPath, OIDC.OIDC_SCOPE_CONFIG_FILE_NAME).toString();
+        File configfile = new File(confXml);
+        if (!configfile.exists()) {
+            log.warn(OIDC.OIDC_SCOPE_CONFIG_FILE_NAME + " is cannot be found in " + identityConfPath + ". " +
+                     "Initializing with defaults");
+        }
+
+        XMLStreamReader parser = null;
+        InputStream stream = null;
+        try {
+            stream = new FileInputStream(configfile);
+            parser = XMLInputFactory.newInstance()
+                    .createXMLStreamReader(stream);
+            StAXOMBuilder builder = new StAXOMBuilder(parser);
+            OMElement documentElement = builder.getDocumentElement();
+            Iterator iterator = documentElement.getChildElements();
+            while (iterator.hasNext()) {
+                OMElement omElement = (OMElement) iterator.next();
+                String configType = omElement.getAttributeValue(new QName(
+                        "id"));
+                scopes.put(configType, loadClaimConfig(omElement));
+            }
+        } catch (XMLStreamException e) {
+            log.warn("Error while creating XMLStreamReader from " + OIDC.OIDC_SCOPE_CONFIG_FILE_NAME, e);
+        } catch (FileNotFoundException e) {
+            log.warn("Error while loading " + OIDC.OIDC_SCOPE_CONFIG_FILE_NAME, e);
+        } finally {
+            try {
+                if (parser != null) {
+                    parser.close();
+                }
+            } catch (XMLStreamException e) {
+                log.error("Error while closing XMLStreamReader for " + OIDC.OIDC_SCOPE_CONFIG_FILE_NAME, e);
+            }
+            if (stream != null) {
+                IdentityIOStreamUtils.closeInputStream(stream);
+            }
+        }
+    }
+
+    private static String loadClaimConfig(OMElement configElement) {
+        StringBuilder claimConfig = new StringBuilder();
+        Iterator it = configElement.getChildElements();
+        while (it.hasNext()) {
+            OMElement element = (OMElement) it.next();
+            if ("Claim".equals(element.getLocalName())) {
+                claimConfig.append(element.getText());
+            }
+        }
+        return claimConfig.toString();
+    }
+
     private QName getQNameWithIdentityNS(String localPart) {
         return new QName(IdentityCoreConstants.IDENTITY_DEFAULT_NAMESPACE, localPart);
     }
@@ -135,6 +224,10 @@ public class OIDCServerConfig {
 
     public Set<String> getIdTokenAudiences() {
         return idTokenAudiences;
+    }
+
+    public Map<String,String> getScopes() {
+        return scopes;
     }
 
 }

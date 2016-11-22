@@ -59,7 +59,8 @@ public class BasicAuthHandler extends ClientAuthHandler {
                     if (idSecretArray.length == 2) {
                         clientId = idSecretArray[0];
                         String clientSecret = idSecretArray[1];
-                        // Get OAuth2 data from application.mgt and validate
+                        // Get OAuth2 data from application.mgt and validate and set the service provider to message
+                        // context
                         return "";
                     }
 
