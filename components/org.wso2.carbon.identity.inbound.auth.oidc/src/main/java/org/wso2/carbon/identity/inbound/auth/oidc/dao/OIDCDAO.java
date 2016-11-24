@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2015, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *  Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *  WSO2 Inc. licenses this file to you under the Apache License,
  *  Version 2.0 (the "License"); you may not use this file except
@@ -20,14 +20,12 @@ package org.wso2.carbon.identity.inbound.auth.oidc.dao;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.wso2.carbon.identity.core.util.IdentityTenantUtil;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2RuntimeException;
 import org.wso2.carbon.identity.inbound.auth.oidc.OIDC;
-import org.wso2.carbon.identity.inbound.auth.oidc.internal.OIDCServiceComponentHolder;
+import org.wso2.carbon.identity.inbound.auth.oidc.internal.OIDCDataHolder;
 import org.wso2.carbon.registry.api.Registry;
-import org.wso2.carbon.registry.api.Resource;
 import org.wso2.carbon.registry.api.RegistryException;
-import org.wso2.carbon.user.api.UserStoreException;
+import org.wso2.carbon.registry.api.Resource;
 
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -42,7 +40,7 @@ public class OIDCDAO {
     public static void storeScopes(Map<String,String> scopes, String tenantDomain, int tenantId) throws
                                                                                           OAuth2RuntimeException {
         try {
-            Registry registry = OIDCServiceComponentHolder.getInstance().getRegistryService()
+            Registry registry = OIDCDataHolder.getInstance().getRegistryService()
                     .getConfigSystemRegistry(tenantId);
 
             if (!registry.resourceExists(OIDC.OIDC_SCOPE_CONFIG_RESOURCE_PATH)) {
@@ -65,7 +63,7 @@ public class OIDCDAO {
     public static List<String> getScopes(String tenantDomain, int tenantId) {
 
         try {
-            Registry registry = OIDCServiceComponentHolder.getInstance().getRegistryService()
+            Registry registry = OIDCDataHolder.getInstance().getRegistryService()
                     .getConfigSystemRegistry(tenantId);
             List<String> scopes = new ArrayList();
             if (registry.resourceExists(OIDC.OIDC_SCOPE_CONFIG_RESOURCE_PATH)) {

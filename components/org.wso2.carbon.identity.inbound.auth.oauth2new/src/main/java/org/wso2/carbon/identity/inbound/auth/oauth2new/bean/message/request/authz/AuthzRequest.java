@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2015, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *  Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *  WSO2 Inc. licenses this file to you under the Apache License,
  *  Version 2.0 (the "License"); you may not use this file except
@@ -25,7 +25,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.util.HashSet;
 import java.util.Set;
 
-public class OAuth2AuthzRequest extends OAuth2IdentityRequest {
+public class AuthzRequest extends OAuth2IdentityRequest {
 
     private static final long serialVersionUID = 6738091486923517921L;
 
@@ -35,10 +35,9 @@ public class OAuth2AuthzRequest extends OAuth2IdentityRequest {
     protected String state;
     protected Set<String> scopes = new HashSet<>();
     protected String pkceCodeChallenge;
-
     protected String pkceCodeChallengeMethod;
 
-    protected OAuth2AuthzRequest(AuthzRequestBuilder builder) {
+    protected AuthzRequest(AuthzRequestBuilder builder) {
         super(builder);
         this.responseType = builder.responseType;
         this.clientId = builder.clientId;
@@ -135,8 +134,8 @@ public class OAuth2AuthzRequest extends OAuth2IdentityRequest {
             return this;
         }
 
-        public OAuth2AuthzRequest build() {
-            return new OAuth2AuthzRequest(this);
+        public AuthzRequest build() {
+            return new AuthzRequest(this);
         }
     }
 

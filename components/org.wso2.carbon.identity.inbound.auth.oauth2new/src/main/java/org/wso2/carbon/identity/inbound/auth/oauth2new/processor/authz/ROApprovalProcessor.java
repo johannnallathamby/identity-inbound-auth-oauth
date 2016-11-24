@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2015, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *  Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *  WSO2 Inc. licenses this file to you under the Apache License,
  *  Version 2.0 (the "License"); you may not use this file except
@@ -18,7 +18,7 @@
 
 package org.wso2.carbon.identity.inbound.auth.oauth2new.processor.authz;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.identity.application.authentication.framework.exception.FrameworkException;
@@ -31,16 +31,16 @@ import org.wso2.carbon.identity.application.authentication.framework.model.Authe
 import org.wso2.carbon.identity.application.common.model.ServiceProvider;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2AuthzMessageContext;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.authz.OAuth2AuthzRequest;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.authz.AuthzRequest;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.authz.ConsentResponse;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.authz.ROApprovalResponse;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.dao.jdbc.UserConsentDAO;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2AuthnException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2ConsentException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2Exception;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2InternalException;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.model.UserConsent;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2AuthnException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.OAuth2ServerConfig;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.model.UserConsent;
 
 import java.util.UUID;
 
@@ -73,7 +73,7 @@ public abstract class ROApprovalProcessor extends IdentityProcessor {
 
         IdentityMessageContext context = getContextIfAvailable(identityRequest);
         if(context != null) {
-            if(context.getRequest() instanceof OAuth2AuthzRequest){
+            if(context.getRequest() instanceof AuthzRequest){
                 return true;
             }
         }

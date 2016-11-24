@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2015, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *  Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *  WSO2 Inc. licenses this file to you under the Apache License,
  *  Version 2.0 (the "License"); you may not use this file except
@@ -178,8 +178,8 @@ public abstract class AccessTokenResponseIssuer extends AbstractIdentityMessageH
         String clientId = messageContext.getRequest().getClientId();
         AuthenticatedUser authzUser = messageContext.getAuthzUser();
         Set<String> scopes = messageContext.getApprovedScopes();
-        long accessTokenCallbackValidity = messageContext.getValidityPeriod();
-        long refreshTokenCallbackValidity = messageContext.getValidityPeriod();
+        long accessTokenCallbackValidity = messageContext.getAccessTokenValidityPeriod();
+        long refreshTokenCallbackValidity = messageContext.getRefreshTokenValidityPeriod();
         String responseType = messageContext.getRequest().getResponseType();
         return issueNewAccessToken(clientId, authzUser, scopes, isRefreshTokenValid,
                 markAccessTokenExpired, prevAccessToken, accessTokenCallbackValidity, refreshTokenCallbackValidity,
@@ -194,8 +194,8 @@ public abstract class AccessTokenResponseIssuer extends AbstractIdentityMessageH
         String clientId = messageContext.getClientId();
         AuthenticatedUser authzUser = messageContext.getAuthzUser();
         Set<String> scopes = messageContext.getApprovedScopes();
-        long accessTokenValidityPeriod = messageContext.getValidityPeriod();
-        long refreshTokenValidityPeriod = messageContext.getValidityPeriod();
+        long accessTokenValidityPeriod = messageContext.getAccessTokenValidityPeriod();
+        long refreshTokenValidityPeriod = messageContext.getRefreshTokenValidityPeriod();
         String grantType = messageContext.getRequest().getGrantType();
         return issueNewAccessToken(clientId, authzUser, scopes, isRefreshTokenValid,
                 markAccessTokenExpired, prevAccessToken, accessTokenValidityPeriod, refreshTokenValidityPeriod,

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2015, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *  Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *  WSO2 Inc. licenses this file to you under the Apache License,
  *  Version 2.0 (the "License"); you may not use this file except
@@ -18,7 +18,7 @@
 
 package org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.authz;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.oltu.oauth2.common.OAuth;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.FrameworkClientException;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
@@ -45,10 +45,10 @@ public class AuthzRequestFactory extends OAuth2IdentityRequestFactory {
         return false;
     }
 
-    public OAuth2AuthzRequest.AuthzRequestBuilder create(HttpServletRequest request,
-                                                         HttpServletResponse response) throws OAuth2ClientException {
+    public AuthzRequest.AuthzRequestBuilder create(HttpServletRequest request,
+                                                   HttpServletResponse response) throws OAuth2ClientException {
 
-        OAuth2AuthzRequest.AuthzRequestBuilder builder = new OAuth2AuthzRequest.AuthzRequestBuilder
+        AuthzRequest.AuthzRequestBuilder builder = new AuthzRequest.AuthzRequestBuilder
                 (request, response);
         create(builder, request, response);
         return builder;
@@ -57,8 +57,8 @@ public class AuthzRequestFactory extends OAuth2IdentityRequestFactory {
     public void create(IdentityRequest.IdentityRequestBuilder builder, HttpServletRequest request,
                        HttpServletResponse response) throws OAuth2ClientException {
 
-        OAuth2AuthzRequest.AuthzRequestBuilder authzRequestBuilder =
-                (OAuth2AuthzRequest.AuthzRequestBuilder)builder;
+        AuthzRequest.AuthzRequestBuilder authzRequestBuilder =
+                (AuthzRequest.AuthzRequestBuilder)builder;
         try {
             super.create(authzRequestBuilder, request, response);
         } catch (FrameworkClientException e) {

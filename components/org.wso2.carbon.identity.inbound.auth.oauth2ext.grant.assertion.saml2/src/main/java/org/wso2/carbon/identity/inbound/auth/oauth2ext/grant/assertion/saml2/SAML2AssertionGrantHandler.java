@@ -236,7 +236,7 @@ public class SAML2AssertionGrantHandler extends AuthorizationGrantHandler {
         if (conditions != null) {
             //Set validity period extracted from SAML Assertion
             long curTimeInMillis = Calendar.getInstance().getTimeInMillis();
-            messageContext.setValidityPeriod(conditions.getNotOnOrAfter().getMillis() - curTimeInMillis);
+            messageContext.setAccessTokenValidityPeriod(conditions.getNotOnOrAfter().getMillis() - curTimeInMillis);
             List<AudienceRestriction> audienceRestrictions = conditions.getAudienceRestrictions();
             if (audienceRestrictions != null && !audienceRestrictions.isEmpty()) {
                 boolean audienceFound = false;

@@ -18,14 +18,14 @@
 
 package org.wso2.carbon.identity.inbound.auth.oauth2ext.grant.iwa.ntlm;
 
-import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.token.OAuth2TokenRequest;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.token.TokenRequest;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.HashSet;
 import java.util.Set;
 
-public class IWANTLMGrantRequest extends OAuth2TokenRequest {
+public class IWANTLMGrantRequest extends TokenRequest {
 
     private static final long serialVersionUID = -4072916934667966426L;
 

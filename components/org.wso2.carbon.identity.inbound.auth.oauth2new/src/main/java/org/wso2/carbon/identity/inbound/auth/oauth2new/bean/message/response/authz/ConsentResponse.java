@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2015, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *  Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *  WSO2 Inc. licenses this file to you under the Apache License,
  *  Version 2.0 (the "License"); you may not use this file except
@@ -55,13 +55,13 @@ public class ConsentResponse extends ROApprovalResponse {
         return parameterMap;
     }
 
-    protected ConsentResponse(IdentityResponseBuilder builder) {
+    protected ConsentResponse(ConsentResponseBuilder builder) {
         super(builder);
-        this.sessionDataKeyConsent = ((ConsentResponseBuilder)builder).sessionDataKeyConsent;
-        this.applicationName = ((ConsentResponseBuilder)builder).applicationName;
-        this.authenticatedSubjectId = ((ConsentResponseBuilder)builder).authenticatedSubjectId;
-        this.requestedScopes = ((ConsentResponseBuilder)builder).requestedScopes;
-        this.parameterMap = ((ConsentResponseBuilder)builder).parameterMap;
+        this.sessionDataKeyConsent = builder.sessionDataKeyConsent;
+        this.applicationName = builder.applicationName;
+        this.authenticatedSubjectId = builder.authenticatedSubjectId;
+        this.requestedScopes = builder.requestedScopes;
+        this.parameterMap = builder.parameterMap;
     }
 
     public static class ConsentResponseBuilder extends ROApprovalResponseBuilder {

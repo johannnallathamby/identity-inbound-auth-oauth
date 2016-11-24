@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2015, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *  Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *  WSO2 Inc. licenses this file to you under the Apache License,
  *  Version 2.0 (the "License"); you may not use this file except
@@ -56,7 +56,7 @@ public class HttpTokenResponseFactory extends HttpIdentityResponseFactory {
         OAuthResponse oauthResponse = null;
         try {
             oauthResponse = tokenResponse.getBuilder().buildJSONMessage();
-        } catch (OAuthSystemException e1) {
+        } catch (OAuthSystemException e) {
             throw OAuth2RuntimeException.error("Error occurred while building JSON message fo token endpoint response");
         }
         builder.setStatusCode(oauthResponse.getResponseStatus());

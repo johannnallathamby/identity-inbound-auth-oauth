@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2015, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *  Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *  WSO2 Inc. licenses this file to you under the Apache License,
  *  Version 2.0 (the "License"); you may not use this file except
@@ -23,9 +23,18 @@ import org.apache.commons.logging.LogFactory;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
 import org.wso2.carbon.base.MultitenantConstants;
+import org.wso2.carbon.identity.application.authentication.framework.inbound.HttpIdentityRequestFactory;
+import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityProcessor;
+import org.wso2.carbon.identity.inbound.auth.oidc.bean.message.request.authz.OIDCAuthzRequestFactory;
+import org.wso2.carbon.identity.inbound.auth.oidc.bean.message.response.authz.HttpOIDCAuthzResponseFactory;
+import org.wso2.carbon.identity.inbound.auth.oidc.bean.message.response.token.HttpOIDCTokenResponseFactory;
+import org.wso2.carbon.identity.inbound.auth.oidc.bean.message.response.userinfo.HttpUserinfoResponseFactory;
 import org.wso2.carbon.identity.inbound.auth.oidc.dao.OIDCDAO;
 import org.wso2.carbon.identity.inbound.auth.oidc.handler.IDTokenHandler;
 import org.wso2.carbon.identity.inbound.auth.oidc.model.OIDCServerConfig;
+import org.wso2.carbon.identity.inbound.auth.oidc.processor.authz.OIDCAuthzProcessor;
+import org.wso2.carbon.identity.inbound.auth.oidc.processor.token.OIDCTokenProcessor;
+import org.wso2.carbon.identity.inbound.auth.oidc.processor.userinfo.UserInfoProcessor;
 import org.wso2.carbon.registry.core.service.RegistryService;
 import org.wso2.carbon.stratos.common.listeners.TenantMgtListener;
 import org.wso2.carbon.user.core.service.RealmService;
@@ -50,6 +59,73 @@ public class OIDCServiceComponent {
     protected void activate(ComponentContext context) {
 
         try {
+            OIDCDataHolder.getInstance().getIDTokenHandlers().add(new IDTokenHandler());
+
+            ServiceRegistration oidcAuthzReqFactory = context.getBundleContext().registerService(
+                    HttpIdentityRequestFactory.class.getName(), new OIDCAuthzRequestFactory(), null);
+            if (oidcAuthzReqFactory != null) {
+                if (log.isDebugEnabled()) {
+                    log.debug(" OIDCAuthzRequestFactory is registered");
+                }
+            } else {
+                log.error("OIDCAuthzRequestFactory could not be registered");
+            }
+            ServiceRegistration oidcAuthzRespFactory = context.getBundleContext().registerService(
+                    HttpIdentityRequestFactory.class.getName(), new HttpOIDCAuthzResponseFactory(), null);
+            if (oidcAuthzRespFactory != null) {
+                if (log.isDebugEnabled()) {
+                    log.debug(" HttpOIDCAuthzResponseFactory is registered");
+                }
+            } else {
+                log.error("HttpOIDCAuthzResponseFactory could not be registered");
+            }
+            ServiceRegistration oidcTokenRespFactory = context.getBundleContext().registerService(
+                    HttpIdentityRequestFactory.class.getName(), new HttpOIDCTokenResponseFactory(), null);
+            if (oidcAuthzRespFactory != null) {
+                if (log.isDebugEnabled()) {
+                    log.debug(" HttpOIDCTokenResponseFactory is registered");
+                }
+            } else {
+                log.error("HttpOIDCTokenResponseFactory could not be registered");
+            }
+            ServiceRegistration oidcUserInfoRespFactory = context.getBundleContext().registerService(
+                    HttpIdentityRequestFactory.class.getName(), new HttpUserinfoResponseFactory(), null);
+            if (oidcUserInfoRespFactory != null) {
+                if (log.isDebugEnabled()) {
+                    log.debug(" HttpUserinfoResponseFactory is registered");
+                }
+            } else {
+                log.error("HttpUserinfoResponseFactory could not be registered");
+            }
+
+            ServiceRegistration authzProcessor = context.getBundleContext().registerService(
+                    IdentityProcessor.class.getName(), new OIDCAuthzProcessor(), null);
+            if (authzProcessor != null) {
+                if (log.isDebugEnabled()) {
+                    log.debug(" OIDCAuthzProcessor is registered");
+                }
+            } else {
+                log.error("OIDCAuthzProcessor could not be registered");
+            }
+            ServiceRegistration tokenProcessor = context.getBundleContext().registerService(
+                    IdentityProcessor.class.getName(), new OIDCTokenProcessor(), null);
+            if (tokenProcessor != null) {
+                if (log.isDebugEnabled()) {
+                    log.debug(" OIDCTokenProcessor is registered");
+                }
+            } else {
+                log.error("OIDCTokenProcessor could not be registered");
+            }
+            ServiceRegistration userInfoProcessor = context.getBundleContext().registerService(
+                    IdentityProcessor.class.getName(), new UserInfoProcessor(), null);
+            if (userInfoProcessor != null) {
+                if (log.isDebugEnabled()) {
+                    log.debug(" UserInfoProcessor is registered");
+                }
+            } else {
+                log.error("UserInfoProcessor could not be registered");
+            }
+
             ServiceRegistration scopesInitListenerReg = context.getBundleContext().registerService(
                     TenantMgtListener.class.getName(), new ScopesInitListener(), null);
             if (scopesInitListenerReg != null) {
@@ -80,41 +156,41 @@ public class OIDCServiceComponent {
         if (log.isDebugEnabled()) {
             log.debug("Setting the RealmService");
         }
-        OIDCServiceComponentHolder.getInstance().setRealmService(realmService);
+        OIDCDataHolder.getInstance().setRealmService(realmService);
     }
 
     protected void unsetRealmService(RealmService realmService) {
         if (log.isDebugEnabled()) {
             log.debug("Unsetting the RealmService");
         }
-        OIDCServiceComponentHolder.getInstance().setRealmService(null);
+        OIDCDataHolder.getInstance().setRealmService(null);
     }
 
     protected void setRegistryService(RegistryService registryService) {
         if (log.isDebugEnabled()) {
             log.debug("Setting the RegistryService");
         }
-        OIDCServiceComponentHolder.getInstance().setRegistryService(registryService);
+        OIDCDataHolder.getInstance().setRegistryService(registryService);
     }
 
     protected void unsetRegistryService(RegistryService registryService) {
         if (log.isDebugEnabled()) {
             log.debug("Unsetting the RegistryService");
         }
-        OIDCServiceComponentHolder.getInstance().setRegistryService(null);
+        OIDCDataHolder.getInstance().setRegistryService(null);
     }
 
     protected void addIDTokenHandler(IDTokenHandler handler) {
         if (log.isDebugEnabled()) {
             log.debug("Adding IDTokenHandler " + handler.getName());
         }
-        OIDCServiceComponentHolder.getInstance().getIDTokenHandlers().add(handler);
+        OIDCDataHolder.getInstance().getIDTokenHandlers().add(handler);
     }
 
     protected void removeIDTokenHandler(IDTokenHandler handler) {
         if (log.isDebugEnabled()) {
             log.debug("Removing IDTokenHandler " + handler.getName());
         }
-        OIDCServiceComponentHolder.getInstance().getIDTokenHandlers().remove(handler);
+        OIDCDataHolder.getInstance().getIDTokenHandlers().remove(handler);
     }
 }

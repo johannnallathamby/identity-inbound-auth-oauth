@@ -81,9 +81,9 @@ public class HttpOIDCAuthzResponseFactory extends HttpAuthzResponseFactory {
         builder.setStatusCode(response.getResponseStatus());
         String redirectUri = response.getLocationUri();
         if(!((OIDCAuthzResponse) identityResponse).getResponseType().contains(ResponseType.CODE.toString())) {
-           redirectUri = redirectUri.replace("?","#");
+            redirectUri = redirectUri.replace("?", "#");
         }
-        builder.setRedirectURL(response.getLocationUri());
+        builder.setRedirectURL(redirectUri);
         builder.setHeaders(response.getHeaders());
         builder.addHeader(OAuth2.Header.CACHE_CONTROL,
                           OAuth2.HeaderValue.CACHE_CONTROL_NO_STORE);

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2015, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *  Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *  WSO2 Inc. licenses this file to you under the Apache License,
  *  Version 2.0 (the "License"); you may not use this file except
@@ -20,16 +20,47 @@ package org.wso2.carbon.identity.inbound.auth.oauth2new.internal;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
+import org.wso2.carbon.identity.application.authentication.framework.inbound.HttpIdentityRequestFactory;
+import org.wso2.carbon.identity.application.authentication.framework.inbound.HttpIdentityResponseFactory;
+import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityProcessor;
 import org.wso2.carbon.identity.application.mgt.ApplicationManagementService;
 import org.wso2.carbon.identity.core.util.IdentityCoreInitializedEvent;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.authz.AuthzRequestFactory;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.token.authzcode.AuthzCodeGrantFactory;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.token.clientcredentials.ClientCredentialsGrantFactory;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.token.password.PasswordGrantFactory;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.token.refresh.RefreshGrantFactory;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.authz.HttpAuthzResponseFactory;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.authz.HttpConsentResponseFactory;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.token.HttpTokenResponseFactory;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.dao.OAuth2DAOHandler;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.dao.jdbc.JDBCOAuth2DAO;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.client.BasicAuthHandler;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.client.ClientAuthHandler;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.grant.AuthorizationGrantHandler;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.grant.AuthzCodeGrantHandler;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.grant.PasswordGrantHandler;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.grant.RefreshGrantHandler;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.issuer.AccessTokenResponseIssuer;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.issuer.BearerTokenResponseIssuer;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.persist.PlainTextPersistenceProcessor;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.persist.TokenPersistenceProcessor;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.introspect.HttpIntrospectionResponseFactory;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.introspect.IntrospectionHandler;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.introspect.IntrospectionProcessor;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.introspect.IntrospectionRequestFactory;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.OAuth2ServerConfig;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.processor.authz.AuthzProcessor;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.processor.authz.CodeResponseProcessor;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.processor.authz.TokenResponseProcessor;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.processor.token.TokenProcessor;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.revoke.HttpRevocationResponseFactory;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.revoke.OAuth2RevocationService;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.revoke.OAuth2RevocationServiceImpl;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.revoke.RevocationProcessor;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.revoke.RevocationRequestFactory;
 import org.wso2.carbon.registry.core.service.RegistryService;
 import org.wso2.carbon.user.core.service.RealmService;
 
@@ -77,6 +108,200 @@ public class OAuth2ServiceComponent {
 
         try {
             OAuth2ServerConfig.getInstance();
+
+            OAuth2DataHolder.getInstance().getOAuth2DAOHandlers().add(new OAuth2DAOHandler(new JDBCOAuth2DAO()));
+            OAuth2DataHolder.getInstance().getTokenPersistenceProcessors().add(new PlainTextPersistenceProcessor());
+            OAuth2DataHolder.getInstance().getAccessTokenIssuers().add(new BearerTokenResponseIssuer());
+            OAuth2DataHolder.getInstance().getClientAuthHandlers().add(new BasicAuthHandler());
+            OAuth2DataHolder.getInstance().getGrantHandlers().add(new AuthzCodeGrantHandler());
+            OAuth2DataHolder.getInstance().getGrantHandlers().add(new PasswordGrantHandler());
+            OAuth2DataHolder.getInstance().getGrantHandlers().add(new RefreshGrantHandler());
+            OAuth2DataHolder.getInstance().getIntrospectionHandlers().add(new IntrospectionHandler());
+
+            ServiceRegistration authzProcessor = context.getBundleContext().registerService(
+                    IdentityProcessor.class.getName(), new AuthzProcessor(), null);
+            if (authzProcessor != null) {
+                if (log.isDebugEnabled()) {
+                    log.debug(" AuthzProcessor is registered");
+                }
+            } else {
+                log.error("AuthzProcessor could not be registered");
+            }
+            ServiceRegistration codeRespProcessor = context.getBundleContext().registerService(
+                    IdentityProcessor.class.getName(), new CodeResponseProcessor(), null);
+            if (codeRespProcessor != null) {
+                if (log.isDebugEnabled()) {
+                    log.debug(" CodeResponseProcessor is registered");
+                }
+            } else {
+                log.error("CodeResponseProcessor could not be registered");
+            }
+            ServiceRegistration tokenRespProcessor = context.getBundleContext().registerService(
+                    IdentityProcessor.class.getName(), new TokenResponseProcessor(), null);
+            if (tokenRespProcessor != null) {
+                if (log.isDebugEnabled()) {
+                    log.debug(" TokenResponseProcessor is registered");
+                }
+            } else {
+                log.error("TokenResponseProcessor could not be registered");
+            }
+            ServiceRegistration tokenProcessor = context.getBundleContext().registerService(
+                    IdentityProcessor.class.getName(), new TokenProcessor(), null);
+            if (tokenProcessor != null) {
+                if (log.isDebugEnabled()) {
+                    log.debug(" TokenProcessor is registered");
+                }
+            } else {
+                log.error("TokenProcessor could not be registered");
+            }
+
+            ServiceRegistration authzReqFactory = context.getBundleContext().registerService(
+                    HttpIdentityRequestFactory.class.getName(), new AuthzRequestFactory(), null);
+            if (authzReqFactory != null) {
+                if (log.isDebugEnabled()) {
+                    log.debug(" AuthzRequestFactory is registered");
+                }
+            } else {
+                log.error("AuthzRequestFactory could not be registered");
+            }
+            ServiceRegistration authzApprovedReqFactory = context.getBundleContext().registerService(
+                    HttpIdentityRequestFactory.class.getName(), new AuthzRequestFactory(), null);
+            if (authzApprovedReqFactory != null) {
+                if (log.isDebugEnabled()) {
+                    log.debug(" AuthzApprovedReqFactory is registered");
+                }
+            } else {
+                log.error("AuthzApprovedReqFactory could not be registered");
+            }
+            ServiceRegistration authzCodeGrantFactory = context.getBundleContext().registerService(
+                    HttpIdentityRequestFactory.class.getName(), new AuthzCodeGrantFactory(), null);
+            if (authzCodeGrantFactory != null) {
+                if (log.isDebugEnabled()) {
+                    log.debug(" AuthzCodeGrantFactory is registered");
+                }
+            } else {
+                log.error("AuthzCodeGrantFactory could not be registered");
+            }
+            ServiceRegistration passwordGrantFactory = context.getBundleContext().registerService(
+                    HttpIdentityRequestFactory.class.getName(), new PasswordGrantFactory(), null);
+            if (passwordGrantFactory != null) {
+                if (log.isDebugEnabled()) {
+                    log.debug(" PasswordGrantFactory is registered");
+                }
+            } else {
+                log.error("PasswordGrantFactory could not be registered");
+            }
+            ServiceRegistration clientCredGrant = context.getBundleContext().registerService(
+                    HttpIdentityRequestFactory.class.getName(), new ClientCredentialsGrantFactory(), null);
+            if (clientCredGrant != null) {
+                if (log.isDebugEnabled()) {
+                    log.debug(" ClientCredentialsGrantFactory is registered");
+                }
+            } else {
+                log.error("ClientCredentialsGrantFactory could not be registered");
+            }
+            ServiceRegistration refreshGrantFactory = context.getBundleContext().registerService(
+                    HttpIdentityRequestFactory.class.getName(), new RefreshGrantFactory(), null);
+            if (refreshGrantFactory != null) {
+                if (log.isDebugEnabled()) {
+                    log.debug(" RefreshGrantFactory is registered");
+                }
+            } else {
+                log.error("RefreshGrantFactory could not be registered");
+            }
+
+            ServiceRegistration httpAuthzRespFactory = context.getBundleContext().registerService(
+                    HttpIdentityResponseFactory.class.getName(), new HttpAuthzResponseFactory(), null);
+            if (httpAuthzRespFactory != null) {
+                if (log.isDebugEnabled()) {
+                    log.debug(" HttpAuthzResponseFactory is registered");
+                }
+            } else {
+                log.error("HttpAuthzResponseFactory could not be registered");
+            }
+            ServiceRegistration httpConsentRespFactory = context.getBundleContext().registerService(
+                    HttpIdentityResponseFactory.class.getName(), new HttpConsentResponseFactory(), null);
+            if (httpConsentRespFactory != null) {
+                if (log.isDebugEnabled()) {
+                    log.debug(" HttpConsentResponseFactory is registered");
+                }
+            } else {
+                log.error("HttpConsentResponseFactory could not be registered");
+            }
+            ServiceRegistration httpTokenRespFactory = context.getBundleContext().registerService(
+                    HttpIdentityResponseFactory.class.getName(), new HttpTokenResponseFactory(), null);
+            if (httpTokenRespFactory != null) {
+                if (log.isDebugEnabled()) {
+                    log.debug(" HttpTokenResponseFactory is registered");
+                }
+            } else {
+                log.error("HttpTokenResponseFactory could not be registered");
+            }
+
+            ServiceRegistration revocationReqFactory = context.getBundleContext().registerService(
+                    HttpIdentityResponseFactory.class.getName(), new RevocationRequestFactory(), null);
+            if (revocationReqFactory != null) {
+                if (log.isDebugEnabled()) {
+                    log.debug(" RevocationRequestFactory is registered");
+                }
+            } else {
+                log.error("RevocationRequestFactory could not be registered");
+            }
+            ServiceRegistration httpRevocationRespFactory = context.getBundleContext().registerService(
+                    HttpIdentityResponseFactory.class.getName(), new HttpRevocationResponseFactory(), null);
+            if (httpRevocationRespFactory != null) {
+                if (log.isDebugEnabled()) {
+                    log.debug(" HttpRevocationResponseFactory is registered");
+                }
+            } else {
+                log.error("HttpRevocationResponseFactory could not be registered");
+            }
+            ServiceRegistration revokeProcessor = context.getBundleContext().registerService(
+                    IdentityProcessor.class.getName(), new RevocationProcessor(), null);
+            if (revokeProcessor != null) {
+                if (log.isDebugEnabled()) {
+                    log.debug(" RevocationProcessor is registered");
+                }
+            } else {
+                log.error("RevocationProcessor could not be registered");
+            }
+            ServiceRegistration revocationService = context.getBundleContext().registerService(
+                    OAuth2RevocationService.class.getName(), OAuth2RevocationServiceImpl.getInstance(), null);
+            if (revokeProcessor != null) {
+                if (log.isDebugEnabled()) {
+                    log.debug(" OAuth2RevocationServiceImpl is registered");
+                }
+            } else {
+                log.error("OAuth2RevocationServiceImpl could not be registered");
+            }
+
+            ServiceRegistration introspectionReqFactory = context.getBundleContext().registerService(
+                    HttpIdentityRequestFactory.class.getName(), new IntrospectionRequestFactory(), null);
+            if (introspectionReqFactory != null) {
+                if (log.isDebugEnabled()) {
+                    log.debug(" IntrospectionRequestFactory is registered");
+                }
+            } else {
+                log.error("RevocationRequestFactory could not be registered");
+            }
+            ServiceRegistration introspectionRespFactory = context.getBundleContext().registerService(
+                    HttpIdentityResponseFactory.class.getName(), new HttpIntrospectionResponseFactory(), null);
+            if (introspectionRespFactory != null) {
+                if (log.isDebugEnabled()) {
+                    log.debug(" HttpIntrospectionResponseFactory is registered");
+                }
+            } else {
+                log.error("HttpIntrospectionResponseFactory could not be registered");
+            }
+            ServiceRegistration introspectionProcessor = context.getBundleContext().registerService(
+                    IdentityProcessor.class.getName(), new IntrospectionProcessor(), null);
+            if (introspectionProcessor != null) {
+                if (log.isDebugEnabled()) {
+                    log.debug(" IntrospectionProcessor is registered");
+                }
+            } else {
+                log.error("IntrospectionProcessor could not be registered");
+            }
             if (log.isDebugEnabled()) {
                 log.debug("OAuth2 bundle is activated");
             }

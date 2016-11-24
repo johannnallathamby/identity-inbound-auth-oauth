@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2015, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *  Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *  WSO2 Inc. licenses this file to you under the Apache License,
  *  Version 2.0 (the "License"); you may not use this file except
@@ -24,9 +24,10 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2ClientExc
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2Exception;
 
 /*
- * To authenticate OAuth2 clients
+ * To authenticate OAuth2 clients.
+ * client_credentials grant type uses this.
  */
-public abstract class AuthorizationGrantHandler extends AbstractIdentityMessageHandler {
+public class AuthorizationGrantHandler extends AbstractIdentityMessageHandler {
 
     @Override
     public String getName() {
@@ -37,7 +38,6 @@ public abstract class AuthorizationGrantHandler extends AbstractIdentityMessageH
      * Validate the authorization grant.
      *
      * @param messageContext The runtime message context
-     * @return Returns the client type - confidential or public.
      */
     public void validateGrant(OAuth2TokenMessageContext messageContext) throws OAuth2ClientException, OAuth2Exception {
 

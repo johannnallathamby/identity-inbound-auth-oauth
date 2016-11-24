@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2015, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *  Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *  WSO2 Inc. licenses this file to you under the Apache License,
  *  Version 2.0 (the "License"); you may not use this file except
@@ -23,13 +23,13 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.OAut
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-public class OAuth2TokenRequest extends OAuth2IdentityRequest {
+public class TokenRequest extends OAuth2IdentityRequest {
 
     private static final long serialVersionUID = -4100425188456499228L;
 
     private String grantType;
 
-    protected OAuth2TokenRequest(TokenRequestBuilder builder) {
+    protected TokenRequest(TokenRequestBuilder builder) {
         super(builder);
         this.grantType = builder.grantType;
     }
@@ -55,9 +55,9 @@ public class OAuth2TokenRequest extends OAuth2IdentityRequest {
             return this;
         }
 
-        public OAuth2TokenRequest build() {
+        public TokenRequest build() {
 
-            return new OAuth2TokenRequest(this);
+            return new TokenRequest(this);
         }
 
     }

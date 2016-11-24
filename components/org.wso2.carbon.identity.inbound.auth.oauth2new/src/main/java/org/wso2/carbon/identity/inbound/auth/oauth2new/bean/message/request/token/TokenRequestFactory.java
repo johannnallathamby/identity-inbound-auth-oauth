@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2015, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *  Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *  WSO2 Inc. licenses this file to you under the Apache License,
  *  Version 2.0 (the "License"); you may not use this file except
@@ -18,7 +18,7 @@
 
 package org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.token;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.oltu.oauth2.common.OAuth;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.FrameworkClientException;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
@@ -43,10 +43,10 @@ public class TokenRequestFactory extends OAuth2IdentityRequestFactory {
         return false;
     }
 
-    public OAuth2TokenRequest.TokenRequestBuilder create(HttpServletRequest request,
-                                                         HttpServletResponse response) throws OAuth2ClientException {
+    public TokenRequest.TokenRequestBuilder create(HttpServletRequest request,
+                                                   HttpServletResponse response) throws OAuth2ClientException {
 
-        OAuth2TokenRequest.TokenRequestBuilder builder = new OAuth2TokenRequest.TokenRequestBuilder(request, response);
+        TokenRequest.TokenRequestBuilder builder = new TokenRequest.TokenRequestBuilder(request, response);
         create(builder, request, response);
         return builder;
     }
@@ -54,7 +54,7 @@ public class TokenRequestFactory extends OAuth2IdentityRequestFactory {
     public void create(IdentityRequest.IdentityRequestBuilder builder, HttpServletRequest request,
                                                          HttpServletResponse response) throws OAuth2ClientException {
 
-        OAuth2TokenRequest.TokenRequestBuilder tokenRequestBuilder = (OAuth2TokenRequest.TokenRequestBuilder)builder;
+        TokenRequest.TokenRequestBuilder tokenRequestBuilder = (TokenRequest.TokenRequestBuilder)builder;
         try {
             super.create(tokenRequestBuilder, request, response);
         } catch (FrameworkClientException e) {

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2015, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *  Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *  WSO2 Inc. licenses this file to you under the Apache License,
  *  Version 2.0 (the "License"); you may not use this file except
@@ -25,18 +25,18 @@ import org.wso2.carbon.user.core.service.RealmService;
 import java.util.ArrayList;
 import java.util.List;
 
-public class OIDCServiceComponentHolder {
+public class OIDCDataHolder {
 
-    private static OIDCServiceComponentHolder instance = new OIDCServiceComponentHolder();
+    private static OIDCDataHolder instance = new OIDCDataHolder();
     private RealmService realmService;
     private RegistryService registryService;
     private List<IDTokenHandler> idTokenHandlers = new ArrayList<>();
 
-    private OIDCServiceComponentHolder() {
+    private OIDCDataHolder() {
 
     }
 
-    public static OIDCServiceComponentHolder getInstance() {
+    public static OIDCDataHolder getInstance() {
         return instance;
     }
 

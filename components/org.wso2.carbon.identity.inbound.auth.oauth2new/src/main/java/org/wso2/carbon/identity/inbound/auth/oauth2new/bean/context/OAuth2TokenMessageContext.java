@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2015, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *  Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *  WSO2 Inc. licenses this file to you under the Apache License,
  *  Version 2.0 (the "License"); you may not use this file except
@@ -19,7 +19,7 @@
 package org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context;
 
 import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.token.OAuth2TokenRequest;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.token.TokenRequest;
 
 import java.io.Serializable;
 import java.util.Map;
@@ -36,11 +36,13 @@ public class OAuth2TokenMessageContext<T1 extends Serializable, T2 extends Seria
 
     private Set<String> approvedScopes;
 
-    private long validityPeriod;
+    private long accessTokenValidityPeriod;
+
+    private long refreshTokenValidityPeriod;
 
     private String clientId;
 
-    public OAuth2TokenMessageContext(OAuth2TokenRequest request, Map<T1,T2> parameters) {
+    public OAuth2TokenMessageContext(TokenRequest request, Map<T1,T2> parameters) {
         super(request, parameters);
     }
 
@@ -52,12 +54,20 @@ public class OAuth2TokenMessageContext<T1 extends Serializable, T2 extends Seria
         this.approvedScopes = approvedScopes;
     }
 
-    public long getValidityPeriod() {
-        return validityPeriod;
+    public long getAccessTokenValidityPeriod() {
+        return accessTokenValidityPeriod;
     }
 
-    public void setValidityPeriod(long validityPeriod) {
-        this.validityPeriod = validityPeriod;
+    public void setAccessTokenValidityPeriod(long accessTokenValidityPeriod) {
+        this.accessTokenValidityPeriod = accessTokenValidityPeriod;
+    }
+
+    public long getRefreshTokenValidityPeriod() {
+        return refreshTokenValidityPeriod;
+    }
+
+    public void setRefreshTokenValidityPeriod(long refreshTokenValidityPeriod) {
+        this.refreshTokenValidityPeriod = refreshTokenValidityPeriod;
     }
 
     public AuthenticatedUser getAuthzUser() {
@@ -78,8 +88,8 @@ public class OAuth2TokenMessageContext<T1 extends Serializable, T2 extends Seria
 
 
     @Override
-    public OAuth2TokenRequest getRequest() {
-        return (OAuth2TokenRequest)request;
+    public TokenRequest getRequest() {
+        return (TokenRequest)request;
     }
 
 }

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2015, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *  Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *  WSO2 Inc. licenses this file to you under the Apache License,
  *  Version 2.0 (the "License"); you may not use this file except
@@ -18,7 +18,7 @@
 
 package org.wso2.carbon.identity.inbound.auth.oauth2new.processor.authz;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.oltu.oauth2.as.issuer.MD5Generator;
 import org.apache.oltu.oauth2.as.issuer.OAuthIssuerImpl;
 import org.apache.oltu.oauth2.as.response.OAuthASResponse;
@@ -62,7 +62,7 @@ public class CodeResponseProcessor extends ROApprovalProcessor {
         Timestamp timestamp = new Timestamp(new Date().getTime());
 
         long authzCodeValidity = OAuth2ServerConfig.getInstance().getAuthzCodeValidity();
-        long callbackValidityPeriod = messageContext.getValidityPeriod();
+        long callbackValidityPeriod = messageContext.getAccessTokenValidityPeriod();
         if ((callbackValidityPeriod != OAuth2.UNASSIGNED_VALIDITY_PERIOD)
                 && callbackValidityPeriod > 0) {
             authzCodeValidity = callbackValidityPeriod;
