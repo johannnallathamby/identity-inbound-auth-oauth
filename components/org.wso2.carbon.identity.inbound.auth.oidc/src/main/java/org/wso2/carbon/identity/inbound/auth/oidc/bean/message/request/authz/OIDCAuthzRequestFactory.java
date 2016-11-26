@@ -18,6 +18,10 @@
 
 package org.wso2.carbon.identity.inbound.auth.oidc.bean.message.request.authz;
 
+import com.nimbusds.openid.connect.sdk.claims.ClaimRequirement;
+import com.nimbusds.openid.connect.sdk.claims.ClaimsTransport;
+import net.minidev.json.JSONArray;
+import net.minidev.json.JSONObject;
 import org.apache.oltu.oauth2.common.OAuth;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.authz.AuthzRequestFactory;
@@ -27,6 +31,11 @@ import org.wso2.carbon.identity.inbound.auth.oidc.OIDC;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.text.ParseException;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class OIDCAuthzRequestFactory extends AuthzRequestFactory {
@@ -85,6 +94,52 @@ public class OIDCAuthzRequestFactory extends AuthzRequestFactory {
         }
         if(prompts.contains(OIDC.Prompt.CONSENT)) {
             oidcAuthzRequestBuilder.setConsentRequired(true);
+        }
+        parseClaims((OIDCAuthzRequest.OIDCAuthzRequestBuilder)builder, request, response);
+    }
+
+    protected void parseClaims(OIDCAuthzRequest.OIDCAuthzRequestBuilder builder, HttpServletRequest request,
+                               HttpServletResponse response) throws OAuth2ClientException {
+
+        Set<OIDCAuthzRequest.Claim> claims = new HashSet();
+        String claimsParam = request.getParameter("claims");
+        JSONObject object = null;
+        try {
+            object = com.nimbusds.jose.util.JSONObjectUtils.parse(claimsParam);
+        } catch (ParseException e) {
+            throw OAuth2ClientException.error("Error occurred while parsing claims parameter " + claims);
+        }
+        JSONObject userinfo = (JSONObject)object.get("userinfo");
+        JSONObject idToken = (JSONObject)object.get("id_token");
+        JSONObject[] array = new JSONObject[] {userinfo, idToken};
+        for(int i = 0; i < 2 ; i++) {
+            String claimURI = null;
+            ClaimsTransport claimsTransport = i == 0 ? ClaimsTransport.USERINFO : ClaimsTransport.ID_TOKEN;
+            ClaimRequirement claimRequirement = ClaimRequirement.VOLUNTARY;
+            String value = null;
+            List<String> values = null;
+            JSONObject item = array[i];
+            for (Map.Entry<String, Object> entry : item.entrySet()) {
+                claimURI = entry.getKey();
+                JSONObject claimAttrs = (JSONObject) entry.getValue();
+                if (claimAttrs != null) {
+                    if(claimAttrs.get("essential") != null && (Boolean) claimAttrs.get("essential")) {
+                        claimRequirement = ClaimRequirement.ESSENTIAL;
+                    }
+                    value = (String) claimAttrs.get("value");
+                    JSONArray jsonValues = (JSONArray) claimAttrs.get("values");
+                    if (jsonValues != null && !jsonValues.isEmpty()) {
+                        Iterator ite = jsonValues.iterator();
+                        while (ite.hasNext()) {
+                            String next = (String) ite.next();
+                            values.add(next);
+                        }
+                    }
+                }
+                OIDCAuthzRequest.Claim claim = new OIDCAuthzRequest.Claim(claimURI, claimsTransport,
+                                                                          claimRequirement, value, values);
+                builder.addClaim(claim);
+            }
         }
     }
 }

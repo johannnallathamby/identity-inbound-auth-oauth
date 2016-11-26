@@ -18,11 +18,11 @@
 
 package org.wso2.carbon.identity.inbound.auth.oidc.cache;
 
-public class AuthnResultCacheCodeKey extends AuthnResultCacheKey {
+public class OIDCCacheCodeKey extends OIDCCacheKey {
 
     private static final long serialVersionUID = 5182867669631180253L;
 
-    public AuthnResultCacheCodeKey(String authzCodeId, String authzCode) {
+    public OIDCCacheCodeKey(String authzCodeId, String authzCode) {
         super(authzCodeId, authzCode);
     }
 }

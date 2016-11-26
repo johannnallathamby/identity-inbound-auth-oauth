@@ -28,58 +28,58 @@ import org.wso2.carbon.utils.CarbonUtils;
  * Stores authenticated user attributes and OpenID Connect specific attributes during OIDC Authorization request
  * processing. Those values are later required to serve OIDC Token request and build IDToken.
  */
-public class AuthnResultCache extends BaseCache<AuthnResultCacheKey, AuthnResultCacheEntry> {
+public class OIDCCache extends BaseCache<OIDCCacheKey, OIDCCacheEntry> {
 
-    private static final Log log = LogFactory.getLog(AuthnResultCache.class);
+    private static final Log log = LogFactory.getLog(OIDCCache.class);
 
-    private static final String USER_ATTRIBUTE_CACHE = "UserAttributeCache";
-    private static volatile AuthnResultCache instance;
+    private static final String OIDC_CACHE = "OIDCCache";
+    private static volatile OIDCCache instance;
 
-    private AuthnResultCache() {
-        super(USER_ATTRIBUTE_CACHE);
+    private OIDCCache() {
+        super(OIDC_CACHE);
     }
 
-    public static AuthnResultCache getInstance() {
+    public static OIDCCache getInstance() {
         CarbonUtils.checkSecurity();
         if (instance == null) {
-            synchronized (AuthnResultCache.class) {
+            synchronized (OIDCCache.class) {
                 if (instance == null) {
-                    instance = new AuthnResultCache();
+                    instance = new OIDCCache();
                 }
             }
         }
         return instance;
     }
 
-    public AuthnResultCacheEntry getValueFromCache(AuthnResultCacheKey key) {
+    public OIDCCacheEntry getValueFromCache(OIDCCacheKey key) {
 
-        AuthnResultCacheEntry entry = super.getValueFromCache(key);
+        OIDCCacheEntry entry = super.getValueFromCache(key);
         if (entry == null) {
             entry = getFromSessionStore(key.getTokenId());
         }
         return entry;
     }
 
-    public void addToCache(AuthnResultCacheKey key, AuthnResultCacheEntry entry) {
+    public void addToCache(OIDCCacheKey key, OIDCCacheEntry entry) {
 
         storeToSessionStore(key.getTokenId(), entry);
         super.addToCache(key, entry);
     }
 
-    public void clearCacheEntry(AuthnResultCacheKey key) {
+    public void clearCacheEntry(OIDCCacheKey key) {
         super.clearCacheEntry(key);
         clearFromSessionStore(key.getTokenId());
     }
 
-    private AuthnResultCacheEntry getFromSessionStore(String id) {
-        return (AuthnResultCacheEntry) SessionDataStore.getInstance().getSessionData(id, USER_ATTRIBUTE_CACHE);
+    private OIDCCacheEntry getFromSessionStore(String id) {
+        return (OIDCCacheEntry) SessionDataStore.getInstance().getSessionData(id, OIDC_CACHE);
     }
 
-    private void storeToSessionStore(String id, AuthnResultCacheEntry entry) {
-        SessionDataStore.getInstance().storeSessionData(id, USER_ATTRIBUTE_CACHE, entry);
+    private void storeToSessionStore(String id, OIDCCacheEntry entry) {
+        SessionDataStore.getInstance().storeSessionData(id, OIDC_CACHE, entry);
     }
 
     private void clearFromSessionStore(String id) {
-        SessionDataStore.getInstance().clearSessionData(id, USER_ATTRIBUTE_CACHE);
+        SessionDataStore.getInstance().clearSessionData(id, OIDC_CACHE);
     }
 }

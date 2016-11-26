@@ -20,17 +20,22 @@ package org.wso2.carbon.identity.inbound.auth.oidc.cache;
 
 import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticationResult;
 import org.wso2.carbon.identity.application.common.cache.CacheEntry;
+import org.wso2.carbon.identity.inbound.auth.oidc.bean.message.request.authz.OIDCAuthzRequest;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
-public class AuthnResultCacheEntry extends CacheEntry {
+public class OIDCCacheEntry extends CacheEntry {
 
     AuthenticationResult authnResult;
     String nonce;
     List<String> acrValues;
     long authTime = 0;
+    Set<String> scopes = new HashSet();
+    Set<OIDCAuthzRequest.Claim> requestedClaims = new HashSet();
 
-    public AuthnResultCacheEntry(AuthenticationResult authnResult) {
+    public OIDCCacheEntry(AuthenticationResult authnResult) {
         this.authnResult = authnResult;
     }
 
@@ -60,5 +65,21 @@ public class AuthnResultCacheEntry extends CacheEntry {
 
     public long getAuthTime() {
         return authTime;
+    }
+
+    public Set<OIDCAuthzRequest.Claim> getRequestedClaims() {
+        return requestedClaims;
+    }
+
+    public void setRequestedClaims(Set<OIDCAuthzRequest.Claim> requestedClaims) {
+        this.requestedClaims = requestedClaims;
+    }
+
+    public Set<String> getScopes() {
+        return scopes;
+    }
+
+    public void setScopes(Set<String> scopes) {
+        this.scopes = scopes;
     }
 }

@@ -50,4 +50,8 @@ public class OIDC {
 
     public static final String OIDC_SCOPE_CONFIG_FILE_NAME = "oidc-scope-config.xml";
     public static final String OIDC_SCOPE_CONFIG_RESOURCE_PATH = "/oidc";
+    public static final String UPDATED_AT = "updated_at";
+    public static final String PHONE_NUMBER_VERIFIED = "phone_number_verified";
+    public static final String EMAIL_VERIFIED = "email_verified";
+    public static final String ADDRESS = "address";
 }

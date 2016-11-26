@@ -18,6 +18,8 @@
 
 package org.wso2.carbon.identity.inbound.auth.oidc.bean.message.request.authz;
 
+import com.nimbusds.openid.connect.sdk.claims.ClaimRequirement;
+import com.nimbusds.openid.connect.sdk.claims.ClaimsTransport;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.authz.OAuth2AuthzRequest;
 
 import javax.servlet.http.HttpServletRequest;
@@ -40,6 +42,7 @@ public class OIDCAuthzRequest extends OAuth2AuthzRequest {
     protected boolean isLoginRequired = false;
     protected boolean isConsentRequired = false;
     protected boolean isPromptNone = false;
+    protected Set<Claim> claims = new HashSet();
 
     protected OIDCAuthzRequest(OIDCAuthzRequestBuilder builder) {
         super(builder);
@@ -51,6 +54,7 @@ public class OIDCAuthzRequest extends OAuth2AuthzRequest {
         this.isLoginRequired = builder.isLoginRequired;
         this.isConsentRequired = builder.isConsentRequired;
         this.isPromptNone = builder.isPromptNone;
+        this.claims = builder.claims;
     }
 
     public String getNonce() {
@@ -89,17 +93,61 @@ public class OIDCAuthzRequest extends OAuth2AuthzRequest {
         return this.isPromptNone;
     }
 
+    public Set<Claim> getClaims() {
+        return claims;
+    }
+
+    // may have to move outside this class because this class is used from token endpoint and userinfo endpoint also
+    public static class Claim {
+
+        private String claimURI;
+        private ClaimsTransport claimTransport;
+        private ClaimRequirement claimRequirement;
+        private String value;
+        private List<String> values;
+
+        public Claim(String claimURI, ClaimsTransport claimTransport, ClaimRequirement claimRequirement,
+                     String value, List<String> values) {
+            this.claimURI = claimURI;
+            this.claimTransport = claimTransport;
+            this.claimRequirement = claimRequirement;
+            this.value = value;
+            this.values = values;
+        }
+
+        public String getClaimURI() {
+            return claimURI;
+        }
+
+        public ClaimsTransport getClaimTransport() {
+            return claimTransport;
+        }
+
+        public ClaimRequirement getClaimRequirement() {
+            return claimRequirement;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        public List<String> getValues() {
+            return values;
+        }
+    }
+
     public static class OIDCAuthzRequestBuilder extends AuthzRequestBuilder {
 
         protected String nonce;
         protected String display;
         protected String idTokenHint;
         protected String loginHint;
-        protected Set<String> prompts = new HashSet<>();
+        protected Set<String> prompts = new HashSet();
         protected List<String> acrValues = new ArrayList();
         protected boolean isLoginRequired = false;
         protected boolean isConsentRequired = false;
         protected boolean isPromptNone = false;
+        protected Set<Claim> claims = new HashSet();
 
         public OIDCAuthzRequestBuilder(HttpServletRequest request, HttpServletResponse response) {
             super(request, response);
@@ -161,6 +209,23 @@ public class OIDCAuthzRequest extends OAuth2AuthzRequest {
 
         public OIDCAuthzRequestBuilder setPromptNone(boolean isPromptNone) {
             this.isPromptNone = isPromptNone;
+            return this;
+        }
+
+        public OIDCAuthzRequestBuilder setClaims(Set<Claim> claims) {
+            if(claims != null && !claims.isEmpty()) {
+                this.claims = claims;
+            }
+            return this;
+        }
+
+        public OIDCAuthzRequestBuilder addClaims(Set<Claim> claims) {
+            this.claims.addAll(claims);
+            return this;
+        }
+
+        public OIDCAuthzRequestBuilder addClaim(Claim claim) {
+            this.claims.add(claim);
             return this;
         }
 

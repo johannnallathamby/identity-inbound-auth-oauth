@@ -19,7 +19,6 @@
 package org.wso2.carbon.identity.inbound.auth.oidc.handler;
 
 import com.nimbusds.jose.JWSAlgorithm;
-import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.oauth2.sdk.id.Audience;
 import com.nimbusds.oauth2.sdk.id.Issuer;
 import com.nimbusds.oauth2.sdk.id.Subject;
@@ -28,31 +27,25 @@ import com.nimbusds.openid.connect.sdk.claims.ACR;
 import com.nimbusds.openid.connect.sdk.claims.AccessTokenHash;
 import com.nimbusds.openid.connect.sdk.claims.AuthorizedParty;
 import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
-import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.wso2.carbon.identity.application.common.model.ClaimMapping;
 import org.wso2.carbon.identity.application.common.model.ServiceProvider;
 import org.wso2.carbon.identity.core.handler.AbstractIdentityMessageHandler;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2AuthzMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2MessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2TokenMessageContext;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.HandlerManager;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AccessToken;
 import org.wso2.carbon.identity.inbound.auth.oidc.OIDC;
-import org.wso2.carbon.identity.inbound.auth.oidc.bean.context.UserinfoMessageContext;
-import org.wso2.carbon.identity.inbound.auth.oidc.bean.message.request.authz.OIDCAuthzRequest;
-import org.wso2.carbon.identity.inbound.auth.oidc.cache.AuthnResultCache;
-import org.wso2.carbon.identity.inbound.auth.oidc.cache.AuthnResultCacheAccessTokenKey;
-import org.wso2.carbon.identity.inbound.auth.oidc.cache.AuthnResultCacheEntry;
+import org.wso2.carbon.identity.inbound.auth.oidc.cache.OIDCCache;
+import org.wso2.carbon.identity.inbound.auth.oidc.cache.OIDCCacheAccessTokenKey;
+import org.wso2.carbon.identity.inbound.auth.oidc.cache.OIDCCacheEntry;
 import org.wso2.carbon.identity.inbound.auth.oidc.model.OIDCServerConfig;
 import org.wso2.carbon.identity.inbound.auth.oidc.util.OIDCUtils;
 
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -101,7 +94,7 @@ public class IDTokenHandler extends AbstractIdentityMessageHandler {
                                                    accessToken.getAccessToken());
             }
         }
-        AuthnResultCacheEntry cacheEntry = getNonceAcrAuthTime(accessToken.getAccessTokenId(), accessToken.getAccessToken());
+        OIDCCacheEntry cacheEntry = getNonceAcrAuthTime(accessToken.getAccessTokenId(), accessToken.getAccessToken());
         String nonce = null;
         List<String> acrValues = new ArrayList();
         long authTime = 0;
@@ -136,7 +129,7 @@ public class IDTokenHandler extends AbstractIdentityMessageHandler {
             atHash = OIDCUtils.calculateAtHash(OIDCServerConfig.getInstance().getIdTokenSigAlg(),
                                                accessToken.getAccessToken());
         }
-        AuthnResultCacheEntry cacheEntry = getNonceAcrAuthTime(accessToken.getAccessTokenId(), accessToken
+        OIDCCacheEntry cacheEntry = getNonceAcrAuthTime(accessToken.getAccessTokenId(), accessToken
                 .getAccessToken());
         String nonce = null;
         List<String> acrValues = new ArrayList();
@@ -187,10 +180,10 @@ public class IDTokenHandler extends AbstractIdentityMessageHandler {
         return idTokenClaimSet;
     }
 
-    protected AuthnResultCacheEntry getNonceAcrAuthTime(String accessTokenId, String accessToken) {
+    protected OIDCCacheEntry getNonceAcrAuthTime(String accessTokenId, String accessToken) {
 
-        AuthnResultCacheAccessTokenKey cacheKey = new AuthnResultCacheAccessTokenKey(accessTokenId, accessToken);
-        AuthnResultCacheEntry cacheEntry = AuthnResultCache.getInstance().getValueFromCache(cacheKey);
+        OIDCCacheAccessTokenKey cacheKey = new OIDCCacheAccessTokenKey(accessTokenId, accessToken);
+        OIDCCacheEntry cacheEntry = OIDCCache.getInstance().getValueFromCache(cacheKey);
         return cacheEntry;
     }
 }

@@ -20,14 +20,14 @@ package org.wso2.carbon.identity.inbound.auth.oidc.cache;
 
 import org.wso2.carbon.identity.application.common.cache.CacheKey;
 
-public abstract class AuthnResultCacheKey extends CacheKey {
+public abstract class OIDCCacheKey extends CacheKey {
 
     private static final long serialVersionUID = 6589756391127446125L;
 
     private String tokenId;
     private String tokenValue;
 
-    public AuthnResultCacheKey(String tokenId, String tokenValue) {
+    public OIDCCacheKey(String tokenId, String tokenValue) {
         this.tokenId = tokenId;
         this.tokenValue = tokenValue;
     }
@@ -45,11 +45,11 @@ public abstract class AuthnResultCacheKey extends CacheKey {
         if (this == o) {
             return true;
         }
-        if (!(o instanceof AuthnResultCacheKey)) {
+        if (!(o instanceof OIDCCacheKey)) {
             return false;
         }
 
-        AuthnResultCacheKey that = (AuthnResultCacheKey) o;
+        OIDCCacheKey that = (OIDCCacheKey) o;
 
         if (!tokenId.equals(that.tokenId)) {
             return false;

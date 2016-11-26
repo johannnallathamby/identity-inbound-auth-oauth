@@ -40,9 +40,9 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Util;
 import org.wso2.carbon.identity.inbound.auth.oidc.OIDC;
 import org.wso2.carbon.identity.inbound.auth.oidc.bean.message.request.authz.OIDCAuthzRequest;
 import org.wso2.carbon.identity.inbound.auth.oidc.bean.message.response.authz.OIDCAuthzResponse;
-import org.wso2.carbon.identity.inbound.auth.oidc.cache.AuthnResultCache;
-import org.wso2.carbon.identity.inbound.auth.oidc.cache.AuthnResultCacheAccessTokenKey;
-import org.wso2.carbon.identity.inbound.auth.oidc.cache.AuthnResultCacheEntry;
+import org.wso2.carbon.identity.inbound.auth.oidc.cache.OIDCCache;
+import org.wso2.carbon.identity.inbound.auth.oidc.cache.OIDCCacheAccessTokenKey;
+import org.wso2.carbon.identity.inbound.auth.oidc.cache.OIDCCacheEntry;
 import org.wso2.carbon.identity.inbound.auth.oidc.handler.OIDCHandlerManager;
 
 import java.util.List;
@@ -127,8 +127,9 @@ public class OIDCTokenResponseProcessor extends TokenResponseProcessor {
         String nonce = ((OIDCAuthzRequest)messageContext.getRequest()).getNonce();
         List<String> acrValues = ((OIDCAuthzRequest)messageContext.getRequest()).getAcrValues();
         long authTime = (Long)authnResult.getProperty("auth_time");
+        Set<OIDCAuthzRequest.Claim> claims = ((OIDCAuthzRequest) messageContext.getRequest()).getClaims();
         storeAuthnResultToCache(accessToken.getAccessTokenId(), accessToken.getAccessToken(), authnResult, nonce,
-                                acrValues, authTime);
+                                acrValues, authTime, accessToken.getScopes(), claims);
 
         return buildAuthzResponse(messageContext);
     }
@@ -165,13 +166,16 @@ public class OIDCTokenResponseProcessor extends TokenResponseProcessor {
     }
 
     protected void storeAuthnResultToCache(String tokenId, String token, AuthenticationResult authnResult,
-                                           String nonce, List<String> acrValues, long authTime) {
-        AuthnResultCacheAccessTokenKey key = new AuthnResultCacheAccessTokenKey(tokenId, token);
-        AuthnResultCacheEntry entry = new AuthnResultCacheEntry(authnResult);
+                                           String nonce, List<String> acrValues, long authTime,
+                                           Set<String> scopes, Set<OIDCAuthzRequest.Claim> claims) {
+        OIDCCacheAccessTokenKey key = new OIDCCacheAccessTokenKey(tokenId, token);
+        OIDCCacheEntry entry = new OIDCCacheEntry(authnResult);
         entry.setNonce(nonce);
         entry.setAcrValues(acrValues);
         entry.setAuthTime(authTime);
-        AuthnResultCache.getInstance().addToCache(key, entry);
+        entry.setScopes(scopes);
+        entry.setRequestedClaims(claims);
+        OIDCCache.getInstance().addToCache(key, entry);
     }
 
 }

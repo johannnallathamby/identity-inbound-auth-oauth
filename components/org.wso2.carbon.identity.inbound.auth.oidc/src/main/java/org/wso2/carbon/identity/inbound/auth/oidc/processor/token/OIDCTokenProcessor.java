@@ -39,14 +39,13 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AuthzCode;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.processor.token.TokenProcessor;
 import org.wso2.carbon.identity.inbound.auth.oidc.OIDC;
 import org.wso2.carbon.identity.inbound.auth.oidc.bean.message.response.token.OIDCTokenResponse;
-import org.wso2.carbon.identity.inbound.auth.oidc.cache.AuthnResultCache;
-import org.wso2.carbon.identity.inbound.auth.oidc.cache.AuthnResultCacheAccessTokenKey;
-import org.wso2.carbon.identity.inbound.auth.oidc.cache.AuthnResultCacheCodeKey;
-import org.wso2.carbon.identity.inbound.auth.oidc.cache.AuthnResultCacheEntry;
+import org.wso2.carbon.identity.inbound.auth.oidc.cache.OIDCCache;
+import org.wso2.carbon.identity.inbound.auth.oidc.cache.OIDCCacheAccessTokenKey;
+import org.wso2.carbon.identity.inbound.auth.oidc.cache.OIDCCacheCodeKey;
+import org.wso2.carbon.identity.inbound.auth.oidc.cache.OIDCCacheEntry;
 import org.wso2.carbon.identity.inbound.auth.oidc.handler.OIDCHandlerManager;
 
 import java.util.HashMap;
-import java.util.List;
 
 /*
  * InboundRequestProcessor for OAuth2 Token Endpoint
@@ -183,15 +182,15 @@ public class OIDCTokenProcessor extends TokenProcessor {
 
     protected void replaceEntryWithAccessToken(String codeId, String code, String accessTokenId, String accessToken) {
 
-        AuthnResultCacheCodeKey codeKey = new AuthnResultCacheCodeKey(codeId, code);
-        AuthnResultCacheEntry entry = AuthnResultCache.getInstance().getValueFromCache(codeKey);
+        OIDCCacheCodeKey codeKey = new OIDCCacheCodeKey(codeId, code);
+        OIDCCacheEntry entry = OIDCCache.getInstance().getValueFromCache(codeKey);
         if(entry == null) {
             log.fatal("AuthzCode entry could not be found for codeId: " + codeId +". Couldn't replace AuthnResult " +
                       "against new access token: " + accessTokenId);
             return;
         }
 
-        AuthnResultCacheAccessTokenKey tokenKey = new AuthnResultCacheAccessTokenKey(accessTokenId, accessToken);
-        AuthnResultCache.getInstance().addToCache(tokenKey, entry);
+        OIDCCacheAccessTokenKey tokenKey = new OIDCCacheAccessTokenKey(accessTokenId, accessToken);
+        OIDCCache.getInstance().addToCache(tokenKey, entry);
     }
 }
