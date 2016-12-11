@@ -24,7 +24,7 @@ import org.wso2.carbon.identity.inbound.auth.oidc.model.OIDCServerConfig;
 import org.wso2.carbon.stratos.common.beans.TenantInfoBean;
 import org.wso2.carbon.stratos.common.exception.StratosException;
 
-public class ScopesInitListener extends AbstractIdentityTenantMgtListener {
+public class TenantScopesInitListener extends AbstractIdentityTenantMgtListener {
 
     @Override
     public void onTenantCreate(TenantInfoBean tenantInfoBean) throws StratosException {

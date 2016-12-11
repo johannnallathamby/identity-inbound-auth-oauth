@@ -18,15 +18,18 @@
 
 package org.wso2.carbon.identity.inbound.auth.oauth2new.revoke;
 
-import org.wso2.carbon.identity.application.common.model.User;
+import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
+import org.wso2.carbon.identity.application.common.model.ServiceProvider;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2InternalException;
 
 import java.util.Set;
 
-public interface OAuth2RevocationService {
+public interface OAuth2TokenRevocationService {
 
-    Set<String> getAppsAuthorizedByUser(User user) throws OAuth2InternalException;
+    Set<ServiceProvider> getAppsAuthorizedByUser(AuthenticatedUser user) throws OAuth2InternalException;
 
-    void revokeApplication(String application, String tenantDomain) throws OAuth2InternalException;
+    void revokeApplication(AuthenticatedUser user, String clientId) throws OAuth2InternalException;
+
+    void revokeApplications(AuthenticatedUser user) throws OAuth2InternalException;
 
 }

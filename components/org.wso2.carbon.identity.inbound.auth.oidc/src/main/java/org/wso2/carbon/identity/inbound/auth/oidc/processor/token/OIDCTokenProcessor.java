@@ -28,7 +28,7 @@ import org.wso2.carbon.identity.application.authentication.framework.inbound.Ide
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2TokenMessageContext;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.token.OAuth2TokenRequest;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.token.TokenRequest;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.token.TokenResponse;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2.ClientType;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2ClientException;
@@ -87,7 +87,7 @@ public class OIDCTokenProcessor extends TokenProcessor {
             throws FrameworkException {
 
         OAuth2TokenMessageContext messageContext = new OAuth2TokenMessageContext(
-                (OAuth2TokenRequest) identityRequest, new HashMap<String,String>());
+                (TokenRequest) identityRequest, new HashMap<String,String>());
 
         if(ClientType.CONFIDENTIAL == clientType(messageContext)) {
             String clientId = authenticateClient(messageContext);

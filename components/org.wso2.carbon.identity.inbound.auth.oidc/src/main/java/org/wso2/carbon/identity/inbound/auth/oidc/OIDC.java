@@ -29,6 +29,7 @@ public class OIDC {
     public static final String ID_TOKEN_HINT = "id_token_hint";
     public static final String LOGIN_HINT = "login_hint";
     public static final String PROMPT = "prompt";
+    public static final String RESPONSE_MODE = "response_mode";
 
     public static class Prompt {
         public static final String LOGIN = "login";
@@ -41,6 +42,10 @@ public class OIDC {
         public static final String SHA256 = "SHA-256";
         public static final String SHA384 = "SHA-384";
         public static final String SHA512 = "SHA-512";
+    }
+
+    public static class ResponseMode {
+        public static final String FORM_POST = "form_post";
     }
 
     public static final String ACCESS_TOKEN = "ACCESS_TOKEN";

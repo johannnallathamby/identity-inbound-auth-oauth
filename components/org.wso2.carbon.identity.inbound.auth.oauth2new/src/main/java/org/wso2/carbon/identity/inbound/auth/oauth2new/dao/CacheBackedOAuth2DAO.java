@@ -26,6 +26,7 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.cache.AccessTokenCache;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.cache.AuthorizationGrantCache;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.cache.AuthorizationGrantCacheKey;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.cache.AuthzCodeCache;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.AccessTokenExistsException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AccessToken;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AuthzCode;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.revoke.RevocationMessageContext;
@@ -44,14 +45,16 @@ public class CacheBackedOAuth2DAO extends OAuth2DAO {
     }
 
     @Override
-    public AccessToken getLatestActiveOrExpiredAccessToken(String clientId, AuthenticatedUser authzUser, Set<String> scopes, OAuth2MessageContext messageContext) {
+    public AccessToken getLatestAccessToken(String clientId, AuthenticatedUser authzUser, Set<String>
+            scopes, Set<String> states, OAuth2MessageContext messageContext) {
 
         AuthorizationGrantCacheKey key = new AuthorizationGrantCacheKey(clientId, authzUser, scopes);
         AccessToken accessToken = AuthorizationGrantCache.getInstance().getValueFromCache(key);
         if(accessToken != null) {
             return accessToken;
         }
-        accessToken = wrappedDAO.getLatestActiveOrExpiredAccessToken(clientId, authzUser, scopes, messageContext);
+        accessToken = wrappedDAO.getLatestAccessToken(clientId, authzUser, scopes, states,
+                                                      messageContext);
         if(accessToken != null) {
             AuthorizationGrantCache.getInstance().addToCache(key, accessToken);
             if(AccessTokenCache.getInstance().getValueFromCache(accessToken.getAccessToken()) != null) {
@@ -86,7 +89,11 @@ public class CacheBackedOAuth2DAO extends OAuth2DAO {
             AuthorizationGrantCache.getInstance().addToCache(key, AccessToken.createAccessToken(accessToken,
                     OAuth2.TokenState.EXPIRED));
         }
-        wrappedDAO.storeAccessToken(newAccessToken, oldAccessToken, authorizationCode, messageContext);
+        try {
+            wrappedDAO.storeAccessToken(newAccessToken, oldAccessToken, authorizationCode, messageContext);
+        } catch (AccessTokenExistsException e) {
+            newAccessToken = e.getAccessToken();
+        }
         AuthorizationGrantCache.getInstance().addToCache(key, newAccessToken);
         AccessTokenCache.getInstance().addToCache(newAccessToken.getAccessToken(), newAccessToken);
 
@@ -148,8 +155,8 @@ public class CacheBackedOAuth2DAO extends OAuth2DAO {
     }
 
     @Override
-    public Set<String> getAuthorizedClientIDs(AuthenticatedUser authzUser, RevocationMessageContext messageContext) {
-        return wrappedDAO.getAuthorizedClientIDs(authzUser, messageContext);
+    public Set<AccessToken> getAuthorizedAccessTokens(AuthenticatedUser authzUser, RevocationMessageContext messageContext) {
+        return wrappedDAO.getAuthorizedAccessTokens(authzUser, messageContext);
     }
 
     public AccessToken getAccessToken(String bearerToken, OAuth2MessageContext messageContext) {
@@ -208,5 +215,43 @@ public class CacheBackedOAuth2DAO extends OAuth2DAO {
             }
             wrappedDAO.revokeRefreshToken(refreshToken, messageContext);
         }
+    }
+
+    @Override
+    public Set<AccessToken> getAccessTokensByClientId(String clientId, boolean includeExpired) {
+        return wrappedDAO.getAccessTokensByClientId(clientId, includeExpired);
+    }
+
+    @Override
+    public Set<AuthzCode> getAuthorizationCodesByClientId(String clientId, boolean includeExpired) {
+        return wrappedDAO.getAuthorizationCodesByClientId(clientId, includeExpired);
+    }
+
+    @Override
+    public Set<AccessToken> getAccessTokensOfTenant(String tenantDomain, boolean includeExpired) {
+        return wrappedDAO.getAccessTokensOfTenant(tenantDomain, includeExpired);
+    }
+
+    @Override
+    public Set<AuthzCode> getAuthorizationCodesOfTenant(String tenantDomain, boolean includeExpired) {
+        return wrappedDAO.getAuthorizationCodesOfTenant(tenantDomain, includeExpired);
+    }
+
+    @Override
+    public Set<AccessToken> getAccessTokensOfUserStore(String tenantDomain, String userStoreDomain,
+                                                       boolean includeExpired) {
+        return wrappedDAO.getAccessTokensOfUserStore(tenantDomain, userStoreDomain, includeExpired);
+    }
+
+    @Override
+    public Set<AuthzCode> getAuthorizationCodesOfUserStore(String tenantDomain, String userStoreDomain,
+                                                           boolean includeExpired) {
+        return wrappedDAO.getAuthorizationCodesOfUserStore(tenantDomain, userStoreDomain, includeExpired);
+    }
+
+    // need to implement the logic to remove tokens from AuthzCodeCache and AccessTokenCache
+    @Override
+    public void renameUserStore(String tenantDomain, String currentName, String newName) {
+        wrappedDAO.renameUserStore(tenantDomain, currentName, newName);
     }
 }

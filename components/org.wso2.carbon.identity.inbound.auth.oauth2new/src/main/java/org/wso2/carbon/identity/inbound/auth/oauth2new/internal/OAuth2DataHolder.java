@@ -22,6 +22,7 @@ import org.wso2.carbon.identity.application.mgt.ApplicationManagementService;
 import org.wso2.carbon.identity.core.util.IdentityCoreInitializedEvent;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.dao.OAuth2DAOHandler;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.client.ClientAuthHandler;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.interceptor.OAuth2EventInterceptor;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.issuer.AccessTokenResponseIssuer;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.persist.TokenPersistenceProcessor;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.introspect.IntrospectionHandler;
@@ -39,12 +40,13 @@ public class OAuth2DataHolder {
     private RegistryService registryService;
     private IdentityCoreInitializedEvent identityCoreInitializedEvent;
     private ApplicationManagementService appMgtService;
-    private List<ClientAuthHandler> clientAuthHandlers = new ArrayList<>();
-    private List<AccessTokenResponseIssuer> accessTokenIssuers = new ArrayList<>();
-    private List<TokenPersistenceProcessor> tokenPersistenceProcessors = new ArrayList<>();
-    private List<OAuth2DAOHandler> oAuth2DAOHandlers = new ArrayList<>();
-    private List<AuthorizationGrantHandler> grantHandlers = new ArrayList<>();
-    private List<IntrospectionHandler> introspectionHandlers = new ArrayList<>();
+    private List<ClientAuthHandler> clientAuthHandlers = new ArrayList();
+    private List<AccessTokenResponseIssuer> accessTokenIssuers = new ArrayList();
+    private List<TokenPersistenceProcessor> tokenPersistenceProcessors = new ArrayList();
+    private List<OAuth2DAOHandler> oAuth2DAOHandlers = new ArrayList();
+    private List<AuthorizationGrantHandler> grantHandlers = new ArrayList();
+    private List<IntrospectionHandler> introspectionHandlers = new ArrayList();
+    private List<OAuth2EventInterceptor> interceptors = new ArrayList();
 
     private OAuth2DataHolder() {
 
@@ -108,5 +110,9 @@ public class OAuth2DataHolder {
 
     public List<IntrospectionHandler> getIntrospectionHandlers() {
         return introspectionHandlers;
+    }
+
+    public List<OAuth2EventInterceptor> getInterceptors() {
+        return interceptors;
     }
 }

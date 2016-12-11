@@ -32,7 +32,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 
-public class HttpConsentResponseFactory extends HttpIdentityResponseFactory {
+public class ConsentResponseFactory extends HttpIdentityResponseFactory {
 
     @Override
     public String getName() {

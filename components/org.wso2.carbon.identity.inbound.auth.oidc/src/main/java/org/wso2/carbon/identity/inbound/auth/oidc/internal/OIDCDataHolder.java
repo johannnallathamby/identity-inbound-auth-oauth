@@ -18,6 +18,7 @@
 
 package org.wso2.carbon.identity.inbound.auth.oidc.internal;
 
+import org.wso2.carbon.identity.application.mgt.ApplicationManagementService;
 import org.wso2.carbon.identity.inbound.auth.oidc.handler.IDTokenHandler;
 import org.wso2.carbon.registry.api.RegistryService;
 import org.wso2.carbon.user.core.service.RealmService;
@@ -31,6 +32,7 @@ public class OIDCDataHolder {
     private RealmService realmService;
     private RegistryService registryService;
     private List<IDTokenHandler> idTokenHandlers = new ArrayList<>();
+    private ApplicationManagementService appMgtService = null;
 
     private OIDCDataHolder() {
 
@@ -58,5 +60,13 @@ public class OIDCDataHolder {
 
     public List<IDTokenHandler> getIDTokenHandlers() {
         return idTokenHandlers;
+    }
+
+    public void setAppMgtService(ApplicationManagementService appMgtService) {
+        this.appMgtService = appMgtService;
+    }
+
+    public ApplicationManagementService getAppMgtService() {
+        return appMgtService;
     }
 }

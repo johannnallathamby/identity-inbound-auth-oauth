@@ -16,7 +16,7 @@
  * under the License.
  */
 
-package org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.token;
+package org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.authz;
 
 import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
 import org.apache.oltu.oauth2.common.message.OAuthResponse;
@@ -26,16 +26,12 @@ import org.wso2.carbon.identity.application.authentication.framework.inbound.Ide
 import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2RuntimeException;
 
-public class HttpTokenResponseFactory extends HttpIdentityResponseFactory {
+public class AuthzResponseFactory extends HttpIdentityResponseFactory {
 
-    @Override
-    public String getName() {
-        return "HttpTokenResponseFactory";
-    }
 
     @Override
     public boolean canHandle(IdentityResponse identityResponse) {
-        if(identityResponse instanceof TokenResponse) {
+        if(identityResponse instanceof AuthzResponse) {
             return true;
         }
         return false;
@@ -52,16 +48,17 @@ public class HttpTokenResponseFactory extends HttpIdentityResponseFactory {
     @Override
     public void create(HttpIdentityResponse.HttpIdentityResponseBuilder builder, IdentityResponse identityResponse) {
 
-        TokenResponse tokenResponse = ((TokenResponse)identityResponse);
-        OAuthResponse oauthResponse = null;
+        AuthzResponse authzResponse = ((AuthzResponse)identityResponse);
+        OAuthResponse response = null;
         try {
-            oauthResponse = tokenResponse.getBuilder().buildJSONMessage();
+            response = authzResponse.getBuilder().buildQueryMessage();
         } catch (OAuthSystemException e) {
-            throw OAuth2RuntimeException.error("Error occurred while building JSON message fo token endpoint response");
+            throw OAuth2RuntimeException.error("Error occurred while building query message for authorization " +
+                                               "response");
         }
-        builder.setStatusCode(oauthResponse.getResponseStatus());
-        builder.setHeaders(oauthResponse.getHeaders());
-        builder.setBody(oauthResponse.getBody());
+        builder.setStatusCode(response.getResponseStatus());
+        builder.setRedirectURL(response.getLocationUri());
+        builder.setHeaders(response.getHeaders());
         builder.addHeader(OAuth2.Header.CACHE_CONTROL,
                           OAuth2.HeaderValue.CACHE_CONTROL_NO_STORE);
         builder.addHeader(OAuth2.Header.PRAGMA,

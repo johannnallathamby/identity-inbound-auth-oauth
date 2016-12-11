@@ -20,6 +20,7 @@ package org.wso2.carbon.identity.inbound.auth.oauth2new.model;
 
 import org.apache.axiom.om.OMElement;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.math.NumberUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.identity.core.util.IdentityConfigParser;
@@ -44,10 +45,10 @@ public class OAuth2ServerConfig {
 
     private static final String CONFIG_ELEM_OAUTH = "OAuth2";
 
-    private static String oauth2AuthzEPUrl = null;
-    private static String oauth2TokenEPUrl = null;
-    private static String consentPageURL = null;
-    private static String errorPageURL = null;
+    private String oauth2AuthzEPUrl = null;
+    private String oauth2TokenEPUrl = null;
+    private String consentPageURL = null;
+    private String errorPageURL = null;
     private long authzCodeValidity = 300;
     private long userAccessTokenValidity = 3600;
     private long applicationAccessTokenValidity = 3600;
@@ -55,6 +56,7 @@ public class OAuth2ServerConfig {
     private long timeStampSkew = 300;
     private boolean isRefreshTokenRenewalEnabled = true;
     private boolean isSkipConsentPage = false;
+    private int tokenPersistenceRetryCount = 5;
 
     private void buildOAuth2ServerConfig() {
 
@@ -77,6 +79,8 @@ public class OAuth2ServerConfig {
 
         // read skip consent page config
         parseSkipConsentPage(oauthElem);
+
+        parsePersistenceRetryCount(oauthElem);
     }
 
     public String getOAuth2AuthzEPUrl() {
@@ -121,6 +125,10 @@ public class OAuth2ServerConfig {
 
     public boolean isSkipConsentPage() {
         return isSkipConsentPage;
+    }
+
+    public int getTokenPersistenceRetryCount() {
+        return tokenPersistenceRetryCount;
     }
 
     private void parseOAuth2URLs(OMElement oauth2Elem) {
@@ -262,6 +270,18 @@ public class OAuth2ServerConfig {
         }
     }
 
+    private void parsePersistenceRetryCount(OMElement oauth2Elem) {
+
+        OMElement retryCountElem = oauth2Elem.getFirstChildWithName(getQNameWithIdentityNS(
+                ConfigElements.PERSISTENCE_RETRY_COUNT));
+        if (retryCountElem != null && NumberUtils.isNumber(retryCountElem.getText())) {
+            tokenPersistenceRetryCount = Integer.parseInt(retryCountElem.getText());
+        }
+        if (log.isDebugEnabled()) {
+            log.debug("TokenPersistenceRetryCount was set to : " + tokenPersistenceRetryCount);
+        }
+    }
+
     /**
      * Localpart names for the OAuth2 configurations in identity.xml.
      */
@@ -287,6 +307,9 @@ public class OAuth2ServerConfig {
 
         // Skip consent page
         private static final String SKIP_CONSENT_PAGE = "SkipConsentPage";
+
+        // Persistence retry count
+        private static final String PERSISTENCE_RETRY_COUNT = "AccessTokenPersistenceRetryCount";
     }
 
     private QName getQNameWithIdentityNS(String localPart) {

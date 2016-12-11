@@ -64,13 +64,17 @@ public class IntrospectionProcessor extends OAuth2IdentityRequestProcessor {
         IntrospectionMessageContext messageContext = new IntrospectionMessageContext(introspectionRequest,
                 new HashMap<String,String>());
 
+        HandlerManager.getInstance().triggerPreTokenIntrospections(messageContext);
+
         if(ClientType.CONFIDENTIAL == clientType(messageContext)) {
             String clientId = authenticateClient(messageContext);
             messageContext.setClientId(clientId);
         }
 
-
         IntrospectionResponse.IntrospectionResponseBuilder introspectionResponseBuilder = introspect(messageContext);
+
+        HandlerManager.getInstance().triggerPostTokenIntrospections(messageContext);
+
         return introspectionResponseBuilder;
     }
 

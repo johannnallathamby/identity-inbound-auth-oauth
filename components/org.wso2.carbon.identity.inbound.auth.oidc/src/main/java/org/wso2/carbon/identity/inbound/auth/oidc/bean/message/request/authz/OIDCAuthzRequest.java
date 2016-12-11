@@ -20,7 +20,7 @@ package org.wso2.carbon.identity.inbound.auth.oidc.bean.message.request.authz;
 
 import com.nimbusds.openid.connect.sdk.claims.ClaimRequirement;
 import com.nimbusds.openid.connect.sdk.claims.ClaimsTransport;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.authz.OAuth2AuthzRequest;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.authz.AuthzRequest;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -29,7 +29,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class OIDCAuthzRequest extends OAuth2AuthzRequest {
+public class OIDCAuthzRequest extends AuthzRequest {
 
     private static final long serialVersionUID = -3009563708954787261L;
 
@@ -43,6 +43,7 @@ public class OIDCAuthzRequest extends OAuth2AuthzRequest {
     protected boolean isConsentRequired = false;
     protected boolean isPromptNone = false;
     protected Set<Claim> claims = new HashSet();
+    protected String response_mode;
 
     protected OIDCAuthzRequest(OIDCAuthzRequestBuilder builder) {
         super(builder);
@@ -55,6 +56,7 @@ public class OIDCAuthzRequest extends OAuth2AuthzRequest {
         this.isConsentRequired = builder.isConsentRequired;
         this.isPromptNone = builder.isPromptNone;
         this.claims = builder.claims;
+        this.response_mode = builder.responseMode;
     }
 
     public String getNonce() {
@@ -95,6 +97,10 @@ public class OIDCAuthzRequest extends OAuth2AuthzRequest {
 
     public Set<Claim> getClaims() {
         return claims;
+    }
+
+    public String getResponseMode() {
+        return response_mode;
     }
 
     // may have to move outside this class because this class is used from token endpoint and userinfo endpoint also
@@ -148,6 +154,7 @@ public class OIDCAuthzRequest extends OAuth2AuthzRequest {
         protected boolean isConsentRequired = false;
         protected boolean isPromptNone = false;
         protected Set<Claim> claims = new HashSet();
+        protected String responseMode;
 
         public OIDCAuthzRequestBuilder(HttpServletRequest request, HttpServletResponse response) {
             super(request, response);
@@ -226,6 +233,11 @@ public class OIDCAuthzRequest extends OAuth2AuthzRequest {
 
         public OIDCAuthzRequestBuilder addClaim(Claim claim) {
             this.claims.add(claim);
+            return this;
+        }
+
+        public OIDCAuthzRequestBuilder setResponseMode(String responseMode) {
+            this.responseMode = responseMode;
             return this;
         }
 

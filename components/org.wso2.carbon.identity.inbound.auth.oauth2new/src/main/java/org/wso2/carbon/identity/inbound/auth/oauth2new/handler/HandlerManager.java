@@ -18,6 +18,7 @@
 
 package org.wso2.carbon.identity.inbound.auth.oauth2new.handler;
 
+import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
 import org.wso2.carbon.identity.core.handler.MessageHandlerComparator;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2MessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2TokenMessageContext;
@@ -25,7 +26,9 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2.ClientType;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.dao.AsyncDAO;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2ClientException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2Exception;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2InternalException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2RuntimeException;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.interceptor.OAuth2EventInterceptor;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.issuer.AccessTokenResponseIssuer;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.persist.TokenPersistenceProcessor;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AccessToken;
@@ -37,6 +40,7 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.grant.Authorizati
 import org.wso2.carbon.identity.inbound.auth.oauth2new.internal.OAuth2DataHolder;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.introspect.IntrospectionHandler;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.introspect.IntrospectionMessageContext;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.revoke.RevocationMessageContext;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -151,5 +155,85 @@ public class HandlerManager {
             }
         }
         throw OAuth2RuntimeException.error("Cannot find IntrospectionHandler to handle this request");
+    }
+
+    public void triggerPreTokenIssuers(OAuth2MessageContext messageContext) {
+        for(OAuth2EventInterceptor interceptor : OAuth2DataHolder.getInstance().getInterceptors()) {
+            if(interceptor.isEnabled(messageContext) && interceptor.canHandle(messageContext)) {
+                interceptor.onPreTokenIssue(messageContext);
+            }
+        }
+    }
+
+    public void triggerPostTokenIssuers(OAuth2MessageContext messageContext) {
+        for(OAuth2EventInterceptor interceptor : OAuth2DataHolder.getInstance().getInterceptors()) {
+            if(interceptor.isEnabled(messageContext) && interceptor.canHandle(messageContext)) {
+                interceptor.onPostTokenIssue(messageContext);
+            }
+        }
+    }
+
+    public void triggerPreTokenRevocationsByClient(RevocationMessageContext messageContext) {
+        for(OAuth2EventInterceptor interceptor : OAuth2DataHolder.getInstance().getInterceptors()) {
+            if(interceptor.isEnabled(messageContext) && interceptor.canHandle(messageContext)) {
+                interceptor.onPreTokenRevocationByClient(messageContext);
+            }
+        }
+    }
+
+    public void triggerPostTokenRevocationsByClient(RevocationMessageContext messageContext) {
+        for(OAuth2EventInterceptor interceptor : OAuth2DataHolder.getInstance().getInterceptors()) {
+            if(interceptor.isEnabled(messageContext) && interceptor.canHandle(messageContext)) {
+                interceptor.onPostTokenRevocationByClient(messageContext);
+            }
+        }
+    }
+
+    public void triggerPreTokenRevocationsByResourceOwner(AuthenticatedUser user) {
+        for(OAuth2EventInterceptor interceptor : OAuth2DataHolder.getInstance().getInterceptors()) {
+            if(interceptor.isEnabled(null) && interceptor.canHandle(null)) {
+                interceptor.onPreTokenRevocationByResourceOwner(user);
+            }
+        }
+    }
+
+    public void triggerPostTokenRevocationsByResourceOwner(AuthenticatedUser user) {
+        for(OAuth2EventInterceptor interceptor : OAuth2DataHolder.getInstance().getInterceptors()) {
+            if(interceptor.isEnabled(null) && interceptor.canHandle(null)) {
+                interceptor.onPostTokenRevocationByResourceOwner(user);
+            }
+        }
+    }
+
+    public void triggerPreTokenRevocationsByResourceOwner(AuthenticatedUser user, String clientId) {
+        for(OAuth2EventInterceptor interceptor : OAuth2DataHolder.getInstance().getInterceptors()) {
+            if(interceptor.isEnabled(null) && interceptor.canHandle(null)) {
+                interceptor.onPreTokenRevocationByResourceOwner(user, clientId);
+            }
+        }
+    }
+
+    public void triggerPostTokenRevocationsByResourceOwner(AuthenticatedUser user, String clientId) {
+        for(OAuth2EventInterceptor interceptor : OAuth2DataHolder.getInstance().getInterceptors()) {
+            if(interceptor.isEnabled(null) && interceptor.canHandle(null)) {
+                interceptor.onPostTokenRevocationByResourceOwner(user, clientId);
+            }
+        }
+    }
+
+    public void triggerPreTokenIntrospections(IntrospectionMessageContext messageContext) {
+        for(OAuth2EventInterceptor interceptor : OAuth2DataHolder.getInstance().getInterceptors()) {
+            if(interceptor.isEnabled(messageContext) && interceptor.canHandle(messageContext)) {
+                interceptor.onPreTokenIntrospection(messageContext);
+            }
+        }
+    }
+
+    public void triggerPostTokenIntrospections(IntrospectionMessageContext messageContext) {
+        for(OAuth2EventInterceptor interceptor : OAuth2DataHolder.getInstance().getInterceptors()) {
+            if(interceptor.isEnabled(messageContext) && interceptor.canHandle(messageContext)) {
+                interceptor.onPostTokenIntrospection(messageContext);
+            }
+        }
     }
 }

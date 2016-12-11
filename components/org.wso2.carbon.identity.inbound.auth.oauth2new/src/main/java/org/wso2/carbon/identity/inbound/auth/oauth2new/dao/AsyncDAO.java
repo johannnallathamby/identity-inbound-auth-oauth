@@ -23,6 +23,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
 import org.wso2.carbon.identity.core.util.IdentityUtil;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2MessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2TokenMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.dao.AccessTokenPersistenceTask.AccessTokenJob;
@@ -71,9 +72,11 @@ public class AsyncDAO extends OAuth2DAO {
     }
 
     @Override
-    public AccessToken getLatestActiveOrExpiredAccessToken(String consumerKey, AuthenticatedUser authzUser,
-                                                           Set<String> scopes, OAuth2MessageContext messageContext) {
-        return persistentDAO.getLatestActiveOrExpiredAccessToken(consumerKey, authzUser, scopes, messageContext);
+    public AccessToken getLatestAccessToken(String consumerKey, AuthenticatedUser authzUser,
+                                            Set<String> scopes, Set<String> states,
+                                            OAuth2MessageContext messageContext) {
+        return persistentDAO.getLatestAccessToken(consumerKey, authzUser, scopes, states,
+                                                  messageContext);
     }
 
     @Override
@@ -122,8 +125,9 @@ public class AsyncDAO extends OAuth2DAO {
     }
 
     @Override
-    public Set<String> getAuthorizedClientIDs(AuthenticatedUser authzUser, RevocationMessageContext messageContext) {
-        return persistentDAO.getAuthorizedClientIDs(authzUser, messageContext);
+    public Set<AccessToken> getAuthorizedAccessTokens(AuthenticatedUser authzUser, RevocationMessageContext
+            messageContext) {
+        return persistentDAO.getAuthorizedAccessTokens(authzUser, messageContext);
     }
 
     @Override
@@ -139,5 +143,42 @@ public class AsyncDAO extends OAuth2DAO {
     @Override
     public void revokeRefreshToken(String refreshToken, RevocationMessageContext messageContext) {
         persistentDAO.revokeRefreshToken(refreshToken, messageContext);
+    }
+
+    @Override
+    public Set<AccessToken> getAccessTokensByClientId(String clientId, boolean includeExpired) {
+        return persistentDAO.getAccessTokensByClientId(clientId, includeExpired);
+    }
+
+    @Override
+    public Set<AuthzCode> getAuthorizationCodesByClientId(String clientId, boolean includeExpired) {
+        return persistentDAO.getAuthorizationCodesByClientId(clientId, includeExpired);
+    }
+
+    @Override
+    public Set<AccessToken> getAccessTokensOfTenant(String tenantDomain, boolean includeExpired) {
+        return persistentDAO.getAccessTokensOfTenant(tenantDomain, includeExpired);
+    }
+
+    @Override
+    public Set<AuthzCode> getAuthorizationCodesOfTenant(String tenantDomain, boolean includeExpired) {
+        return persistentDAO.getAuthorizationCodesOfTenant(tenantDomain, includeExpired);
+    }
+
+    @Override
+    public Set<AccessToken> getAccessTokensOfUserStore(String tenantDomain, String userStoreDomain,
+                                                       boolean includeExpired) {
+        return persistentDAO.getAccessTokensOfUserStore(tenantDomain, userStoreDomain, includeExpired);
+    }
+
+    @Override
+    public Set<AuthzCode> getAuthorizationCodesOfUserStore(String tenantDomain, String userStoreDomain,
+                                                           boolean includeExpired) {
+        return persistentDAO.getAuthorizationCodesOfUserStore(tenantDomain, userStoreDomain, includeExpired);
+    }
+
+    @Override
+    public void renameUserStore(String tenantDomain, String currentName, String newName) {
+        persistentDAO.renameUserStore(tenantDomain, currentName, newName);
     }
 }

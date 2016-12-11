@@ -69,6 +69,9 @@ public class RevocationProcessor extends OAuth2IdentityRequestProcessor {
         RevocationMessageContext messageContext = new RevocationMessageContext(revocationRequest,
                 new HashMap<String,String>());
 
+
+        HandlerManager.getInstance().triggerPreTokenRevocationsByClient(messageContext);
+
         if(ClientType.CONFIDENTIAL == clientType(messageContext)) {
             String clientId = authenticateClient(messageContext);
             messageContext.setClientId(clientId);
@@ -108,6 +111,9 @@ public class RevocationProcessor extends OAuth2IdentityRequestProcessor {
         RevocationResponse.RevocationResponseBuilder responseBuilder = new RevocationResponse
                 .RevocationResponseBuilder(messageContext);
         responseBuilder.setCallback(revocationRequest.getCallback());
+
+        HandlerManager.getInstance().triggerPostTokenRevocationsByClient(messageContext);
+
         return responseBuilder;
     }
 

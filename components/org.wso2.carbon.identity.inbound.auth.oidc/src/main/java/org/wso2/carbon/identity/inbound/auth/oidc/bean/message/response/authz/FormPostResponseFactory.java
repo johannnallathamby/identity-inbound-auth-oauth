@@ -16,7 +16,7 @@
  * under the License.
  */
 
-package org.wso2.carbon.identity.inbound.auth.oidc.bean.message.response.token;
+package org.wso2.carbon.identity.inbound.auth.oidc.bean.message.response.authz;
 
 import com.nimbusds.jose.Algorithm;
 import com.nimbusds.jose.JWSAlgorithm;
@@ -25,54 +25,31 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.PlainJWT;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.ParseException;
+import com.nimbusds.oauth2.sdk.util.JSONObjectUtils;
 import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import net.minidev.json.JSONObject;
 import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
 import org.apache.oltu.oauth2.common.message.OAuthResponse;
-import org.wso2.carbon.base.MultitenantConstants;
-import org.wso2.carbon.core.util.KeyStoreManager;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.HttpIdentityResponse;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityResponse;
-import org.wso2.carbon.identity.application.common.util.IdentityApplicationManagementUtil;
-import org.wso2.carbon.identity.base.IdentityException;
-import org.wso2.carbon.identity.core.util.IdentityTenantUtil;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.token.HttpTokenResponseFactory;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.token.TokenResponse;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.authz.AuthzResponseFactory;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2RuntimeException;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.model.OAuth2ServerConfig;
+import org.wso2.carbon.identity.inbound.auth.oidc.OIDC;
 import org.wso2.carbon.identity.inbound.auth.oidc.model.OIDCServerConfig;
 import org.wso2.carbon.identity.inbound.auth.oidc.util.OIDCUtils;
 
-import java.security.Key;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.cert.Certificate;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
-public class HttpOIDCTokenResponseFactory extends HttpTokenResponseFactory {
-
-    private static final Log log = LogFactory.getLog(HttpOIDCTokenResponseFactory.class);
-
-    private OAuth2ServerConfig config = null;
-
-    @Override
-    public String getName() {
-        return "HttpOIDCTokenResponseFactory";
-    }
+public class FormPostResponseFactory extends AuthzResponseFactory {
 
     @Override
     public boolean canHandle(IdentityResponse identityResponse) {
-        if(identityResponse instanceof OIDCTokenResponse) {
-            return true;
+        if (identityResponse instanceof OIDCAuthzResponse) {
+            OIDCAuthzResponse oidcAuthzResponse = (OIDCAuthzResponse) identityResponse;
+            if (OIDC.ResponseMode.FORM_POST.equals(oidcAuthzResponse.getResponseMode())) {
+                return true;
+            }
         }
         return false;
     }
@@ -88,27 +65,28 @@ public class HttpOIDCTokenResponseFactory extends HttpTokenResponseFactory {
     @Override
     public void create(HttpIdentityResponse.HttpIdentityResponseBuilder builder, IdentityResponse identityResponse) {
 
-        OIDCTokenResponse tokenResponse = ((OIDCTokenResponse)identityResponse);
-        IDTokenClaimsSet idTokenClaimsSet = tokenResponse.getIdTokenClaimsSet();
-        String idToken = createIDToken(idTokenClaimsSet, tokenResponse).serialize();
-        tokenResponse.getBuilder().setParam("id_token", idToken);
+        OIDCAuthzResponse authzResponse = ((OIDCAuthzResponse) identityResponse);
+        IDTokenClaimsSet idTokenClaimsSet = authzResponse.getIdTokenClaimsSet();
+        String idToken = createIDToken(idTokenClaimsSet, authzResponse).serialize();
+        authzResponse.getBuilder().setParam("id_token", idToken);
 
-        OAuthResponse oauthResponse = null;
+        OAuthResponse response = null;
         try {
-            oauthResponse = tokenResponse.getBuilder().buildJSONMessage();
-        } catch (OAuthSystemException e1) {
-            throw OAuth2RuntimeException.error("Error occurred while building JSON message fo token endpoint response");
+            response = authzResponse.getBuilder().buildJSONMessage();
+        } catch (OAuthSystemException e) {
+            throw OAuth2RuntimeException.error("Error occurred while building query message for authorization " +
+                                               "response");
         }
-        builder.setStatusCode(oauthResponse.getResponseStatus());
-        builder.setHeaders(oauthResponse.getHeaders());
-        builder.setBody(oauthResponse.getBody());
+        builder.setStatusCode(response.getResponseStatus());
+        builder.setBody(createFormPage(response.getBody(), authzResponse.getRedirectURI()));
+        builder.setHeaders(response.getHeaders());
         builder.addHeader(OAuth2.Header.CACHE_CONTROL,
                           OAuth2.HeaderValue.CACHE_CONTROL_NO_STORE);
         builder.addHeader(OAuth2.Header.PRAGMA,
                           OAuth2.HeaderValue.PRAGMA_NO_CACHE);
     }
 
-    protected JWT createIDToken(IDTokenClaimsSet claimSet, OIDCTokenResponse response) {
+    protected JWT createIDToken(IDTokenClaimsSet claimSet, OIDCAuthzResponse response) {
 
         JWTClaimsSet jwtClaimsSet = null;
         try {
@@ -129,7 +107,7 @@ public class HttpOIDCTokenResponseFactory extends HttpTokenResponseFactory {
      * @param tenantDomain
      * @return signed JWT
      */
-    protected SignedJWT signJWT(JWTClaimsSet jwtClaimsSet, String tenantDomain)  {
+    protected SignedJWT signJWT(JWTClaimsSet jwtClaimsSet, String tenantDomain) {
 
         Algorithm sigAlg = OIDCServerConfig.getInstance().getIdTokenSigAlg();
         if (JWSAlgorithm.RS256.equals(sigAlg) || JWSAlgorithm.RS384.equals(sigAlg) ||
@@ -143,5 +121,40 @@ public class HttpOIDCTokenResponseFactory extends HttpTokenResponseFactory {
             // return signWithEC(jwtClaimsSet,jwsAlgorithm,request); implementation need to be done
             return null;
         }
+    }
+
+    private String createFormPage(String jsonPayLoad, String redirectURI) {
+
+        JSONObject jsonObject = null;
+        try {
+            jsonObject = JSONObjectUtils.parse(jsonPayLoad);
+        } catch (ParseException e) {
+            throw OAuth2RuntimeException.error("Error occurred while parsing JSON payload: " + jsonPayLoad);
+        }
+
+        String formHead = "<html>\n" +
+                          "   <head><title>Submit This Form</title></head>\n" +
+                          "   <body onload=\"javascript:document.forms[0].submit()\">\n" +
+                          "    <p>Click the submit button if automatic redirection failed.</p>" +
+                          "    <form method=\"post\" action=\"" + redirectURI + "\">\n";
+
+        String formBottom = "<input type=\"submit\" value=\"Submit\">" +
+                            "</form>\n" +
+                            "</body>\n" +
+                            "</html>";
+
+        StringBuilder form = new StringBuilder(formHead);
+
+        for (Map.Entry<String,Object> entry : jsonObject.entrySet()) {
+            form.append("<input type=\"hidden\" name=\"")
+                    .append(entry.getKey())
+                    .append("\"" + "value=\"")
+                    .append(jsonObject.get(entry.getValue()))
+                    .append("\"/>\n");
+        }
+
+        form.append(formBottom);
+
+        return form.toString();
     }
 }

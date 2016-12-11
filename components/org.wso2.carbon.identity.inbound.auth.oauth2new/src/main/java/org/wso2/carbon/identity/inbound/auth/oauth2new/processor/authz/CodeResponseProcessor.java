@@ -78,8 +78,10 @@ public class CodeResponseProcessor extends ROApprovalProcessor {
 
         AuthzCode authzCode = new AuthzCode(authorizationCode, messageContext.getRequest().getClientId(),
                                             messageContext.getRequest().getRedirectURI(),
-                                            messageContext.getAuthzUser(),timestamp, authzCodeValidity,
+                                            messageContext.getAuthzUser().getAuthenticatedSubjectIdentifier(),
+                                            timestamp, authzCodeValidity,
                                             OAuth2.TokenState.ACTIVE);
+        authzCode.setAuthzUser(messageContext.getAuthzUser());
         authzCode.setScopes(messageContext.getApprovedScopes());
         authzCode.setPkceCodeChallenge(messageContext.getRequest().getPkceCodeChallenge());
         authzCode.setPkceCodeChallengeMethod(messageContext.getRequest().getPkceCodeChallengeMethod());

@@ -140,6 +140,11 @@ public class OAuth2Util {
         }
     }
 
+    public static String createUniqueAuthzGrantString(AccessToken accessToken) {
+        return createUniqueAuthzGrantString(accessToken.getAuthzUser(), accessToken.getClientId(), accessToken
+                .getScopes());
+    }
+
     public static String createUniqueAuthzGrantString(AuthenticatedUser authzUser, String clientId,
                                                       Set<String> scopes) {
         if(authzUser == null || StringUtils.isBlank(clientId)){

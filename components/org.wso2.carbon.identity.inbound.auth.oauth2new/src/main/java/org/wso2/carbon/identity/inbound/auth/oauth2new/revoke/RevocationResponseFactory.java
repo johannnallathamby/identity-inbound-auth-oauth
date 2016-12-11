@@ -26,7 +26,7 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
 
 import javax.servlet.http.HttpServletResponse;
 
-public class HttpRevocationResponseFactory extends HttpIdentityResponseFactory {
+public class RevocationResponseFactory extends HttpIdentityResponseFactory {
 
     @Override
     public String getName() {

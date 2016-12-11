@@ -145,4 +145,126 @@ public class SQLQueries {
     public static final String REVOKE_REFRESH_TOKEN = "UPDATE IDN_OAUTH2_ACCESS_TOKEN SET TOKEN_STATE='REVOKED', " +
             "TOKEN_STATE_ID=? WHERE REFRESH_TOKEN=?";
 
+    public static final String GET_ACCESS_TOKENS_FOR_CONSUMER_KEY = "SELECT ACCESS_TOKEN FROM IDN_OAUTH2_ACCESS_TOKEN" +
+                                                                    " WHERE CONSUMER_KEY_ID IN (SELECT ID FROM " +
+                                                                    "IDN_OAUTH_CONSUMER_APPS WHERE CONSUMER_KEY = ?) " +
+                                                                    "AND (TOKEN_STATE = ? OR TOKEN_STATE = ?)";
+
+    public static final String GET_AUTHORIZATION_CODES_FOR_CONSUMER_KEY = "SELECT AUTHORIZATION_CODE FROM " +
+                                                                          "IDN_OAUTH2_AUTHORIZATION_CODE WHERE " +
+                                                                          "CONSUMER_KEY_ID IN (SELECT ID FROM " +
+                                                                          "IDN_OAUTH_CONSUMER_APPS WHERE  " +
+                                                                          "CONSUMER_KEY = ?) AND (STATE = ? OR" +
+                                                                          " STATE = ?";
+
+    public static final String LIST_ALL_TOKENS_IN_TENANT = "SELECT ACCESS_TOKEN_TABLE.TOKEN_ID, ACCESS_TOKEN, " +
+                                                           "REFRESH_TOKEN, ACCESS_TOKEN_TABLE.CONSUMER_KEY, " +
+                                                           "AUTHZ_USER, USER_DOMAIN, " +
+                                                           "TOKEN_SCOPE, TOKEN_STATE, TIME_CREATED, " +
+                                                           "REFRESH_TOKEN_TIME_CREATED, " +
+                                                           "VALIDITY_PERIOD,REFRESH_TOKEN_VALIDITY_PERIOD, " +
+                                                           "GRANT_TYPE, SUBJECT_IDENTIFIER" +
+                                                           "FROM (SELECT TOKEN_ID, ACCESS_TOKEN, REFRESH_TOKEN, " +
+                                                           "CONSUMER_KEY_ID, AUTHZ_USER, USER_DOMAIN, TIME_CREATED, " +
+                                                           "REFRESH_TOKEN_TIME_CREATED, VALIDITY_PERIOD, " +
+                                                           "REFRESH_TOKEN_VALIDITY_PERIOD, GRANT_TYPE, " +
+                                                           "SUBJECT_IDENTIFIER FROM " +
+                                                           "IDN_OAUTH2_ACCESS_TOKEN WHERE TENANT_ID=? AND " +
+                                                           "(TOKEN_STATE=? OR TOKEN_STATE=?)) " +
+                                                           "ACCESS_TOKEN_TABLE LEFT JOIN IDN_OAUTH2_ACCESS_TOKEN_SCOPE " +
+                                                           "ON ACCESS_TOKEN_TABLE.TOKEN_ID = " +
+                                                           "IDN_OAUTH2_ACCESS_TOKEN_SCOPE.TOKEN_ID";
+
+    public static final String LIST_LATEST_AUTHZ_CODES_IN_TENANT = "SELECT CODE_ID, AUTHORIZATION_CODE, " +
+                                                                   "CONSUMER_KEY, IDN_OAUTH2_AUTHORIZATION_CODE.AUTHZ_USER, IDN_OAUTH2_AUTHORIZATION_CODE.SCOPE, " +
+                                                                   "TIME_CREATED, VALIDITY_PERIOD, IDN_OAUTH2_AUTHORIZATION_CODE.CALLBACK_URL, IDN_OAUTH2_AUTHORIZATION_CODE" +
+                                                                   ".USER_DOMAIN, STATE, SUBJECT_IDENTIFIER, " +
+                                                                   "PKCE_CODE_CHALLENGE, " +
+                                                                   "PKCE_CODE_CHALLENGE_METHOD, FROM " +
+                                                                   "(SELECT " +
+                                                                   "AUTHZ_USER, " +
+                                                                   "USER_DOMAIN, CONSUMER_KEY_ID, SCOPE, MAX(TIME_CREATED) TIMES " +
+                                                                   "FROM IDN_OAUTH2_AUTHORIZATION_CODE WHERE TENANT_ID=? group by AUTHZ_USER, " +
+                                                                   "USER_DOMAIN, CONSUMER_KEY_ID, SCOPE) AUTHZ_SELECTED JOIN IDN_OAUTH2_AUTHORIZATION_CODE ON " +
+                                                                   "AUTHZ_SELECTED.AUTHZ_USER=IDN_OAUTH2_AUTHORIZATION_CODE.AUTHZ_USER AND AUTHZ_SELECTED" +
+                                                                   ".CONSUMER_KEY_ID=IDN_OAUTH2_AUTHORIZATION_CODE.CONSUMER_KEY_ID AND AUTHZ_SELECTED" +
+                                                                   ".TIMES=IDN_OAUTH2_AUTHORIZATION_CODE.TIME_CREATED AND AUTHZ_SELECTED" +
+                                                                   ".USER_DOMAIN=IDN_OAUTH2_AUTHORIZATION_CODE.USER_DOMAIN AND AUTHZ_SELECTED" +
+                                                                   ".SCOPE=IDN_OAUTH2_AUTHORIZATION_CODE.SCOPE JOIN IDN_OAUTH_CONSUMER_APPS ON IDN_OAUTH2_AUTHORIZATION_CODE" +
+                                                                   ".CONSUMER_KEY_ID = ID WHERE (STATE=? OR STATE=?)'";
+
+    public static final String LIST_ALL_TOKENS_IN_USER_STORE = "SELECT ACCESS_TOKEN, REFRESH_TOKEN, " +
+                                                               "TIME_CREATED, REFRESH_TOKEN_TIME_CREATED, VALIDITY_PERIOD, REFRESH_TOKEN_VALIDITY_PERIOD, USER_TYPE, " +
+                                                               "TOKEN_SCOPE, ACCESS_TOKEN_TABLE.TOKEN_ID, AUTHZ_USER, CONSUMER_KEY FROM (SELECT AUTHZ_USER, " +
+                                                               "CONSUMER_KEY_ID, TOKEN_ID, ACCESS_TOKEN, REFRESH_TOKEN, TIME_CREATED, REFRESH_TOKEN_TIME_CREATED, " +
+                                                               "VALIDITY_PERIOD, REFRESH_TOKEN_VALIDITY_PERIOD, USER_TYPE FROM IDN_OAUTH2_ACCESS_TOKEN WHERE TENANT_ID=?" +
+                                                               " AND USER_DOMAIN=? AND (TOKEN_STATE='ACTIVE' OR TOKEN_STATE='EXPIRED')) ACCESS_TOKEN_TABLE JOIN " +
+                                                               "IDN_OAUTH_CONSUMER_APPS ON ID = CONSUMER_KEY_ID LEFT JOIN IDN_OAUTH2_ACCESS_TOKEN_SCOPE ON " +
+                                                               "ACCESS_TOKEN_TABLE.TOKEN_ID = IDN_OAUTH2_ACCESS_TOKEN_SCOPE.TOKEN_ID";
+
+    public static final String LIST_LATEST_AUTHZ_CODES_IN_USER_DOMAIN = "SELECT CODE_ID, AUTHORIZATION_CODE, " +
+                                                                        "CONSUMER_KEY, IDN_OAUTH2_AUTHORIZATION_CODE.AUTHZ_USER, IDN_OAUTH2_AUTHORIZATION_CODE.SCOPE, " +
+                                                                        "TIME_CREATED, VALIDITY_PERIOD, IDN_OAUTH2_AUTHORIZATION_CODE.CALLBACK_URL, STATE, SUBJECT_IDENTIFIER, " +
+                                                                        "PKCE_CODE_CHALLENGE, " +
+                                                                        "PKCE_CODE_CHALLENGE_METHOD, FROM " +
+                                                                        "(SELECT " +
+                                                                        "AUTHZ_USER, CONSUMER_KEY_ID, SCOPE, MAX(TIME_CREATED) TIMES " +
+                                                                        "FROM IDN_OAUTH2_AUTHORIZATION_CODE WHERE " +
+                                                                        "TENANT_ID=? AND USER_DOMAIN =? group by " +
+                                                                        "AUTHZ_USER, " +
+                                                                        "USER_DOMAIN, CONSUMER_KEY_ID, SCOPE) AUTHZ_SELECTED JOIN IDN_OAUTH2_AUTHORIZATION_CODE ON " +
+                                                                        "AUTHZ_SELECTED.AUTHZ_USER=IDN_OAUTH2_AUTHORIZATION_CODE.AUTHZ_USER AND AUTHZ_SELECTED" +
+                                                                        ".CONSUMER_KEY_ID=IDN_OAUTH2_AUTHORIZATION_CODE.CONSUMER_KEY_ID AND AUTHZ_SELECTED" +
+                                                                        ".TIMES=IDN_OAUTH2_AUTHORIZATION_CODE.TIME_CREATED AND AUTHZ_SELECTED" +
+                                                                        ".USER_DOMAIN=IDN_OAUTH2_AUTHORIZATION_CODE.USER_DOMAIN AND AUTHZ_SELECTED" +
+                                                                        ".SCOPE=IDN_OAUTH2_AUTHORIZATION_CODE.SCOPE JOIN IDN_OAUTH_CONSUMER_APPS ON IDN_OAUTH2_AUTHORIZATION_CODE" +
+                                                                        ".CONSUMER_KEY_ID = ID WHERE (STATE=? OR STATE=?)'";
+
+    public static final String RENAME_USER_STORE_IN_ACCESS_TOKEN_TABLE = "UPDATE IDN_OAUTH2_ACCESS_TOKEN SET " +
+                                                                         "USER_DOMAIN=? WHERE TENANT_ID=? AND USER_DOMAIN=?";
+
+    public static final String RENAME_USER_STORE_IN_AUTHZ_CODE_TABLE = "UPDATE IDN_OAUTH2_AUTHORIZATION_CODE SET " +
+                                                                       "USER_DOMAIN=? WHERE TENANT_ID=? AND USER_DOMAIN=?";
+
+    public static final String RETRIEVE_LATEST_ACCESS_TOKEN_BY_CLIENT_ID_USER_SCOPE_MYSQL = "SELECT " +
+                                                                                            "ACCESS_TOKEN, REFRESH_TOKEN, TIME_CREATED, REFRESH_TOKEN_TIME_CREATED, VALIDITY_PERIOD, " +
+                                                                                            "REFRESH_TOKEN_VALIDITY_PERIOD, USER_TYPE, TOKEN_ID, SUBJECT_IDENTIFIER FROM IDN_OAUTH2_ACCESS_TOKEN " +
+                                                                                            "WHERE CONSUMER_KEY_ID =(SELECT ID FROM IDN_OAUTH_CONSUMER_APPS WHERE CONSUMER_KEY = ?) AND AUTHZ_USER=? " +
+                                                                                            "AND TENANT_ID=? AND USER_DOMAIN=? AND TOKEN_SCOPE_HASH=? ORDER BY TIME_CREATED " +
+                                                                                            "DESC LIMIT 1";
+
+    public static final String RETRIEVE_LATEST_ACCESS_TOKEN_BY_CLIENT_ID_USER_SCOPE_ORACLE = "SELECT * FROM " +
+                                                                                             "(SELECT ACCESS_TOKEN, REFRESH_TOKEN, TIME_CREATED, REFRESH_TOKEN_TIME_CREATED, VALIDITY_PERIOD, " +
+                                                                                             "REFRESH_TOKEN_VALIDITY_PERIOD, USER_TYPE, TOKEN_ID, SUBJECT_IDENTIFIER FROM " +
+                                                                                             "IDN_OAUTH2_ACCESS_TOKEN WHERE CONSUMER_KEY_ID=(SELECT ID FROM IDN_OAUTH_CONSUMER_APPS WHERE CONSUMER_KEY" +
+                                                                                             " = ?) AND AUTHZ_USER=? AND TENANT_ID=? AND USER_DOMAIN=? AND TOKEN_SCOPE_HASH=? AND TOKEN_STATE='ACTIVE'" +
+                                                                                             " ORDER BY TIME_CREATED DESC) WHERE ROWNUM < 2 ";
+
+    public static final String RETRIEVE_LATEST_ACCESS_TOKEN_BY_CLIENT_ID_USER_SCOPE_DB2SQL = "SELECT " +
+                                                                                             "ACCESS_TOKEN, REFRESH_TOKEN, TIME_CREATED, REFRESH_TOKEN_TIME_CREATED, VALIDITY_PERIOD, " +
+                                                                                             "REFRESH_TOKEN_VALIDITY_PERIOD, USER_TYPE, TOKEN_ID, SUBJECT_IDENTIFIER FROM IDN_OAUTH2_ACCESS_TOKEN " +
+                                                                                             "WHERE CONSUMER_KEY_ID= (SELECT ID FROM IDN_OAUTH_CONSUMER_APPS WHERE CONSUMER_KEY = ?) AND AUTHZ_USER=? " +
+                                                                                             "AND TENANT_ID=? AND USER_DOMAIN=? AND TOKEN_SCOPE_HASH=? AND TOKEN_STATE='ACTIVE' ORDER BY TIME_CREATED " +
+                                                                                             "DESC FETCH FIRST 1 ROWS ONLY";
+
+    public static final String RETRIEVE_LATEST_ACCESS_TOKEN_BY_CLIENT_ID_USER_SCOPE_MSSQL = "SELECT TOP 1 " +
+                                                                                            "ACCESS_TOKEN, REFRESH_TOKEN, TIME_CREATED, REFRESH_TOKEN_TIME_CREATED, VALIDITY_PERIOD, " +
+                                                                                            "REFRESH_TOKEN_VALIDITY_PERIOD, USER_TYPE, TOKEN_ID, SUBJECT_IDENTIFIER FROM IDN_OAUTH2_ACCESS_TOKEN " +
+                                                                                            "WHERE CONSUMER_KEY_ID = (SELECT ID FROM IDN_OAUTH_CONSUMER_APPS WHERE CONSUMER_KEY = ?) AND AUTHZ_USER=?" +
+                                                                                            " AND TENANT_ID=? AND USER_DOMAIN=? AND TOKEN_SCOPE_HASH=? AND TOKEN_STATE='ACTIVE' ORDER BY TIME_CREATED" +
+                                                                                            " DESC";
+
+    public static final String RETRIEVE_LATEST_ACCESS_TOKEN_BY_CLIENT_ID_USER_SCOPE_POSTGRESQL = "SELECT * " +
+                                                                                                 "FROM (SELECT ACCESS_TOKEN, REFRESH_TOKEN, TIME_CREATED, REFRESH_TOKEN_TIME_CREATED, VALIDITY_PERIOD, " +
+                                                                                                 "REFRESH_TOKEN_VALIDITY_PERIOD, USER_TYPE, TOKEN_ID, SUBJECT_IDENTIFIER FROM IDN_OAUTH2_ACCESS_TOKEN " +
+                                                                                                 "WHERE CONSUMER_KEY_ID = (SELECT ID FROM IDN_OAUTH_CONSUMER_APPS WHERE CONSUMER_KEY = ?) AND AUTHZ_USER=?" +
+                                                                                                 " AND TENANT_ID=? AND USER_DOMAIN=? AND TOKEN_SCOPE_HASH=? AND TOKEN_STATE='ACTIVE' ORDER BY TIME_CREATED" +
+                                                                                                 " DESC) TOKEN LIMIT 1 ";
+
+    public static final String RETRIEVE_LATEST_ACCESS_TOKEN_BY_CLIENT_ID_USER_SCOPE_INFORMIX = "SELECT FIRST 1" +
+                                                                                               " * FROM (SELECT ACCESS_TOKEN, REFRESH_TOKEN, TIME_CREATED, REFRESH_TOKEN_TIME_CREATED, VALIDITY_PERIOD, " +
+                                                                                               "REFRESH_TOKEN_VALIDITY_PERIOD, USER_TYPE, TOKEN_ID, SUBJECT_IDENTIFIER FROM " +
+                                                                                               "IDN_OAUTH2_ACCESS_TOKEN WHERE CONSUMER_KEY_ID = (SELECT ID FROM IDN_OAUTH_CONSUMER_APPS WHERE " +
+                                                                                               "CONSUMER_KEY = ?) AND AUTHZ_USER=? AND TENANT_ID=? AND USER_DOMAIN=? AND TOKEN_SCOPE_HASH=? AND " +
+                                                                                               "TOKEN_STATE='ACTIVE' ORDER BY TIME_CREATED DESC) TOKEN ";
 }

@@ -39,6 +39,8 @@ public class AuthzCode implements Serializable {
 
     private AuthenticatedUser authzUser;
 
+    private String subjectIdentifier;
+
     private Set<String> scopes;
 
     private Timestamp issuedTime;
@@ -54,13 +56,13 @@ public class AuthzCode implements Serializable {
 
     private String pkceCodeChallengeMethod;
 
-    public AuthzCode(String authzCode, String clientId, String redirectURI, AuthenticatedUser authzUser,
+    public AuthzCode(String authzCode, String clientId, String redirectURI, String subjectIdentifier,
                      Timestamp issuedTime, long validityPeriod, String codeState) {
 
         this.authzCode = authzCode;
         this.clientId = clientId;
         this.redirectURI = redirectURI;
-        this.authzUser = authzUser;
+        this.subjectIdentifier = subjectIdentifier;
         this.issuedTime = issuedTime;
         this.validityPeriod = validityPeriod;
         this.codeState = codeState;
@@ -68,7 +70,7 @@ public class AuthzCode implements Serializable {
 
     public static AuthzCode createAuthzCode(AuthzCode authzCode, String codeState) {
         AuthzCode newAuthzCode = new AuthzCode(authzCode.getAuthzCode(), authzCode.getClientId(),
-                authzCode.getRedirectURI(), authzCode.getAuthzUser(), authzCode.getIssuedTime(),
+                authzCode.getRedirectURI(), authzCode.getSubjectIdentifer(), authzCode.getIssuedTime(),
                 authzCode.getValidityPeriod(), codeState);
         newAuthzCode.setAuthzCodeId(authzCode.getAuthzCodeId());
         newAuthzCode.setScopes(authzCode.getScopes());
@@ -93,8 +95,8 @@ public class AuthzCode implements Serializable {
         return redirectURI;
     }
 
-    public AuthenticatedUser getAuthzUser() {
-        return authzUser;
+    public String getSubjectIdentifer() {
+        return subjectIdentifier;
     }
 
     public Set<String> getScopes() {
@@ -119,6 +121,14 @@ public class AuthzCode implements Serializable {
 
     public void setAuthzCodeId(String authzCodeId) {
         this.authzCodeId = authzCodeId;
+    }
+
+    public void setAuthzUser(AuthenticatedUser authzUser) {
+        this.authzUser = authzUser;
+    }
+
+    public AuthenticatedUser getAuthzUser() {
+        return authzUser;
     }
 
     public void setScopes(Set<String> scopes) {
@@ -152,6 +162,7 @@ public class AuthzCode implements Serializable {
                ", clientId='" + clientId + '\'' +
                ", redirectURI='" + redirectURI + '\'' +
                ", authzUser=" + authzUser +
+               ", subjectIdentifer=" + subjectIdentifier +
                ", scopes=" + scopes +
                ", issuedTime=" + issuedTime +
                ", validityPeriod=" + validityPeriod +

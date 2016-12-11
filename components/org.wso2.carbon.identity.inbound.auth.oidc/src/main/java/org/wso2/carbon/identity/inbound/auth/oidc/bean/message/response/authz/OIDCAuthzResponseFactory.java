@@ -32,20 +32,12 @@ import org.apache.oltu.oauth2.common.message.types.ResponseType;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.HttpIdentityResponse;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityResponse;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.authz.AuthzResponse;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.authz.HttpAuthzResponseFactory;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.authz.AuthzResponseFactory;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2RuntimeException;
-import org.wso2.carbon.identity.inbound.auth.oidc.OIDC;
-import org.wso2.carbon.identity.inbound.auth.oidc.bean.message.response.token.OIDCTokenResponse;
 import org.wso2.carbon.identity.inbound.auth.oidc.model.OIDCServerConfig;
 import org.wso2.carbon.identity.inbound.auth.oidc.util.OIDCUtils;
 
-public class HttpOIDCAuthzResponseFactory extends HttpAuthzResponseFactory {
-
-    @Override
-    public String getName() {
-        return "HttpOIDCAuthzResponseFactory";
-    }
+public class OIDCAuthzResponseFactory extends AuthzResponseFactory {
 
     @Override
     public boolean canHandle(IdentityResponse identityResponse) {

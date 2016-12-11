@@ -20,7 +20,6 @@ package org.wso2.carbon.identity.inbound.auth.oauth2new.cache;
 
 import org.wso2.carbon.identity.application.common.cache.BaseCache;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AccessToken;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.listener.OAuth2CacheListener;
 import org.wso2.carbon.utils.CarbonUtils;
 
 /**

@@ -32,9 +32,9 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.toke
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.token.clientcredentials.ClientCredentialsGrantFactory;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.token.password.PasswordGrantFactory;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.token.refresh.RefreshGrantFactory;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.authz.HttpAuthzResponseFactory;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.authz.HttpConsentResponseFactory;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.token.HttpTokenResponseFactory;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.authz.AuthzResponseFactory;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.authz.ConsentResponseFactory;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.token.TokenResponseFactory;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.dao.OAuth2DAOHandler;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.dao.jdbc.JDBCOAuth2DAO;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.client.BasicAuthHandler;
@@ -43,11 +43,12 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.grant.Authorizati
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.grant.AuthzCodeGrantHandler;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.grant.PasswordGrantHandler;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.grant.RefreshGrantHandler;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.interceptor.OAuth2EventInterceptor;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.issuer.AccessTokenResponseIssuer;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.issuer.BearerTokenResponseIssuer;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.persist.PlainTextPersistenceProcessor;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.persist.TokenPersistenceProcessor;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.introspect.HttpIntrospectionResponseFactory;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.introspect.IntrospectionResponseFactory;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.introspect.IntrospectionHandler;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.introspect.IntrospectionProcessor;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.introspect.IntrospectionRequestFactory;
@@ -56,9 +57,9 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.processor.authz.AuthzProc
 import org.wso2.carbon.identity.inbound.auth.oauth2new.processor.authz.CodeResponseProcessor;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.processor.authz.TokenResponseProcessor;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.processor.token.TokenProcessor;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.revoke.HttpRevocationResponseFactory;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.revoke.OAuth2RevocationService;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.revoke.OAuth2RevocationServiceImpl;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.revoke.RevocationResponseFactory;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.revoke.OAuth2TokenRevocationService;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.revoke.OAuth2TokenRevocationServiceImpl;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.revoke.RevocationProcessor;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.revoke.RevocationRequestFactory;
 import org.wso2.carbon.registry.core.service.RegistryService;
@@ -98,7 +99,9 @@ import org.wso2.carbon.user.core.service.RealmService;
  * @scr.reference name="oauth2.handler.introspection"
  * interface="org.wso2.carbon.identity.inbound.auth.oauth2new.introspection.IntrospectionHandler" cardinality="0..n"
  * policy="dynamic" bind="addIntrospectionHandler" unbind="removeIntrospectionHandler"
- *
+ * @scr.reference name="org.wso2.carbon.identity.oauth.event.OAuthEventInterceptor"
+ * interface="org.wso2.carbon.identity.oauth.event.OAuthEventInterceptor" cardinality="0..n" policy="dynamic"
+ * bind="setOAuth2EventInterceptor" unbind="unsetOAuth2EventInterceptor"
  */
 public class OAuth2ServiceComponent {
 
@@ -211,7 +214,7 @@ public class OAuth2ServiceComponent {
             }
 
             ServiceRegistration httpAuthzRespFactory = context.getBundleContext().registerService(
-                    HttpIdentityResponseFactory.class.getName(), new HttpAuthzResponseFactory(), null);
+                    HttpIdentityResponseFactory.class.getName(), new AuthzResponseFactory(), null);
             if (httpAuthzRespFactory != null) {
                 if (log.isDebugEnabled()) {
                     log.debug(" HttpAuthzResponseFactory is registered");
@@ -220,7 +223,7 @@ public class OAuth2ServiceComponent {
                 log.error("HttpAuthzResponseFactory could not be registered");
             }
             ServiceRegistration httpConsentRespFactory = context.getBundleContext().registerService(
-                    HttpIdentityResponseFactory.class.getName(), new HttpConsentResponseFactory(), null);
+                    HttpIdentityResponseFactory.class.getName(), new ConsentResponseFactory(), null);
             if (httpConsentRespFactory != null) {
                 if (log.isDebugEnabled()) {
                     log.debug(" HttpConsentResponseFactory is registered");
@@ -229,7 +232,7 @@ public class OAuth2ServiceComponent {
                 log.error("HttpConsentResponseFactory could not be registered");
             }
             ServiceRegistration httpTokenRespFactory = context.getBundleContext().registerService(
-                    HttpIdentityResponseFactory.class.getName(), new HttpTokenResponseFactory(), null);
+                    HttpIdentityResponseFactory.class.getName(), new TokenResponseFactory(), null);
             if (httpTokenRespFactory != null) {
                 if (log.isDebugEnabled()) {
                     log.debug(" HttpTokenResponseFactory is registered");
@@ -248,7 +251,7 @@ public class OAuth2ServiceComponent {
                 log.error("RevocationRequestFactory could not be registered");
             }
             ServiceRegistration httpRevocationRespFactory = context.getBundleContext().registerService(
-                    HttpIdentityResponseFactory.class.getName(), new HttpRevocationResponseFactory(), null);
+                    HttpIdentityResponseFactory.class.getName(), new RevocationResponseFactory(), null);
             if (httpRevocationRespFactory != null) {
                 if (log.isDebugEnabled()) {
                     log.debug(" HttpRevocationResponseFactory is registered");
@@ -266,7 +269,7 @@ public class OAuth2ServiceComponent {
                 log.error("RevocationProcessor could not be registered");
             }
             ServiceRegistration revocationService = context.getBundleContext().registerService(
-                    OAuth2RevocationService.class.getName(), OAuth2RevocationServiceImpl.getInstance(), null);
+                    OAuth2TokenRevocationService.class.getName(), OAuth2TokenRevocationServiceImpl.getInstance(), null);
             if (revokeProcessor != null) {
                 if (log.isDebugEnabled()) {
                     log.debug(" OAuth2RevocationServiceImpl is registered");
@@ -285,7 +288,7 @@ public class OAuth2ServiceComponent {
                 log.error("RevocationRequestFactory could not be registered");
             }
             ServiceRegistration introspectionRespFactory = context.getBundleContext().registerService(
-                    HttpIdentityResponseFactory.class.getName(), new HttpIntrospectionResponseFactory(), null);
+                    HttpIdentityResponseFactory.class.getName(), new IntrospectionResponseFactory(), null);
             if (introspectionRespFactory != null) {
                 if (log.isDebugEnabled()) {
                     log.debug(" HttpIntrospectionResponseFactory is registered");
@@ -457,5 +460,20 @@ public class OAuth2ServiceComponent {
         OAuth2DataHolder.getInstance().setAppMgtService(null);
     }
 
+    protected void setOAuth2EventInterceptor(OAuth2EventInterceptor interceptor) {
+
+        if (log.isDebugEnabled()) {
+            log.debug("Setting OAuth2EventInterceptor " + interceptor.getClass().getName());
+        }
+        OAuth2DataHolder.getInstance().getInterceptors().add(interceptor);
+    }
+
+    protected void unsetOAuth2EventInterceptor(OAuth2EventInterceptor interceptor) {
+
+        if (log.isDebugEnabled()) {
+            log.debug("Un-setting OAuth2EventInterceptor " + interceptor.getClass().getName());
+        }
+        OAuth2DataHolder.getInstance().getInterceptors().remove(interceptor);
+    }
 
 }

@@ -19,6 +19,7 @@
 package org.wso2.carbon.identity.inbound.auth.oauth2new.dao;
 
 import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2MessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2TokenMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AccessToken;
@@ -32,9 +33,9 @@ import java.util.Set;
  */
 public abstract class OAuth2DAO {
 
-    public abstract AccessToken getLatestActiveOrExpiredAccessToken(String consumerKey, AuthenticatedUser authzUser,
-                                                                    Set<String> scopes,
-                                                                    OAuth2MessageContext messageContext);
+    public abstract AccessToken getLatestAccessToken(String consumerKey, AuthenticatedUser authzUser,
+                                                     Set<String> scopes, Set<String> states,
+                                                     OAuth2MessageContext messageContext);
 
     public abstract void storeAccessToken(AccessToken newAccessToken, String oldAccessToken, String authzCode,
                                           OAuth2MessageContext messageContext);
@@ -53,13 +54,29 @@ public abstract class OAuth2DAO {
 
     public abstract void updateAuthzCodeState(String authzCode, String state, OAuth2MessageContext messageContext);
 
-    public abstract Set<String> getAuthorizedClientIDs(AuthenticatedUser authzUser,
-                                                       RevocationMessageContext messageContext);
+    public abstract Set<AccessToken> getAuthorizedAccessTokens(AuthenticatedUser authzUser,
+                                                               RevocationMessageContext messageContext);
 
     public abstract AccessToken getAccessToken(String bearerToken, OAuth2MessageContext messageContext);
 
     public abstract void revokeAccessToken(String accessToken, RevocationMessageContext messageContext);
 
     public abstract void revokeRefreshToken(String refreshToken, RevocationMessageContext messageContext);
+
+    public abstract Set<AccessToken> getAccessTokensByClientId(String clientId, boolean includeExpired);
+
+    public abstract Set<AuthzCode> getAuthorizationCodesByClientId(String clientId, boolean includeExpired);
+
+    public abstract Set<AccessToken> getAccessTokensOfTenant(String tenantDomain, boolean includeExpired);
+
+    public abstract Set<AuthzCode> getAuthorizationCodesOfTenant(String tenantDomain, boolean includeExpired);
+
+    public abstract Set<AccessToken> getAccessTokensOfUserStore(String tenantDomain, String userStoreDomain,
+                                                       boolean includeExpired);
+
+    public abstract Set<AuthzCode> getAuthorizationCodesOfUserStore(String tenantDomain, String userStoreDomain, boolean
+            includeExpired);
+
+    public abstract void renameUserStore(String tenantDomain, String currentName, String newName);
 
 }

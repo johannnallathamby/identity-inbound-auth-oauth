@@ -22,18 +22,20 @@ import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2AuthzMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.authz.AuthzResponse;
 
-import java.util.Set;
-
 public class OIDCAuthzResponse extends AuthzResponse {
 
     protected IDTokenClaimsSet idTokenClaimsSet;
     protected String responseType;
+    protected String responseMode;
+    protected String redirectURI;
     protected String tenantDomain;
 
     protected OIDCAuthzResponse(OIDCAuthzResponseBuilder builder) {
         super(builder);
         this.idTokenClaimsSet = builder.idTokenClaimsSet;
         this.responseType = builder.responseType;
+        this.responseMode = builder.responseMode;
+        this.redirectURI = builder.redirectURI;
         this.tenantDomain = builder.tenantDomain;
     }
 
@@ -49,10 +51,20 @@ public class OIDCAuthzResponse extends AuthzResponse {
         return responseType;
     }
 
+    public String getResponseMode() {
+        return responseMode;
+    }
+
+    public String getRedirectURI() {
+        return redirectURI;
+    }
+
     public static class OIDCAuthzResponseBuilder extends AuthzResponseBuilder {
 
         protected IDTokenClaimsSet idTokenClaimsSet;
         protected String responseType;
+        protected String responseMode;
+        protected String redirectURI;
         protected String tenantDomain;
 
         public OIDCAuthzResponseBuilder(AuthzResponseBuilder authzResponseBuilder,
@@ -60,11 +72,18 @@ public class OIDCAuthzResponse extends AuthzResponse {
             super(messageContext);
             this.tenantDomain = messageContext.getRequest().getTenantDomain();
             this.responseType = messageContext.getRequest().getResponseType();
+            this.redirectURI = messageContext.getRequest().getRedirectURI();
             this.builder = authzResponseBuilder.getBuilder();
         }
 
-        public void setIdTokenClaimsSet(IDTokenClaimsSet idTokenClaimsSet) {
+        public OIDCAuthzResponseBuilder setIdTokenClaimsSet(IDTokenClaimsSet idTokenClaimsSet) {
             this.idTokenClaimsSet = idTokenClaimsSet;
+            return this;
+        }
+
+        public OIDCAuthzResponseBuilder setResponseMode(String responseMode) {
+            this.responseMode = responseMode;
+            return this;
         }
 
         public OIDCAuthzResponse build() {

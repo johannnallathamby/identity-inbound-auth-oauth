@@ -33,6 +33,7 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2RuntimeEx
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.HandlerManager;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Util;
 
+import java.util.HashSet;
 import java.util.Set;
 
 /*
@@ -55,6 +56,8 @@ public abstract class AccessTokenResponseIssuer extends AbstractIdentityMessageH
      */
     public AccessToken issue(OAuth2MessageContext messageContext) {
 
+        HandlerManager.getInstance().triggerPreTokenIssuers(messageContext);
+
         AccessToken accessToken = validTokenExists(messageContext);
         boolean isAccessTokenValid = (Boolean)messageContext.getParameter(IS_ACCESS_TOKEN_VALID);
         boolean isRefreshTokenValid = (Boolean)messageContext.getParameter(IS_REFRESH_TOKEN_VALID);
@@ -62,6 +65,9 @@ public abstract class AccessTokenResponseIssuer extends AbstractIdentityMessageH
             accessToken = issueNewAccessToken(messageContext);
             storeNewAccessToken(accessToken, messageContext);
         }
+
+        HandlerManager.getInstance().triggerPostTokenIssuers(messageContext);
+
         return accessToken;
     }
 
@@ -99,7 +105,10 @@ public abstract class AccessTokenResponseIssuer extends AbstractIdentityMessageH
         // for refresh_token grant
         AccessToken accessToken = (AccessToken) messageContext.getParameter(OAuth2.PREV_ACCESS_TOKEN);
         if(accessToken == null) {
-            accessToken = dao.getLatestActiveOrExpiredAccessToken(clientId, authzUser, scopes, messageContext);
+            Set<String> activeExpiredToken = new HashSet();
+            activeExpiredToken.add(OAuth2.TokenState.ACTIVE);
+            activeExpiredToken.add(OAuth2.TokenState.EXPIRED);
+            accessToken = dao.getLatestAccessToken(clientId, authzUser, scopes, activeExpiredToken, messageContext);
         }
         boolean isAccessTokenValid = false;
         boolean isRefreshTokenValid = false;
@@ -111,11 +120,15 @@ public abstract class AccessTokenResponseIssuer extends AbstractIdentityMessageH
                 if (expireTime > 0 || expireTime < 0) {
                     if (log.isDebugEnabled()) {
                         if (expireTime > 0) {
-                            log.debug("ACTIVE access token found for " + OAuth2Util.createUniqueAuthzGrantString
-                                    (authzUser, clientId, scopes));
+                            if(log.isDebugEnabled()) {
+                                log.debug("ACTIVE access token found for " + OAuth2Util.createUniqueAuthzGrantString
+                                        (authzUser, clientId, scopes));
+                            }
                         } else if (expireTime < 0) {
-                            log.debug("Infinite lifetime access token found for " + OAuth2Util
-                                    .createUniqueAuthzGrantString(authzUser, clientId, scopes));
+                            if (log.isDebugEnabled()) {
+                                log.debug("Infinite lifetime access token found for " + OAuth2Util
+                                        .createUniqueAuthzGrantString(authzUser, clientId, scopes));
+                            }
                         }
                     }
                     isAccessTokenValid = true;
@@ -123,11 +136,15 @@ public abstract class AccessTokenResponseIssuer extends AbstractIdentityMessageH
                     if (refreshTokenExpiryTime < 0 || refreshTokenExpiryTime > 0) {
                         if (log.isDebugEnabled()) {
                             if (refreshTokenExpiryTime < 0) {
-                                log.debug("Infinite lifetime refresh token found for " + OAuth2Util
-                                        .createUniqueAuthzGrantString(authzUser, clientId, scopes));
+                                if(log.isDebugEnabled()) {
+                                    log.debug("Infinite lifetime refresh token found for " + OAuth2Util
+                                            .createUniqueAuthzGrantString(authzUser, clientId, scopes));
+                                }
                             } else if (refreshTokenExpiryTime > 0) {
-                                log.debug("ACTIVE refresh token found for " + OAuth2Util.createUniqueAuthzGrantString
-                                        (authzUser, clientId, scopes));
+                                if(log.isDebugEnabled()) {
+                                    log.debug("ACTIVE refresh token found for " + OAuth2Util.createUniqueAuthzGrantString
+                                            (authzUser, clientId, scopes));
+                                }
                             }
                         }
                         isRefreshTokenValid = true;
@@ -140,11 +157,15 @@ public abstract class AccessTokenResponseIssuer extends AbstractIdentityMessageH
                 if (refreshTokenExpiryTime < 0 || refreshTokenExpiryTime > 0) {
                     if (log.isDebugEnabled()) {
                         if (refreshTokenExpiryTime < 0) {
-                            log.debug("Infinite lifetime refresh token found for " + OAuth2Util
-                                    .createUniqueAuthzGrantString(authzUser, clientId, scopes));
+                            if(log.isDebugEnabled()) {
+                                log.debug("Infinite lifetime refresh token found for " + OAuth2Util
+                                        .createUniqueAuthzGrantString(authzUser, clientId, scopes));
+                            }
                         } else if (refreshTokenExpiryTime > 0) {
-                            log.debug("ACTIVE refresh token found for " + OAuth2Util.createUniqueAuthzGrantString
-                                    (authzUser, clientId, scopes));
+                            if(log.isDebugEnabled()) {
+                                log.debug("ACTIVE refresh token found for " + OAuth2Util.createUniqueAuthzGrantString
+                                        (authzUser, clientId, scopes));
+                            }
                         }
                     }
                     isRefreshTokenValid = true;

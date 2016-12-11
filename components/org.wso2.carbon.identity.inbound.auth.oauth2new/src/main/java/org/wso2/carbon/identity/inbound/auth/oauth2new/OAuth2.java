@@ -57,6 +57,8 @@ public class OAuth2 {
     }
 
     public static final String AUTHZ_CODE = "AUTHZ_CODE";
+    public static final String ACCESS_TOKEN = "AccessToken";
+    public static final String PREV_ACCESS_TOKEN = "PreviousAccessToken";
 
     public class Header {
         public static final String CACHE_CONTROL = "Cache-Control";
@@ -77,7 +79,6 @@ public class OAuth2 {
     public static final String OAUTH2_RESOURCE_OWNER_AUTHN_REQUEST = "OAuth2ResourceOwnerAuthnRequest";
     public static final String OAUTH2_RESOURCE_OWNER_AUTHZ_REQUEST = "OAuth2ResourceOwnerAuthzRequest";
     public static final String QUERY_STRING = "QUERY_STRING";
-    public static final String PREV_ACCESS_TOKEN = "PreviousAccessToken";
     public static final String PKCE_CODE_CHALLENGE = "code_challenge";
     public static final String PKCE_CODE_CHALLENGE_METHOD = "code_challenge_method";
     public static final String PKCE_CODE_VERIFIER = "code_verifier";

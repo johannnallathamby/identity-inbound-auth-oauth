@@ -67,9 +67,6 @@ public class BearerTokenResponseIssuer extends AccessTokenResponseIssuer {
         Timestamp accessTokenIssuedTime = timestamp;
 
         Timestamp refreshTokenIssuedTime = timestamp;
-        if(isRefreshTokenValid) {
-            refreshTokenIssuedTime = prevAccessToken.getRefreshTokenIssuedTime();
-        }
 
         long accessTokenValidity = OAuth2ServerConfig.getInstance().getApplicationAccessTokenValidity();
 
@@ -103,6 +100,8 @@ public class BearerTokenResponseIssuer extends AccessTokenResponseIssuer {
         }
         if (isRefreshTokenValid) {
             refreshToken = prevAccessToken.getRefreshToken();
+            refreshTokenIssuedTime = prevAccessToken.getRefreshTokenIssuedTime();
+            refreshTokenValidity = prevAccessToken.getRefreshTokenValidity();
         } else {
             try {
                 refreshToken = oltuIssuer.refreshToken();
@@ -120,6 +119,7 @@ public class BearerTokenResponseIssuer extends AccessTokenResponseIssuer {
         newAccessToken.setRefreshTokenIssuedTime(refreshTokenIssuedTime);
         newAccessToken.setRefreshTokenValidity(refreshTokenValidity);
 
+        messageContext.addParameter(OAuth2.ACCESS_TOKEN, newAccessToken);
         return newAccessToken;
     }
 

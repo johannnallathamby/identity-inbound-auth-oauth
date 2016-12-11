@@ -26,14 +26,14 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AuthzCode;
 
 import java.util.concurrent.BlockingDeque;
 
-public class AuthzCodePersistenceTask implements Runnable {
+class AuthzCodePersistenceTask implements Runnable {
 
     private static Log log = LogFactory.getLog(AuthzCodePersistenceTask.class);
 
     private BlockingDeque<AuthzCodeJob> authzCodeJobQueue;
     private OAuth2DAO persistentDAO;
 
-    public AuthzCodePersistenceTask(BlockingDeque<AuthzCodeJob> authzCodeJobQueue, OAuth2DAO persistentDAO) {
+    AuthzCodePersistenceTask(BlockingDeque<AuthzCodeJob> authzCodeJobQueue, OAuth2DAO persistentDAO) {
         this.authzCodeJobQueue = authzCodeJobQueue;
         this.persistentDAO = persistentDAO;
     }
@@ -66,7 +66,7 @@ public class AuthzCodePersistenceTask implements Runnable {
     static class AuthzCodeJob {
 
         private enum AuthzCodeJobAction {
-            STORE, UPDATE;
+            STORE, UPDATE
         }
 
         private AuthzCodeJobAction action;

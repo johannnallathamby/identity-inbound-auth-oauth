@@ -16,26 +16,26 @@
  * under the License.
  */
 
-package org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.authz;
+package org.wso2.carbon.identity.inbound.auth.oauth2new.introspect;
 
-import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
-import org.apache.oltu.oauth2.common.message.OAuthResponse;
+import com.google.gson.Gson;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.HttpIdentityResponse;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.HttpIdentityResponseFactory;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityResponse;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2RuntimeException;
 
-public class HttpAuthzResponseFactory extends HttpIdentityResponseFactory {
+import javax.servlet.http.HttpServletResponse;
+
+public class IntrospectionResponseFactory extends HttpIdentityResponseFactory {
 
     @Override
     public String getName() {
-        return "HttpTokenResponseFactory";
+        return "HttpIntrospectionResponseFactory";
     }
 
     @Override
     public boolean canHandle(IdentityResponse identityResponse) {
-        if(identityResponse instanceof AuthzResponse) {
+        if(identityResponse instanceof IntrospectionResponse) {
             return true;
         }
         return false;
@@ -44,28 +44,22 @@ public class HttpAuthzResponseFactory extends HttpIdentityResponseFactory {
     @Override
     public HttpIdentityResponse.HttpIdentityResponseBuilder create(IdentityResponse identityResponse) {
 
-        HttpIdentityResponse.HttpIdentityResponseBuilder builder = new HttpIdentityResponse.HttpIdentityResponseBuilder();
-        create(builder, identityResponse);
-        return builder;
+        HttpIdentityResponse.HttpIdentityResponseBuilder responseBuilder = new
+                HttpIdentityResponse.HttpIdentityResponseBuilder();
+        create(responseBuilder, identityResponse);
+        return responseBuilder;
     }
 
     @Override
     public void create(HttpIdentityResponse.HttpIdentityResponseBuilder builder, IdentityResponse identityResponse) {
 
-        AuthzResponse authzResponse = ((AuthzResponse)identityResponse);
-        OAuthResponse response = null;
-        try {
-            response = authzResponse.getBuilder().buildQueryMessage();
-        } catch (OAuthSystemException e) {
-            throw OAuth2RuntimeException.error("Error occurred while building query message for authorization " +
-                                               "response");
-        }
-        builder.setStatusCode(response.getResponseStatus());
-        builder.setRedirectURL(response.getLocationUri());
-        builder.setHeaders(response.getHeaders());
-        builder.addHeader(OAuth2.Header.CACHE_CONTROL,
-                          OAuth2.HeaderValue.CACHE_CONTROL_NO_STORE);
-        builder.addHeader(OAuth2.Header.PRAGMA,
-                          OAuth2.HeaderValue.PRAGMA_NO_CACHE);
+        IntrospectionResponse introspectionResponse = (IntrospectionResponse)identityResponse;
+
+        builder.setStatusCode(HttpServletResponse.SC_OK);
+        Gson gson = new Gson();
+        String body = gson.toJson(introspectionResponse);
+        builder.setBody(body);
+        builder.addHeader(OAuth2.Header.CACHE_CONTROL, OAuth2.HeaderValue.CACHE_CONTROL_NO_STORE);
+        builder.addHeader(OAuth2.Header.PRAGMA, OAuth2.HeaderValue.PRAGMA_NO_CACHE);
     }
 }

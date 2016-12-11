@@ -145,6 +145,11 @@ public class OIDCTokenResponseProcessor extends TokenResponseProcessor {
             addIDToken(oidcBuilder, messageContext);
         }
 
+        String responseMode = ((OIDCAuthzRequest)messageContext.getRequest()).getResponseMode();
+        if(responseMode != null && OIDC.ResponseMode.FORM_POST.equals(responseMode)) {
+            oidcBuilder.setResponseMode(responseMode);
+        }
+
         AuthenticationResult authenticationResult = (AuthenticationResult)messageContext.getParameter(
                 InboundConstants.RequestProcessor.AUTHENTICATION_RESULT);
         if(StringUtils.isNotBlank(authenticationResult.getAuthenticatedIdPs())){

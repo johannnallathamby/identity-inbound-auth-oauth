@@ -26,14 +26,14 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AccessToken;
 
 import java.util.concurrent.BlockingDeque;
 
-public class AccessTokenPersistenceTask implements Runnable {
+class AccessTokenPersistenceTask implements Runnable {
 
     private static Log log = LogFactory.getLog(AccessTokenPersistenceTask.class);
 
     private BlockingDeque<AccessTokenJob> accessTokenJobQueue;
     private OAuth2DAO persistentDAO;
 
-    public AccessTokenPersistenceTask(BlockingDeque<AccessTokenJob> accessTokenJobQueue, OAuth2DAO persistentDAO) {
+    AccessTokenPersistenceTask(BlockingDeque<AccessTokenJob> accessTokenJobQueue, OAuth2DAO persistentDAO) {
         this.accessTokenJobQueue = accessTokenJobQueue;
         this.persistentDAO = persistentDAO;
     }
@@ -46,7 +46,7 @@ public class AccessTokenPersistenceTask implements Runnable {
         }
 
         while (true) {
-            AccessTokenJob job = null;
+            AccessTokenJob job;
             try {
                 job = accessTokenJobQueue.take();
                 if (job != null) {
@@ -67,18 +67,6 @@ public class AccessTokenPersistenceTask implements Runnable {
 
         AccessTokenJob(AccessToken newAccessToken) {
             this.newAccessToken = newAccessToken;
-        }
-
-        void setOldAccessToken(String oldAccessToken) {
-            this.oldAccessToken = oldAccessToken;
-        }
-
-        void setAuthzCode(String authzCode) {
-            this.authzCode = authzCode;
-        }
-
-        void setMessageContext(OAuth2MessageContext messageContext) {
-            this.messageContext = messageContext;
         }
     }
 }

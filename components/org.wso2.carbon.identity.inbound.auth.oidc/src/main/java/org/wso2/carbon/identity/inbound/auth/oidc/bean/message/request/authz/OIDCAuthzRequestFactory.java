@@ -96,6 +96,7 @@ public class OIDCAuthzRequestFactory extends AuthzRequestFactory {
             oidcAuthzRequestBuilder.setConsentRequired(true);
         }
         parseClaims((OIDCAuthzRequest.OIDCAuthzRequestBuilder)builder, request, response);
+        oidcAuthzRequestBuilder.setResponseMode(request.getParameter(OIDC.RESPONSE_MODE));
     }
 
     protected void parseClaims(OIDCAuthzRequest.OIDCAuthzRequestBuilder builder, HttpServletRequest request,

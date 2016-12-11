@@ -2128,7 +2128,7 @@ public class TokenMgtDAO {
     private String getSanitizedUserStoreDomain(String userStoreDomain){
         if(userStoreDomain != null){
             userStoreDomain = userStoreDomain.toUpperCase();
-        } else{
+        } else {
             userStoreDomain = IdentityUtil.getPrimaryDomainName();
         }
         return userStoreDomain;

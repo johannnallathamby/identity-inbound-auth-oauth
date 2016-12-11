@@ -171,7 +171,7 @@ public abstract class ROApprovalProcessor extends IdentityProcessor {
         } else if(StringUtils.equals("Deny", consent)) {
             UserConsentDAO.getInstance().approveAppAlways(new UserConsent(messageContext.getAuthzUser(), applicationId,
                                                                           false), spName);
-            throw OAuth2ConsentException.error("User denied the request");
+            throw OAuth2ConsentException.error("AuthenticatedUser denied the request");
         } else {
             throw OAuth2InternalException.error("Cannot find consent parameter");
         }

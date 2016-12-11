@@ -25,10 +25,11 @@ import org.osgi.service.component.ComponentContext;
 import org.wso2.carbon.base.MultitenantConstants;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.HttpIdentityRequestFactory;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityProcessor;
+import org.wso2.carbon.identity.application.mgt.ApplicationManagementService;
 import org.wso2.carbon.identity.inbound.auth.oidc.bean.message.request.authz.OIDCAuthzRequestFactory;
-import org.wso2.carbon.identity.inbound.auth.oidc.bean.message.response.authz.HttpOIDCAuthzResponseFactory;
-import org.wso2.carbon.identity.inbound.auth.oidc.bean.message.response.token.HttpOIDCTokenResponseFactory;
-import org.wso2.carbon.identity.inbound.auth.oidc.bean.message.response.userinfo.HttpUserinfoResponseFactory;
+import org.wso2.carbon.identity.inbound.auth.oidc.bean.message.response.authz.OIDCAuthzResponseFactory;
+import org.wso2.carbon.identity.inbound.auth.oidc.bean.message.response.token.OIDCTokenResponseFactory;
+import org.wso2.carbon.identity.inbound.auth.oidc.bean.message.response.userinfo.UserinfoResponseFactory;
 import org.wso2.carbon.identity.inbound.auth.oidc.dao.OIDCDAO;
 import org.wso2.carbon.identity.inbound.auth.oidc.handler.IDTokenHandler;
 import org.wso2.carbon.identity.inbound.auth.oidc.model.OIDCServerConfig;
@@ -51,6 +52,9 @@ import org.wso2.carbon.user.core.service.RealmService;
  * @scr.reference name="oidc.handler.idtoken"
  * interface="org.wso2.carbon.identity.inbound.auth.oidc.handler.IDTokenHandler" cardinality="0..n"
  * policy="dynamic" bind="addIDTokenHandler" unbind="removeIDTokenHandler"
+ * @scr.reference name="ApplicationManagementService"
+ * interface="org.wso2.carbon.identity.application.mgt.ApplicationManagementService" cardinality="1..1"
+ * policy="dynamic" bind="setApplicationManagementService" unbind="unsetApplicationManagementService"
  */
 public class OIDCServiceComponent {
 
@@ -71,7 +75,7 @@ public class OIDCServiceComponent {
                 log.error("OIDCAuthzRequestFactory could not be registered");
             }
             ServiceRegistration oidcAuthzRespFactory = context.getBundleContext().registerService(
-                    HttpIdentityRequestFactory.class.getName(), new HttpOIDCAuthzResponseFactory(), null);
+                    HttpIdentityRequestFactory.class.getName(), new OIDCAuthzResponseFactory(), null);
             if (oidcAuthzRespFactory != null) {
                 if (log.isDebugEnabled()) {
                     log.debug(" HttpOIDCAuthzResponseFactory is registered");
@@ -80,7 +84,7 @@ public class OIDCServiceComponent {
                 log.error("HttpOIDCAuthzResponseFactory could not be registered");
             }
             ServiceRegistration oidcTokenRespFactory = context.getBundleContext().registerService(
-                    HttpIdentityRequestFactory.class.getName(), new HttpOIDCTokenResponseFactory(), null);
+                    HttpIdentityRequestFactory.class.getName(), new OIDCTokenResponseFactory(), null);
             if (oidcAuthzRespFactory != null) {
                 if (log.isDebugEnabled()) {
                     log.debug(" HttpOIDCTokenResponseFactory is registered");
@@ -89,7 +93,7 @@ public class OIDCServiceComponent {
                 log.error("HttpOIDCTokenResponseFactory could not be registered");
             }
             ServiceRegistration oidcUserInfoRespFactory = context.getBundleContext().registerService(
-                    HttpIdentityRequestFactory.class.getName(), new HttpUserinfoResponseFactory(), null);
+                    HttpIdentityRequestFactory.class.getName(), new UserinfoResponseFactory(), null);
             if (oidcUserInfoRespFactory != null) {
                 if (log.isDebugEnabled()) {
                     log.debug(" HttpUserinfoResponseFactory is registered");
@@ -127,7 +131,7 @@ public class OIDCServiceComponent {
             }
 
             ServiceRegistration scopesInitListenerReg = context.getBundleContext().registerService(
-                    TenantMgtListener.class.getName(), new ScopesInitListener(), null);
+                    TenantMgtListener.class.getName(), new TenantScopesInitListener(), null);
             if (scopesInitListenerReg != null) {
                 if (log.isDebugEnabled()) {
                     log.debug(" ScopesInitListener is registered");
@@ -192,5 +196,19 @@ public class OIDCServiceComponent {
             log.debug("Removing IDTokenHandler " + handler.getName());
         }
         OIDCDataHolder.getInstance().getIDTokenHandlers().remove(handler);
+    }
+
+    protected void setApplicationManagementService(ApplicationManagementService service) {
+        if (log.isDebugEnabled()) {
+            log.debug("Adding ApplicationManagementService.");
+        }
+        OIDCDataHolder.getInstance().setAppMgtService(service);
+    }
+
+    protected void unsetApplicationManagementService(ApplicationManagementService service) {
+        if (log.isDebugEnabled()) {
+            log.debug("Removing ApplicationManagementService.");
+        }
+        OIDCDataHolder.getInstance().setAppMgtService(null);
     }
 }

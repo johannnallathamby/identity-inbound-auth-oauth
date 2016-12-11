@@ -23,7 +23,7 @@ import org.wso2.carbon.identity.application.authentication.framework.inbound.Htt
 import org.wso2.carbon.identity.application.authentication.framework.inbound.HttpIdentityResponseFactory;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityResponse;
 
-public class HttpUserinfoResponseFactory extends HttpIdentityResponseFactory {
+public class UserinfoResponseFactory extends HttpIdentityResponseFactory {
 
     public String getName() {
         return "HttpUserinfoResponseFactory";

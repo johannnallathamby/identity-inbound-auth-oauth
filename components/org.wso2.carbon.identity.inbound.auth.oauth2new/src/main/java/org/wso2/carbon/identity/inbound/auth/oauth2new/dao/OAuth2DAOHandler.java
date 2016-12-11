@@ -23,6 +23,7 @@ import org.wso2.carbon.identity.core.bean.context.MessageContext;
 import org.wso2.carbon.identity.core.handler.AbstractIdentityMessageHandler;
 import org.wso2.carbon.identity.core.handler.IdentityMessageHandler;
 import org.wso2.carbon.identity.core.handler.InitConfig;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2MessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2TokenMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AccessToken;
@@ -94,9 +95,10 @@ public final class OAuth2DAOHandler extends OAuth2DAO implements IdentityMessage
     }
 
     @Override
-    public AccessToken getLatestActiveOrExpiredAccessToken(String consumerKey, AuthenticatedUser authzUser,
-                                                           Set<String> scopes, OAuth2MessageContext messageContext) {
-        return wrappedDAO.getLatestActiveOrExpiredAccessToken(consumerKey, authzUser, scopes, messageContext);
+    public AccessToken getLatestAccessToken(String consumerKey, AuthenticatedUser authzUser,
+                                            Set<String> scopes, Set<String> states,
+                                            OAuth2MessageContext messageContext) {
+        return wrappedDAO.getLatestAccessToken(consumerKey, authzUser, scopes, states, messageContext);
     }
 
     @Override
@@ -136,8 +138,8 @@ public final class OAuth2DAOHandler extends OAuth2DAO implements IdentityMessage
     }
 
     @Override
-    public Set<String> getAuthorizedClientIDs(AuthenticatedUser authzUser, RevocationMessageContext messageContext) {
-        return wrappedDAO.getAuthorizedClientIDs(authzUser, messageContext);
+    public Set<AccessToken> getAuthorizedAccessTokens(AuthenticatedUser authzUser, RevocationMessageContext messageContext) {
+        return wrappedDAO.getAuthorizedAccessTokens(authzUser, messageContext);
     }
 
     @Override
@@ -153,5 +155,42 @@ public final class OAuth2DAOHandler extends OAuth2DAO implements IdentityMessage
     @Override
     public void revokeRefreshToken(String refreshToken, RevocationMessageContext messageContext) {
         wrappedDAO.revokeRefreshToken(refreshToken, messageContext);
+    }
+
+    @Override
+    public Set<AccessToken> getAccessTokensByClientId(String clientId, boolean includeExpired) {
+        return wrappedDAO.getAccessTokensByClientId(clientId, includeExpired);
+    }
+
+    @Override
+    public Set<AuthzCode> getAuthorizationCodesByClientId(String clientId, boolean includeExpired) {
+        return wrappedDAO.getAuthorizationCodesByClientId(clientId, includeExpired);
+    }
+
+    @Override
+    public Set<AccessToken> getAccessTokensOfTenant(String tenantDomain, boolean includeExpired) {
+        return wrappedDAO.getAccessTokensOfTenant(tenantDomain, includeExpired);
+    }
+
+    @Override
+    public Set<AuthzCode> getAuthorizationCodesOfTenant(String tenantDomain, boolean includeExpired) {
+        return wrappedDAO.getAuthorizationCodesOfTenant(tenantDomain, includeExpired);
+    }
+
+    @Override
+    public Set<AccessToken> getAccessTokensOfUserStore(String tenantDomain, String userStoreDomain,
+                                                       boolean includeExpired) {
+        return wrappedDAO.getAccessTokensOfUserStore(tenantDomain, userStoreDomain, includeExpired);
+    }
+
+    @Override
+    public Set<AuthzCode> getAuthorizationCodesOfUserStore(String tenantDomain, String userStoreDomain,
+                                                           boolean includeExpired) {
+        return wrappedDAO.getAuthorizationCodesOfUserStore(tenantDomain, userStoreDomain, includeExpired);
+    }
+
+    @Override
+    public void renameUserStore(String tenantDomain, String currentName, String newName) {
+        wrappedDAO.renameUserStore(tenantDomain, currentName, newName);
     }
 }
