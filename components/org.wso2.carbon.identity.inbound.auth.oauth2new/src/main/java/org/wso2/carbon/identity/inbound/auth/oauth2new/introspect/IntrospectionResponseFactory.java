@@ -29,11 +29,6 @@ import javax.servlet.http.HttpServletResponse;
 public class IntrospectionResponseFactory extends HttpIdentityResponseFactory {
 
     @Override
-    public String getName() {
-        return "HttpIntrospectionResponseFactory";
-    }
-
-    @Override
     public boolean canHandle(IdentityResponse identityResponse) {
         if(identityResponse instanceof IntrospectionResponse) {
             return true;

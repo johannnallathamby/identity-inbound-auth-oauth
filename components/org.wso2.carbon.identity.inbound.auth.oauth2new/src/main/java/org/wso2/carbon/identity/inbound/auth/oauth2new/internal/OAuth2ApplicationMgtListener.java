@@ -17,20 +17,17 @@
  */
 package org.wso2.carbon.identity.inbound.auth.oauth2new.internal;
 
-import org.apache.commons.lang.StringUtils;
 import org.wso2.carbon.identity.application.common.IdentityApplicationManagementException;
-import org.wso2.carbon.identity.application.common.model.InboundAuthenticationConfig;
-import org.wso2.carbon.identity.application.common.model.InboundAuthenticationRequestConfig;
 import org.wso2.carbon.identity.application.common.model.ServiceProvider;
-import org.wso2.carbon.identity.application.common.util.IdentityApplicationConstants;
 import org.wso2.carbon.identity.application.mgt.ApplicationManagementService;
 import org.wso2.carbon.identity.application.mgt.listener.AbstractApplicationMgtListener;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.HandlerManager;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AccessToken;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AuthzCode;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.model.OAuth2App;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Util;
 
-import java.util.HashSet;
 import java.util.Set;
 
 public class OAuth2ApplicationMgtListener extends AbstractApplicationMgtListener {
@@ -60,34 +57,20 @@ public class OAuth2ApplicationMgtListener extends AbstractApplicationMgtListener
 
     private void inactiveTokens(ServiceProvider serviceProvider) throws IdentityApplicationManagementException {
 
-        Set<AccessToken> accessTokens = new HashSet<>();
-        Set<AuthzCode> authzCodes = new HashSet<>();
-        String clientId = null;
-
-        InboundAuthenticationConfig inboundAuthenticationConfig = serviceProvider.getInboundAuthenticationConfig();
-        if (inboundAuthenticationConfig != null) {
-            InboundAuthenticationRequestConfig[] inboundRequestConfigs = inboundAuthenticationConfig.
-                    getInboundAuthenticationRequestConfigs();
-            if (inboundRequestConfigs != null) {
-                for (InboundAuthenticationRequestConfig inboundRequestConfig : inboundRequestConfigs) {
-                    if (StringUtils.equals(IdentityApplicationConstants.OAuth2.NAME, inboundRequestConfig
-                            .getInboundAuthType())) {
-                        clientId = inboundRequestConfig.getInboundAuthKey();
-                        accessTokens = HandlerManager.getInstance().getOAuth2DAO(null)
-                                .getAccessTokensByClientId(clientId, false);
-                        authzCodes = HandlerManager.getInstance().getOAuth2DAO(null)
-                                .getAuthorizationCodesByClientId(clientId, false);
-                    }
-                }
+        OAuth2App app = OAuth2Util.getOAuth2App(serviceProvider);
+        if(app != null) {
+            Set<AccessToken> accessTokens = HandlerManager.getInstance().getOAuth2DAO(null)
+                    .getAccessTokensByClientId(app.getClientId(), false);
+            Set<AuthzCode> authzCodes = HandlerManager.getInstance().getOAuth2DAO(null)
+                    .getAuthorizationCodesByClientId(app.getClientId(), false);
+            for (AccessToken accessToken : accessTokens) {
+                HandlerManager.getInstance().getOAuth2DAO(null).updateAccessTokenState(accessToken.getAccessToken(), OAuth2.TokenState
+                        .INACTIVE, null);
             }
-        }
-        for (AccessToken accessToken : accessTokens) {
-            HandlerManager.getInstance().getOAuth2DAO(null).updateAccessTokenState(accessToken.getAccessToken(), OAuth2.TokenState
-                    .INACTIVE, null);
-        }
-        for (AuthzCode authzCode : authzCodes) {
-            HandlerManager.getInstance().getOAuth2DAO(null).updateAuthzCodeState(authzCode.getAuthzCode(), OAuth2.TokenState
-                    .INACTIVE, null);
+            for (AuthzCode authzCode : authzCodes) {
+                HandlerManager.getInstance().getOAuth2DAO(null).updateAuthzCodeState(authzCode.getAuthzCode(), OAuth2.TokenState
+                        .INACTIVE, null);
+            }
         }
     }
 }

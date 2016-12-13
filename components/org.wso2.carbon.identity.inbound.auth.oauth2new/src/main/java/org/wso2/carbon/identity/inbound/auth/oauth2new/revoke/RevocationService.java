@@ -16,22 +16,19 @@
  * under the License.
  */
 
-package org.wso2.carbon.identity.inbound.auth.oauth2new.introspect;
+package org.wso2.carbon.identity.inbound.auth.oauth2new.revoke;
 
-import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2MessageContext;
+import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.model.OAuth2App;
 
-import java.io.Serializable;
-import java.util.Map;
+import java.util.Set;
 
-/*
- * Message context that holds information about the token introspection request to the token introspection endpoint
- */
-public class IntrospectionMessageContext<T1 extends Serializable, T2 extends Serializable> extends
-        OAuth2MessageContext {
+public interface RevocationService {
 
-    private static final long serialVersionUID = 8957814451266828857L;
+    Set<OAuth2App> getAppsAuthorizedByUser(AuthenticatedUser user) throws RevocationException;
 
-    public IntrospectionMessageContext(IntrospectionRequest request, Map<T1, T2> parameters) {
-        super(request, parameters);
-    }
+    void revokeApplication(AuthenticatedUser user, String clientId) throws RevocationException;
+
+    void revokeApplications(AuthenticatedUser user) throws RevocationException;
+
 }

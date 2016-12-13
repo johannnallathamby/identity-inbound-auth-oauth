@@ -25,7 +25,7 @@ import javax.servlet.http.HttpServletResponse;
 
 public class AuthzApprovedRequest extends OAuth2IdentityRequest {
 
-    private static final long serialVersionUID = 3359421085612381634L;
+    private static final long serialVersionUID = -1776762325249922753L;
 
     private String sessionDataKey;
     private String consent;

@@ -35,11 +35,6 @@ import java.net.URLEncoder;
 public class ConsentResponseFactory extends HttpIdentityResponseFactory {
 
     @Override
-    public String getName() {
-        return "HttpConsentResponseFactory";
-    }
-
-    @Override
     public boolean canHandle(IdentityResponse identityResponse) {
         if(identityResponse instanceof ConsentResponse) {
             return true;

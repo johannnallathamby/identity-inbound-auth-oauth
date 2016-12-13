@@ -27,7 +27,7 @@ import java.util.Set;
 
 public class PasswordGrantRequest extends TokenRequest {
 
-    private static final long serialVersionUID = -4072916934667966426L;
+    private static final long serialVersionUID = -163019801525558318L;
 
     private String username;
     private char[] password;

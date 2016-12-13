@@ -16,7 +16,9 @@
  * under the License.
  */
 
-package org.wso2.carbon.identity.inbound.auth.oauth2new.exception;
+package org.wso2.carbon.identity.inbound.auth.oauth2new.introspect;
+
+import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2ClientException;
 
 public class IntrospectionClientException extends OAuth2ClientException {
 

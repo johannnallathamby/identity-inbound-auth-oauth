@@ -24,7 +24,7 @@ import java.io.Serializable;
 
 public class UserConsent implements Serializable {
 
-    private static final long serialVersionUID = -4853807491189397416L;
+    private static final long serialVersionUID = -4946946591400652779L;
 
     private AuthenticatedUser authzUser;
     private int applicationId;

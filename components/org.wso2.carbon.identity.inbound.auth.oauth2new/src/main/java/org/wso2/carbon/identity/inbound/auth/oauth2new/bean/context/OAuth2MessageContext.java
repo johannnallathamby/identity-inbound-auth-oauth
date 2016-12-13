@@ -20,6 +20,7 @@ package org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context;
 
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.OAuth2IdentityRequest;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.model.OAuth2App;
 
 import java.io.Serializable;
 import java.util.Map;
@@ -31,12 +32,33 @@ public class OAuth2MessageContext<T1 extends Serializable, T2 extends Serializab
 
     private static final long serialVersionUID = -3793959181562481432L;
 
+    protected OAuth2App application;
+
     public OAuth2MessageContext(OAuth2IdentityRequest request, Map<T1,T2> parameters) {
         super(request, parameters);
+    }
+
+    /**
+     * Uncomment after adding default constructor to framework and updating framework dependency version
+     *
+     * This constructor is deprecated because any processor using {@link OAuth2MessageContext} must create a
+     * {@link OAuth2IdentityRequest} object.
+     */
+//    @Deprecated
+//    public OAuth2MessageContext() {
+//
+//    }
+
+    public void setApplication(OAuth2App application) {
+        this.application = application;
     }
 
     @Override
     public OAuth2IdentityRequest getRequest(){
         return (OAuth2IdentityRequest)request;
+    }
+
+    public OAuth2App getApplication() {
+        return application;
     }
 }

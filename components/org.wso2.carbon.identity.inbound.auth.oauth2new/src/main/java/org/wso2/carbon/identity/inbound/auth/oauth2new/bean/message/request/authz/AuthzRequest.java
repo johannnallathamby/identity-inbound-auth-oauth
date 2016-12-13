@@ -27,7 +27,7 @@ import java.util.Set;
 
 public class AuthzRequest extends OAuth2IdentityRequest {
 
-    private static final long serialVersionUID = 6738091486923517921L;
+    private static final long serialVersionUID = -7566583749113286264L;
 
     protected String responseType;
     protected String clientId;

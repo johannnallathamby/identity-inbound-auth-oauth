@@ -41,11 +41,6 @@ import java.util.Set;
 public class OIDCAuthzRequestFactory extends AuthzRequestFactory {
 
     @Override
-    public String getName() {
-        return "OIDCAuthzRequestFactory";
-    }
-
-    @Override
     public int getPriority() {
         return 0;
     }

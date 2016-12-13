@@ -23,7 +23,7 @@ import org.wso2.carbon.identity.application.authentication.framework.inbound.Fra
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityMessageContext;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.InboundConstants;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2AuthzMessageContext;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.AuthzMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.processor.authz.AuthzProcessor;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Util;
 import org.wso2.carbon.identity.inbound.auth.oidc.OIDC;
@@ -35,11 +35,6 @@ import java.util.Set;
  * InboundRequestProcessor for OAuth2 Authorization Endpoint
  */
 public class OIDCAuthzProcessor extends AuthzProcessor {
-
-    @Override
-    public String getName() {
-        return "OIDCAuthzProcessor";
-    }
 
     public int getPriority() {
         return 0;
@@ -70,7 +65,7 @@ public class OIDCAuthzProcessor extends AuthzProcessor {
      * @return OAuth2 authorization endpoint
      */
     protected FrameworkLoginResponse.FrameworkLoginResponseBuilder initializeResourceOwnerAuthentication(
-            OAuth2AuthzMessageContext messageContext) {
+            AuthzMessageContext messageContext) {
 
         boolean isLoginRequired = ((OIDCAuthzRequest)messageContext.getRequest()).isLoginRequired();
         messageContext.addParameter(InboundConstants.ForceAuth, isLoginRequired);

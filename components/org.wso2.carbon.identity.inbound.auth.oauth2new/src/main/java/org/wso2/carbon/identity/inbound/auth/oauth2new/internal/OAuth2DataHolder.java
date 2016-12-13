@@ -18,15 +18,16 @@
 
 package org.wso2.carbon.identity.inbound.auth.oauth2new.internal;
 
+import org.wso2.carbon.event.stream.core.EventStreamService;
 import org.wso2.carbon.identity.application.mgt.ApplicationManagementService;
 import org.wso2.carbon.identity.core.util.IdentityCoreInitializedEvent;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.dao.OAuth2DAOHandler;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.client.ClientAuthHandler;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.grant.AuthorizationGrantHandler;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.interceptor.OAuth2EventInterceptor;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.issuer.AccessTokenResponseIssuer;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.persist.TokenPersistenceProcessor;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.introspect.IntrospectionHandler;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.grant.AuthorizationGrantHandler;
 import org.wso2.carbon.registry.api.RegistryService;
 import org.wso2.carbon.user.core.service.RealmService;
 
@@ -47,6 +48,7 @@ public class OAuth2DataHolder {
     private List<AuthorizationGrantHandler> grantHandlers = new ArrayList();
     private List<IntrospectionHandler> introspectionHandlers = new ArrayList();
     private List<OAuth2EventInterceptor> interceptors = new ArrayList();
+    private EventStreamService eventStreamService = null;
 
     private OAuth2DataHolder() {
 
@@ -74,6 +76,10 @@ public class OAuth2DataHolder {
 
     public void setIdentityCoreInitializedEvent(IdentityCoreInitializedEvent identityCoreInitializedEvent) {
         this.identityCoreInitializedEvent = identityCoreInitializedEvent;
+    }
+
+    public void setEventStreamService(EventStreamService eventStreamService) {
+        this.eventStreamService = eventStreamService;
     }
 
     public IdentityCoreInitializedEvent getIdentityCoreInitializedEvent() {
@@ -114,5 +120,9 @@ public class OAuth2DataHolder {
 
     public List<OAuth2EventInterceptor> getInterceptors() {
         return interceptors;
+    }
+
+    public EventStreamService getEventStreamService() {
+        return eventStreamService;
     }
 }

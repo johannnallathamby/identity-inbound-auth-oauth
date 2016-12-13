@@ -18,8 +18,6 @@
 
 package org.wso2.carbon.identity.inbound.auth.oidc;
 
-import org.wso2.carbon.identity.application.common.util.IdentityApplicationConstants;
-
 public class OIDC {
 
     public static final String OPENID_SCOPE = "openid";
@@ -35,6 +33,11 @@ public class OIDC {
         public static final String LOGIN = "login";
         public static final String CONSENT = "consent";
         public static final String NONE = "none";
+    }
+
+    public static class ResponseType {
+        public static final String ID_TOKEN = "id_token";
+        public static final String ID_TOKEN_TOKEN = "id_token token";
     }
 
     public static class IDTokenDigAlg {

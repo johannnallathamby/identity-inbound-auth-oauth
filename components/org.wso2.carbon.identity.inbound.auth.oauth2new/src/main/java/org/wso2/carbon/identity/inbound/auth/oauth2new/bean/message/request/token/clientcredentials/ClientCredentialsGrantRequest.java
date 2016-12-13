@@ -27,7 +27,7 @@ import java.util.Set;
 
 public class ClientCredentialsGrantRequest extends TokenRequest {
 
-    private static final long serialVersionUID = -1664111039532276033L;
+    private static final long serialVersionUID = -8383327642338337554L;
 
     private Set<String> scopes = new HashSet<>();
 

@@ -24,6 +24,8 @@ import org.wso2.carbon.identity.application.authentication.framework.inbound.Ide
 
 public class TokenResponse extends IdentityResponse {
 
+    private static final long serialVersionUID = -5294873717285750996L;
+
     protected OAuthASResponse.OAuthTokenResponseBuilder builder;
 
     public OAuthASResponse.OAuthTokenResponseBuilder getBuilder() {

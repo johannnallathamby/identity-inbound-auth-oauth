@@ -27,7 +27,7 @@ import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
 import org.apache.oltu.oauth2.common.message.types.ResponseType;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2AuthzMessageContext;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.AuthzMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.authz.AuthzResponse;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2RuntimeException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.HandlerManager;
@@ -45,10 +45,6 @@ public class CodeResponseProcessor extends ROApprovalProcessor {
 
     private OAuthIssuerImpl oltuIssuer = new OAuthIssuerImpl(new MD5Generator());
 
-    public String getName() {
-        return "CodeResponseProcessor";
-    }
-
     public boolean canHandle(IdentityRequest identityRequest) {
         if(StringUtils.equals(ResponseType.CODE.toString(),
                 identityRequest.getParameter(OAuth.OAUTH_RESPONSE_TYPE))) {
@@ -57,14 +53,13 @@ public class CodeResponseProcessor extends ROApprovalProcessor {
         return false;
     }
 
-    protected AuthzResponse.AuthzResponseBuilder buildAuthzResponse(OAuth2AuthzMessageContext messageContext) {
+    protected AuthzResponse.AuthzResponseBuilder buildAuthzResponse(AuthzMessageContext messageContext) {
 
         Timestamp timestamp = new Timestamp(new Date().getTime());
 
         long authzCodeValidity = OAuth2ServerConfig.getInstance().getAuthzCodeValidity();
         long callbackValidityPeriod = messageContext.getAccessTokenValidityPeriod();
-        if ((callbackValidityPeriod != OAuth2.UNASSIGNED_VALIDITY_PERIOD)
-                && callbackValidityPeriod > 0) {
+        if (callbackValidityPeriod != OAuth2.UNASSIGNED_VALIDITY_PERIOD && callbackValidityPeriod > 0) {
             authzCodeValidity = callbackValidityPeriod;
         }
         authzCodeValidity = authzCodeValidity * 1000;

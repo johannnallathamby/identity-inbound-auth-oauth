@@ -18,6 +18,7 @@
 
 package org.wso2.carbon.identity.inbound.auth.oauth2new.handler.persist;
 
+import org.wso2.carbon.identity.core.bean.context.MessageContext;
 import org.wso2.carbon.identity.core.handler.AbstractIdentityMessageHandler;
 
 /**
@@ -25,6 +26,16 @@ import org.wso2.carbon.identity.core.handler.AbstractIdentityMessageHandler;
  * E.g. to encrypt tokens before storing them in the database.
  */
 public abstract class TokenPersistenceProcessor extends AbstractIdentityMessageHandler {
+
+    // TODO: move this implementation to framework, remove it from here and update framework dependency version
+    public String getName() {
+        return this.getClass().getSimpleName();
+    }
+
+    @Override
+    public boolean canHandle(MessageContext messageContext) {
+        return true;
+    }
 
     public abstract String getProcessedClientId(String clientId);
 

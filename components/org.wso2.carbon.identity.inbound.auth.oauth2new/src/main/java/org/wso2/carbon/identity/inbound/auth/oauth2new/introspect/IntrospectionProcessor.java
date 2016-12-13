@@ -32,11 +32,6 @@ import java.util.HashMap;
 public class IntrospectionProcessor extends OAuth2IdentityRequestProcessor {
 
     @Override
-    public String getName() {
-        return "IntrospectionProcessor";
-    }
-
-    @Override
     public String getCallbackPath(IdentityMessageContext context) {
         return null;
     }
@@ -67,8 +62,7 @@ public class IntrospectionProcessor extends OAuth2IdentityRequestProcessor {
         HandlerManager.getInstance().triggerPreTokenIntrospections(messageContext);
 
         if(ClientType.CONFIDENTIAL == clientType(messageContext)) {
-            String clientId = authenticateClient(messageContext);
-            messageContext.setClientId(clientId);
+            authenticateClient(messageContext);
         }
 
         IntrospectionResponse.IntrospectionResponseBuilder introspectionResponseBuilder = introspect(messageContext);
@@ -99,10 +93,9 @@ public class IntrospectionProcessor extends OAuth2IdentityRequestProcessor {
      * Authenticates confidential clients
      *
      * @param messageContext The runtime message context
-     * @return {@code true} only if the client was confidential and was authenticated successfully
-     * @throws OAuth2Exception
+     * @throws OAuth2ClientException if the client was not authenticated successfully
      */
-    protected String authenticateClient(IntrospectionMessageContext messageContext) throws OAuth2Exception {
-        return HandlerManager.getInstance().authenticateClient(messageContext);
+    protected void authenticateClient(IntrospectionMessageContext messageContext) throws OAuth2ClientException {
+        HandlerManager.getInstance().authenticateClient(messageContext);
     }
 }

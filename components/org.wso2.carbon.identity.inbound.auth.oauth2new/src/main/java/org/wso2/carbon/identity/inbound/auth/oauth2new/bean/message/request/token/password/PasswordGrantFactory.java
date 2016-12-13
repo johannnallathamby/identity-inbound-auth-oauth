@@ -32,11 +32,6 @@ import javax.servlet.http.HttpServletResponse;
 public class PasswordGrantFactory extends TokenRequestFactory {
 
     @Override
-    public String getName() {
-        return "PasswordGrantFactory";
-    }
-
-    @Override
     public boolean canHandle(HttpServletRequest request, HttpServletResponse response) {
         if(StringUtils.equals(GrantType.PASSWORD.toString(), request.getParameter(OAuth.OAUTH_GRANT_TYPE))) {
             return true;

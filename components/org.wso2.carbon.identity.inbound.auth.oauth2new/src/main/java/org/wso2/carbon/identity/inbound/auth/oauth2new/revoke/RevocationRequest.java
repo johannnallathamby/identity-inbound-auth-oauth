@@ -25,7 +25,7 @@ import javax.servlet.http.HttpServletResponse;
 
 public class RevocationRequest extends OAuth2IdentityRequest {
 
-    private static final long serialVersionUID = -371925192220383152L;
+    private static final long serialVersionUID = -4037377885923719845L;
 
     private String token;
     private String tokenTypeHint;

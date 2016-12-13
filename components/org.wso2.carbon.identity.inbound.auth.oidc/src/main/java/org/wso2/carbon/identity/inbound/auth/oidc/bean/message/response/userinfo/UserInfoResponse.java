@@ -24,6 +24,8 @@ import org.wso2.carbon.identity.inbound.auth.oidc.bean.context.UserinfoMessageCo
 
 public class UserInfoResponse extends IdentityResponse {
 
+    private static final long serialVersionUID = -2260150340336759491L;
+
     protected UserInfo userInfo;
 
     protected UserInfoResponse(UserInfoResponseBuilder builder) {

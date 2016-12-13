@@ -25,6 +25,8 @@ import java.util.Set;
 
 public class ConsentResponse extends ROApprovalResponse {
 
+    private static final long serialVersionUID = 2175011133147174197L;
+
     private String sessionDataKeyConsent;
 
     private String applicationName;

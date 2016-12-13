@@ -20,9 +20,9 @@ package org.wso2.carbon.identity.inbound.auth.oauth2new.processor;
 
 import org.apache.oltu.oauth2.common.message.types.GrantType;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityProcessor;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2AuthzMessageContext;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.AuthzMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2MessageContext;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2TokenMessageContext;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.TokenMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2RuntimeException;
 
 public abstract class OAuth2IdentityRequestProcessor extends IdentityProcessor {
@@ -35,13 +35,13 @@ public abstract class OAuth2IdentityRequestProcessor extends IdentityProcessor {
      */
     public boolean issueRefreshToken(OAuth2MessageContext messageContext) {
 
-        if(messageContext instanceof OAuth2AuthzMessageContext){
-            return issueRefreshToken((OAuth2AuthzMessageContext) messageContext);
-        } else if(messageContext instanceof OAuth2TokenMessageContext) {
-            return issueRefreshToken((OAuth2TokenMessageContext) messageContext);
+        if(messageContext instanceof AuthzMessageContext){
+            return issueRefreshToken((AuthzMessageContext) messageContext);
+        } else if(messageContext instanceof TokenMessageContext) {
+            return issueRefreshToken((TokenMessageContext) messageContext);
         } else {
             throw OAuth2RuntimeException.error("Invalid OAuth2MessageContext; neither of type " +
-                                               "OAuth2AuthzMessageContext nor type OAuth2TokenMessageContext");
+                                               "AuthzMessageContext nor type TokenMessageContext");
         }
     }
 
@@ -51,7 +51,7 @@ public abstract class OAuth2IdentityRequestProcessor extends IdentityProcessor {
      * @param messageContext The runtime authorization message context
      * @return {@code true} if refresh tokens must be issued
      */
-    protected boolean issueRefreshToken(OAuth2AuthzMessageContext messageContext) {
+    protected boolean issueRefreshToken(AuthzMessageContext messageContext) {
         return false;
     }
 
@@ -61,7 +61,7 @@ public abstract class OAuth2IdentityRequestProcessor extends IdentityProcessor {
      * @param messageContext The runtime token message context
      * @return {@code true} if refresh tokens must be issued
      */
-    protected boolean issueRefreshToken(OAuth2TokenMessageContext messageContext) {
+    protected boolean issueRefreshToken(TokenMessageContext messageContext) {
 
         if(GrantType.CLIENT_CREDENTIALS.toString().equals(messageContext.getRequest().getGrantType())) {
             return false;

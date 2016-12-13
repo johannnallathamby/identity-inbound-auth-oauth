@@ -22,6 +22,8 @@ import org.wso2.carbon.identity.application.authentication.framework.inbound.Ide
 
 public class IntrospectionResponse extends IdentityResponse {
 
+    private static final long serialVersionUID = 8432047287609675214L;
+
     /*
      * REQUIRED. Boolean indicator of whether or not the presented token is currently active. The specifics of a token's
      * "active" state will vary depending on the implementation of the authorization server and the information it keeps

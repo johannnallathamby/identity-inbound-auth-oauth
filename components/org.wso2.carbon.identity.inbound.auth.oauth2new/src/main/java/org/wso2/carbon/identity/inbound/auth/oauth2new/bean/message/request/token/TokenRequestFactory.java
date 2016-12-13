@@ -31,11 +31,6 @@ import javax.servlet.http.HttpServletResponse;
 public class TokenRequestFactory extends OAuth2IdentityRequestFactory {
 
     @Override
-    public String getName() {
-        return "TokenRequestFactory";
-    }
-
-    @Override
     public boolean canHandle(HttpServletRequest request, HttpServletResponse response) {
         if(StringUtils.isNotBlank(request.getParameter(OAuth.OAUTH_GRANT_TYPE))) {
             return true;

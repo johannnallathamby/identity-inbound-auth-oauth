@@ -21,7 +21,7 @@ package org.wso2.carbon.identity.inbound.auth.oauth2new.dao;
 import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2MessageContext;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2TokenMessageContext;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.TokenMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.cache.AccessTokenCache;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.cache.AuthorizationGrantCache;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.cache.AuthorizationGrantCacheKey;
@@ -29,7 +29,6 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.cache.AuthzCodeCache;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.AccessTokenExistsException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AccessToken;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AuthzCode;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.revoke.RevocationMessageContext;
 
 import java.util.Set;
 
@@ -99,14 +98,14 @@ public class CacheBackedOAuth2DAO extends OAuth2DAO {
 
     }
 
-    public void updateAccessTokenState(String bearerToken, String tokenState, OAuth2TokenMessageContext messageContext) {
+    public void updateAccessTokenState(String bearerToken, String tokenState, TokenMessageContext messageContext) {
 
         AccessToken accessToken = AccessTokenCache.getInstance().getValueFromCache(bearerToken);
         if(accessToken != null){
             AccessToken accessToken1 = AccessToken.createAccessToken(accessToken, tokenState);
             AccessTokenCache.getInstance().addToCache(bearerToken, accessToken1);
         }
-        AuthorizationGrantCacheKey key = new AuthorizationGrantCacheKey(messageContext.getClientId(),
+        AuthorizationGrantCacheKey key = new AuthorizationGrantCacheKey(messageContext.getApplication().getClientId(),
                 messageContext.getAuthzUser(), messageContext.getApprovedScopes());
         accessToken = AuthorizationGrantCache.getInstance().getValueFromCache(key);
         if(accessToken != null) {
@@ -155,7 +154,7 @@ public class CacheBackedOAuth2DAO extends OAuth2DAO {
     }
 
     @Override
-    public Set<AccessToken> getAuthorizedAccessTokens(AuthenticatedUser authzUser, RevocationMessageContext messageContext) {
+    public Set<AccessToken> getAuthorizedAccessTokens(AuthenticatedUser authzUser, OAuth2MessageContext messageContext) {
         return wrappedDAO.getAuthorizedAccessTokens(authzUser, messageContext);
     }
 
@@ -178,7 +177,7 @@ public class CacheBackedOAuth2DAO extends OAuth2DAO {
     }
 
     @Override
-    public void revokeAccessToken(String bearerToken, RevocationMessageContext messageContext) {
+    public void revokeAccessToken(String bearerToken, OAuth2MessageContext messageContext) {
 
         AccessToken accessToken = null;
         accessToken = getAccessToken(bearerToken, messageContext);
@@ -198,7 +197,7 @@ public class CacheBackedOAuth2DAO extends OAuth2DAO {
     }
 
     @Override
-    public void revokeRefreshToken(String refreshToken, RevocationMessageContext messageContext) {
+    public void revokeRefreshToken(String refreshToken, OAuth2MessageContext messageContext) {
 
         AccessToken accessToken = null;
         accessToken = getLatestAccessTokenByRefreshToken(refreshToken, messageContext);

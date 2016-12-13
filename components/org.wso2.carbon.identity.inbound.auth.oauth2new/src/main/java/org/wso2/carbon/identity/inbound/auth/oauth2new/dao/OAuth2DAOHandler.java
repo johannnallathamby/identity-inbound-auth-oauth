@@ -23,12 +23,10 @@ import org.wso2.carbon.identity.core.bean.context.MessageContext;
 import org.wso2.carbon.identity.core.handler.AbstractIdentityMessageHandler;
 import org.wso2.carbon.identity.core.handler.IdentityMessageHandler;
 import org.wso2.carbon.identity.core.handler.InitConfig;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2MessageContext;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2TokenMessageContext;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.TokenMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AccessToken;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AuthzCode;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.revoke.RevocationMessageContext;
 
 import java.util.Set;
 
@@ -108,7 +106,7 @@ public final class OAuth2DAOHandler extends OAuth2DAO implements IdentityMessage
     }
 
     public void updateAccessTokenState(String accessToken, String tokenState,
-                                                OAuth2TokenMessageContext messageContext) {
+                                                TokenMessageContext messageContext) {
         wrappedDAO.updateAuthzCodeState(accessToken, tokenState, messageContext);
     }
 
@@ -138,7 +136,7 @@ public final class OAuth2DAOHandler extends OAuth2DAO implements IdentityMessage
     }
 
     @Override
-    public Set<AccessToken> getAuthorizedAccessTokens(AuthenticatedUser authzUser, RevocationMessageContext messageContext) {
+    public Set<AccessToken> getAuthorizedAccessTokens(AuthenticatedUser authzUser, OAuth2MessageContext messageContext) {
         return wrappedDAO.getAuthorizedAccessTokens(authzUser, messageContext);
     }
 
@@ -148,12 +146,12 @@ public final class OAuth2DAOHandler extends OAuth2DAO implements IdentityMessage
     }
 
     @Override
-    public void revokeAccessToken(String accessToken, RevocationMessageContext messageContext) {
+    public void revokeAccessToken(String accessToken, OAuth2MessageContext messageContext) {
         wrappedDAO.revokeAccessToken(accessToken, messageContext);
     }
 
     @Override
-    public void revokeRefreshToken(String refreshToken, RevocationMessageContext messageContext) {
+    public void revokeRefreshToken(String refreshToken, OAuth2MessageContext messageContext) {
         wrappedDAO.revokeRefreshToken(refreshToken, messageContext);
     }
 

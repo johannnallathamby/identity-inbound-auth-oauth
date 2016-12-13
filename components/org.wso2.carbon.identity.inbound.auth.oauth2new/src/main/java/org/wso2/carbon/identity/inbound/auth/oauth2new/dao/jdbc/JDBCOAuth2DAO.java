@@ -28,7 +28,7 @@ import org.wso2.carbon.identity.core.util.IdentityTenantUtil;
 import org.wso2.carbon.identity.core.util.IdentityUtil;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2MessageContext;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2TokenMessageContext;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.TokenMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.dao.OAuth2DAO;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.AccessTokenExistsException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2RuntimeException;
@@ -37,7 +37,6 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.persist.TokenPers
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AccessToken;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AuthzCode;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.OAuth2ServerConfig;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.revoke.RevocationMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Util;
 
 import java.sql.Connection;
@@ -81,10 +80,11 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
                                             Set<String> scopes, Set<String> states,
                                             OAuth2MessageContext messageContext) {
 
-        if(CollectionUtils.isEmpty(states) || (!states.contains(OAuth2.TokenState.ACTIVE) && !states.contains
-                (OAuth2.TokenState.EXPIRED) && !states.contains(OAuth2.TokenState.INACTIVE) && !states.contains
-                (OAuth2.TokenState.REVOKED))) {
-            throw OAuth2RuntimeException.error("States cannot be empty.");
+        if(CollectionUtils.isEmpty(states)) {
+            throw new IllegalArgumentException("States cannot be empty.");
+        }
+        for(String state:states) {
+            OAuth2.TokenState.validate(state);
         }
 
         TokenPersistenceProcessor processor = HandlerManager.getInstance().getTokenPersistenceProcessor(messageContext);
@@ -384,7 +384,7 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
     }
 
     @Override
-    public void updateAccessTokenState(String accessToken, String tokenState, OAuth2TokenMessageContext messageContext) {
+    public void updateAccessTokenState(String accessToken, String tokenState, TokenMessageContext messageContext) {
 
         Connection connection = IdentityDatabaseUtil.getDBConnection();
         try {
@@ -663,7 +663,7 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
     }
 
     // need to fix this method to return all authorized access tokens by user
-    public Set<AccessToken> getAuthorizedAccessTokens(AuthenticatedUser authzUser, RevocationMessageContext messageContext) {
+    public Set<AccessToken> getAuthorizedAccessTokens(AuthenticatedUser authzUser, OAuth2MessageContext messageContext) {
 
         TokenPersistenceProcessor processor = HandlerManager.getInstance().getTokenPersistenceProcessor(messageContext);
         Connection connection = IdentityDatabaseUtil.getDBConnection();
@@ -770,7 +770,7 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
         return accessToken;
     }
 
-    public void revokeAccessToken(String accessToken, RevocationMessageContext messageContext) {
+    public void revokeAccessToken(String accessToken, OAuth2MessageContext messageContext) {
 
         TokenPersistenceProcessor processor = HandlerManager.getInstance().getTokenPersistenceProcessor(messageContext);
         Connection connection = IdentityDatabaseUtil.getDBConnection();
@@ -791,7 +791,7 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
         }
     }
 
-    public void revokeRefreshToken(String refreshToken, RevocationMessageContext messageContext) {
+    public void revokeRefreshToken(String refreshToken, OAuth2MessageContext messageContext) {
 
         TokenPersistenceProcessor processor = HandlerManager.getInstance().getTokenPersistenceProcessor(messageContext);
         Connection connection = IdentityDatabaseUtil.getDBConnection();

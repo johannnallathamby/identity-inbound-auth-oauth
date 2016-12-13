@@ -22,19 +22,12 @@ import org.apache.commons.lang.StringUtils;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.FrameworkClientException;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.OAuth2IdentityRequestFactory;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.IntrospectionClientException;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2ClientException;
 import org.wso2.carbon.utils.multitenancy.MultitenantConstants;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 public class IntrospectionRequestFactory extends OAuth2IdentityRequestFactory {
-
-    @Override
-    public String getName() {
-        return "IntrospectionRequestFactory";
-    }
 
     @Override
     public boolean canHandle(HttpServletRequest request, HttpServletResponse response) {

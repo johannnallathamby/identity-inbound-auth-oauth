@@ -26,13 +26,17 @@ import org.apache.oltu.oauth2.common.OAuth;
 import org.wso2.carbon.identity.core.bean.context.MessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2.ClientType;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2MessageContext;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2RuntimeException;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2ClientException;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.model.OAuth2App;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Util;
+
+import java.util.Arrays;
 
 public class BasicAuthHandler extends ClientAuthHandler {
 
-    @Override
+    // TODO: move this implementation to framework, remove it from here and update framework dependency version
     public String getName() {
-        return "BasicAuthHandler";
+        return this.getClass().getSimpleName();
     }
 
     @Override
@@ -46,7 +50,8 @@ public class BasicAuthHandler extends ClientAuthHandler {
     }
 
     @Override
-    public String authenticate(OAuth2MessageContext messageContext) {
+    public void authenticate(OAuth2MessageContext messageContext) throws OAuth2ClientException {
+
         String authzHeader = messageContext.getRequest().getHeaderMap().get(OAuth.HeaderType.AUTHORIZATION);
         String clientId = null;
         if(StringUtils.isNotBlank(authzHeader)) {
@@ -59,9 +64,14 @@ public class BasicAuthHandler extends ClientAuthHandler {
                     if (idSecretArray.length == 2) {
                         clientId = idSecretArray[0];
                         String clientSecret = idSecretArray[1];
-                        // Get OAuth2 data from application.mgt and validate and set the service provider to message
-                        // context
-                        return "";
+                        OAuth2App app = OAuth2Util.getOAuth2App(
+                                clientId, messageContext.getRequest().getTenantDomain());
+                        if(app != null) {
+                            if(Arrays.equals(clientSecret.toCharArray(), app.getClientSecret())){
+                                messageContext.setApplication(app);
+                                return;
+                            }
+                        }
                     }
 
                 }
@@ -71,6 +81,6 @@ public class BasicAuthHandler extends ClientAuthHandler {
         if(StringUtils.isNotBlank(clientId)){
             message.append(" ").append(clientId);
         }
-        throw OAuth2RuntimeException.error(message.toString());
+        throw OAuth2ClientException.error(message.toString());
     }
 }

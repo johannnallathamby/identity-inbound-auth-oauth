@@ -32,11 +32,6 @@ import javax.servlet.http.HttpServletResponse;
 public class AuthzCodeGrantFactory extends TokenRequestFactory {
 
     @Override
-    public String getName() {
-        return "AuthzCodeGrantFactory";
-    }
-
-    @Override
     public boolean canHandle(HttpServletRequest request, HttpServletResponse response) {
         if(StringUtils.equals(GrantType.AUTHORIZATION_CODE.toString(), request.getParameter(OAuth.OAUTH_GRANT_TYPE))) {
             return true;
@@ -63,6 +58,6 @@ public class AuthzCodeGrantFactory extends TokenRequestFactory {
         super.create(authzCodeGrantBuilder, request, response);
         authzCodeGrantBuilder.setCode(request.getParameter(OAuth.OAUTH_CODE));
         authzCodeGrantBuilder.setRedirectURI(request.getParameter(OAuth.OAUTH_REDIRECT_URI));
-        authzCodeGrantBuilder.setPKCECodeVerifier(request.getParameter(OAuth2.PKCE_CODE_VERIFIER));
+        authzCodeGrantBuilder.setPKCECodeVerifier(request.getParameter(OAuth2.PKCE.CODE_VERIFIER));
     }
 }

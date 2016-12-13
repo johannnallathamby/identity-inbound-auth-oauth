@@ -19,19 +19,20 @@
 package org.wso2.carbon.identity.inbound.auth.oauth2new.handler.grant;
 
 import org.wso2.carbon.identity.core.handler.AbstractIdentityMessageHandler;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2TokenMessageContext;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.TokenMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2ClientException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2Exception;
 
+import java.util.List;
+
 /*
- * To authenticate OAuth2 clients.
  * client_credentials grant type uses this.
  */
 public class AuthorizationGrantHandler extends AbstractIdentityMessageHandler {
 
-    @Override
+    // TODO: move this implementation to framework, remove it from here and update framework dependency version
     public String getName() {
-        return "AuthorizationGrantHandler";
+        return this.getClass().getSimpleName();
     }
 
     /**
@@ -39,8 +40,12 @@ public class AuthorizationGrantHandler extends AbstractIdentityMessageHandler {
      *
      * @param messageContext The runtime message context
      */
-    public void validateGrant(OAuth2TokenMessageContext messageContext) throws OAuth2ClientException, OAuth2Exception {
+    public void validateGrant(TokenMessageContext messageContext) throws OAuth2ClientException, OAuth2Exception {
 
-        // validate with registered grant types for the application
+        List<String> grantTypes = messageContext.getApplication().getGrantTypes();
+        if(!grantTypes.contains(messageContext.getRequest().getGrantType())) {
+            throw OAuth2ClientException.error("Unauthorized Grant Type " + messageContext.getRequest().getGrantType());
+
+        }
     }
 }

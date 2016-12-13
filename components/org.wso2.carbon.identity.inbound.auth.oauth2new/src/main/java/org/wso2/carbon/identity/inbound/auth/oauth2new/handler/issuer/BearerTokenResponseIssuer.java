@@ -44,9 +44,9 @@ public class BearerTokenResponseIssuer extends AccessTokenResponseIssuer {
 
     private OAuthIssuerImpl oltuIssuer = new OAuthIssuerImpl(new MD5Generator());
 
-    @Override
+    // TODO: move this implementation to framework, remove it from here and update framework dependency version
     public String getName() {
-        return "BearerTokenResponseIssuer";
+        return this.getClass().getSimpleName();
     }
 
     @Override
@@ -68,28 +68,29 @@ public class BearerTokenResponseIssuer extends AccessTokenResponseIssuer {
 
         Timestamp refreshTokenIssuedTime = timestamp;
 
-        long accessTokenValidity = OAuth2ServerConfig.getInstance().getApplicationAccessTokenValidity();
+        long accessTokenValidity = OAuth2ServerConfig.getInstance().getUserAccessTokenValidity();
 
-        if(GrantType.CLIENT_CREDENTIALS.toString().equals(grantOrResponseType)){
-            accessTokenValidity = OAuth2ServerConfig.getInstance().getUserAccessTokenValidity();
+        if (GrantType.CLIENT_CREDENTIALS.toString().equals(grantOrResponseType)) {
+            accessTokenValidity = OAuth2ServerConfig.getInstance().getApplicationAccessTokenValidity();
         }
 
-        // if a VALID validity period is set through the callback, then use it
         if (accessTokenCallbackValidity != OAuth2.UNASSIGNED_VALIDITY_PERIOD) {
             accessTokenValidity = accessTokenCallbackValidity;
         }
 
-        accessTokenValidity = accessTokenValidity * 1000;
+        if (accessTokenValidity > 0) {
+            accessTokenValidity = accessTokenValidity * 1000;
+        }
 
-        // Default Validity Period (in seconds)
         long refreshTokenValidity = OAuth2ServerConfig.getInstance().getRefreshTokenValidity();
 
-        // if a VALID validity period is set through the callback, then use it
         if (refreshTokenCallbackValidity != OAuth2.UNASSIGNED_VALIDITY_PERIOD) {
             refreshTokenValidity = refreshTokenCallbackValidity;
         }
 
-        refreshTokenValidity = refreshTokenValidity * 1000;
+        if(refreshTokenValidity > 0) {
+            refreshTokenValidity = refreshTokenValidity * 1000;
+        }
 
         String bearerToken;
         String refreshToken = null;

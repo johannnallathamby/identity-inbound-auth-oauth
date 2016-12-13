@@ -19,12 +19,10 @@
 package org.wso2.carbon.identity.inbound.auth.oauth2new.dao;
 
 import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2MessageContext;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2TokenMessageContext;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.TokenMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AccessToken;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AuthzCode;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.revoke.RevocationMessageContext;
 
 import java.util.Set;
 
@@ -43,7 +41,7 @@ public abstract class OAuth2DAO {
     public abstract String getAccessTokenByAuthzCode(String authorizationCode, OAuth2MessageContext messageContext);
 
     public abstract void updateAccessTokenState(String accessToken, String tokenState,
-                                                OAuth2TokenMessageContext messageContext);
+                                                TokenMessageContext messageContext);
 
     public abstract AccessToken getLatestAccessTokenByRefreshToken(String refreshToken,
                                                                    OAuth2MessageContext messageContext);
@@ -55,13 +53,13 @@ public abstract class OAuth2DAO {
     public abstract void updateAuthzCodeState(String authzCode, String state, OAuth2MessageContext messageContext);
 
     public abstract Set<AccessToken> getAuthorizedAccessTokens(AuthenticatedUser authzUser,
-                                                               RevocationMessageContext messageContext);
+                                                               OAuth2MessageContext messageContext);
 
     public abstract AccessToken getAccessToken(String bearerToken, OAuth2MessageContext messageContext);
 
-    public abstract void revokeAccessToken(String accessToken, RevocationMessageContext messageContext);
+    public abstract void revokeAccessToken(String accessToken, OAuth2MessageContext messageContext);
 
-    public abstract void revokeRefreshToken(String refreshToken, RevocationMessageContext messageContext);
+    public abstract void revokeRefreshToken(String refreshToken, OAuth2MessageContext messageContext);
 
     public abstract Set<AccessToken> getAccessTokensByClientId(String clientId, boolean includeExpired);
 

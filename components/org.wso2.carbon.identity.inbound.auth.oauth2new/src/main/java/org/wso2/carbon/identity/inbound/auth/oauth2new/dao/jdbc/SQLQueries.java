@@ -237,28 +237,28 @@ public class SQLQueries {
                                                                                              "(SELECT ACCESS_TOKEN, REFRESH_TOKEN, TIME_CREATED, REFRESH_TOKEN_TIME_CREATED, VALIDITY_PERIOD, " +
                                                                                              "REFRESH_TOKEN_VALIDITY_PERIOD, USER_TYPE, TOKEN_ID, SUBJECT_IDENTIFIER FROM " +
                                                                                              "IDN_OAUTH2_ACCESS_TOKEN WHERE CONSUMER_KEY_ID=(SELECT ID FROM IDN_OAUTH_CONSUMER_APPS WHERE CONSUMER_KEY" +
-                                                                                             " = ?) AND AUTHZ_USER=? AND TENANT_ID=? AND USER_DOMAIN=? AND TOKEN_SCOPE_HASH=? AND TOKEN_STATE='ACTIVE'" +
+                                                                                             " = ?) AND AUTHZ_USER=? AND TENANT_ID=? AND USER_DOMAIN=? AND TOKEN_SCOPE_HASH=?" +
                                                                                              " ORDER BY TIME_CREATED DESC) WHERE ROWNUM < 2 ";
 
     public static final String RETRIEVE_LATEST_ACCESS_TOKEN_BY_CLIENT_ID_USER_SCOPE_DB2SQL = "SELECT " +
                                                                                              "ACCESS_TOKEN, REFRESH_TOKEN, TIME_CREATED, REFRESH_TOKEN_TIME_CREATED, VALIDITY_PERIOD, " +
                                                                                              "REFRESH_TOKEN_VALIDITY_PERIOD, USER_TYPE, TOKEN_ID, SUBJECT_IDENTIFIER FROM IDN_OAUTH2_ACCESS_TOKEN " +
                                                                                              "WHERE CONSUMER_KEY_ID= (SELECT ID FROM IDN_OAUTH_CONSUMER_APPS WHERE CONSUMER_KEY = ?) AND AUTHZ_USER=? " +
-                                                                                             "AND TENANT_ID=? AND USER_DOMAIN=? AND TOKEN_SCOPE_HASH=? AND TOKEN_STATE='ACTIVE' ORDER BY TIME_CREATED " +
+                                                                                             "AND TENANT_ID=? AND USER_DOMAIN=? AND TOKEN_SCOPE_HASH=? ORDER BY TIME_CREATED " +
                                                                                              "DESC FETCH FIRST 1 ROWS ONLY";
 
     public static final String RETRIEVE_LATEST_ACCESS_TOKEN_BY_CLIENT_ID_USER_SCOPE_MSSQL = "SELECT TOP 1 " +
                                                                                             "ACCESS_TOKEN, REFRESH_TOKEN, TIME_CREATED, REFRESH_TOKEN_TIME_CREATED, VALIDITY_PERIOD, " +
                                                                                             "REFRESH_TOKEN_VALIDITY_PERIOD, USER_TYPE, TOKEN_ID, SUBJECT_IDENTIFIER FROM IDN_OAUTH2_ACCESS_TOKEN " +
                                                                                             "WHERE CONSUMER_KEY_ID = (SELECT ID FROM IDN_OAUTH_CONSUMER_APPS WHERE CONSUMER_KEY = ?) AND AUTHZ_USER=?" +
-                                                                                            " AND TENANT_ID=? AND USER_DOMAIN=? AND TOKEN_SCOPE_HASH=? AND TOKEN_STATE='ACTIVE' ORDER BY TIME_CREATED" +
+                                                                                            " AND TENANT_ID=? AND USER_DOMAIN=? AND TOKEN_SCOPE_HASH=? AND ORDER BY TIME_CREATED" +
                                                                                             " DESC";
 
     public static final String RETRIEVE_LATEST_ACCESS_TOKEN_BY_CLIENT_ID_USER_SCOPE_POSTGRESQL = "SELECT * " +
                                                                                                  "FROM (SELECT ACCESS_TOKEN, REFRESH_TOKEN, TIME_CREATED, REFRESH_TOKEN_TIME_CREATED, VALIDITY_PERIOD, " +
                                                                                                  "REFRESH_TOKEN_VALIDITY_PERIOD, USER_TYPE, TOKEN_ID, SUBJECT_IDENTIFIER FROM IDN_OAUTH2_ACCESS_TOKEN " +
                                                                                                  "WHERE CONSUMER_KEY_ID = (SELECT ID FROM IDN_OAUTH_CONSUMER_APPS WHERE CONSUMER_KEY = ?) AND AUTHZ_USER=?" +
-                                                                                                 " AND TENANT_ID=? AND USER_DOMAIN=? AND TOKEN_SCOPE_HASH=? AND TOKEN_STATE='ACTIVE' ORDER BY TIME_CREATED" +
+                                                                                                 " AND TENANT_ID=? AND USER_DOMAIN=? AND TOKEN_SCOPE_HASH=? AND ORDER BY TIME_CREATED" +
                                                                                                  " DESC) TOKEN LIMIT 1 ";
 
     public static final String RETRIEVE_LATEST_ACCESS_TOKEN_BY_CLIENT_ID_USER_SCOPE_INFORMIX = "SELECT FIRST 1" +
@@ -266,5 +266,5 @@ public class SQLQueries {
                                                                                                "REFRESH_TOKEN_VALIDITY_PERIOD, USER_TYPE, TOKEN_ID, SUBJECT_IDENTIFIER FROM " +
                                                                                                "IDN_OAUTH2_ACCESS_TOKEN WHERE CONSUMER_KEY_ID = (SELECT ID FROM IDN_OAUTH_CONSUMER_APPS WHERE " +
                                                                                                "CONSUMER_KEY = ?) AND AUTHZ_USER=? AND TENANT_ID=? AND USER_DOMAIN=? AND TOKEN_SCOPE_HASH=? AND " +
-                                                                                               "TOKEN_STATE='ACTIVE' ORDER BY TIME_CREATED DESC) TOKEN ";
+                                                                                               "ORDER BY TIME_CREATED DESC) TOKEN ";
 }

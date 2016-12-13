@@ -21,7 +21,7 @@ package org.wso2.carbon.identity.inbound.auth.oidc.handler;
 import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
 import org.wso2.carbon.identity.core.handler.MessageHandlerComparator;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2MessageContext;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2RuntimeException;
+import org.wso2.carbon.identity.inbound.auth.oidc.exception.OIDCRuntimeException;
 import org.wso2.carbon.identity.inbound.auth.oidc.internal.OIDCDataHolder;
 
 import java.util.Collections;
@@ -48,6 +48,6 @@ public class OIDCHandlerManager {
                 return handler.buildIDToken(messageContext);
             }
         }
-        throw OAuth2RuntimeException.error("Cannot find IDTokenHandler to handle this request");
+        throw OIDCRuntimeException.error("Cannot find IDTokenHandler to handle this request");
     }
 }

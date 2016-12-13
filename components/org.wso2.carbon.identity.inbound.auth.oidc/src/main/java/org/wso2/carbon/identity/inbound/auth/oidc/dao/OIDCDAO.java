@@ -20,8 +20,8 @@ package org.wso2.carbon.identity.inbound.auth.oidc.dao;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2RuntimeException;
 import org.wso2.carbon.identity.inbound.auth.oidc.OIDC;
+import org.wso2.carbon.identity.inbound.auth.oidc.exception.OIDCRuntimeException;
 import org.wso2.carbon.identity.inbound.auth.oidc.internal.OIDCDataHolder;
 import org.wso2.carbon.registry.api.Registry;
 import org.wso2.carbon.registry.api.RegistryException;
@@ -38,7 +38,7 @@ public class OIDCDAO {
     private static Log log = LogFactory.getLog(OIDCDAO.class);
 
     public static void storeScopes(Map<String,String> scopes, String tenantDomain, int tenantId) throws
-                                                                                          OAuth2RuntimeException {
+                                                                                          OIDCRuntimeException {
         try {
             Registry registry = OIDCDataHolder.getInstance().getRegistryService()
                     .getConfigSystemRegistry(tenantId);
@@ -55,7 +55,7 @@ public class OIDCDAO {
                 registry.put(OIDC.OIDC_SCOPE_CONFIG_RESOURCE_PATH, resource);
             }
         } catch (RegistryException e) {
-            throw OAuth2RuntimeException.error("Error while storing scopes configuration for tenant domain: " +
+            throw OIDCRuntimeException.error("Error while storing scopes configuration for tenant domain: " +
                                                tenantDomain, e);
         }
     }
@@ -76,7 +76,7 @@ public class OIDCDAO {
             }
             return scopes;
         } catch (RegistryException e) {
-            throw OAuth2RuntimeException.error("Error while reading scopes configuration for tenant domain: " + OIDC
+            throw OIDCRuntimeException.error("Error while reading scopes configuration for tenant domain: " + OIDC
                     .OIDC_SCOPE_CONFIG_RESOURCE_PATH, e);
         }
     }

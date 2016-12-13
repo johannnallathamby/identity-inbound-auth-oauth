@@ -32,11 +32,6 @@ import javax.servlet.http.HttpServletResponse;
 public class AuthzApprovedRequestFactory extends OAuth2IdentityRequestFactory {
 
     @Override
-    public String getName() {
-        return "AuthzApprovedRequestFactory";
-    }
-
-    @Override
     public boolean canHandle(HttpServletRequest request, HttpServletResponse response) {
 
         if(StringUtils.isNotBlank(request.getParameter(OAuth2.CONSENT))){

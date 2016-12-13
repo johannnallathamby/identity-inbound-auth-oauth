@@ -40,7 +40,6 @@ public class OAuth2CacheListener extends AbstractCacheListener<String, AccessTok
     public void entryRemoved(CacheEntryEvent<? extends String, ? extends AccessToken> cacheEntryEvent)
             throws CacheEntryListenerException {
 
-        // Need to override AuthenticatedUser's equals and hashcode method to support case insensitivity of usernames
         AccessToken accessToken = cacheEntryEvent.getValue();
         AccessTokenCache.getInstance().clearCacheEntry(accessToken.getAccessToken());
         AuthorizationGrantCacheKey key = new AuthorizationGrantCacheKey(accessToken.getClientId(), accessToken.getAuthzUser(),

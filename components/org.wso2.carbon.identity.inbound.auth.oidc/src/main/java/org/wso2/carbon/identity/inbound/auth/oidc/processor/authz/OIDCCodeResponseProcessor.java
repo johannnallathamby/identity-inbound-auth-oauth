@@ -28,9 +28,8 @@ import org.wso2.carbon.identity.application.authentication.framework.inbound.Ide
 import org.wso2.carbon.identity.application.authentication.framework.inbound.InboundConstants;
 import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
 import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticationResult;
-import org.wso2.carbon.identity.application.common.model.ServiceProvider;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2AuthzMessageContext;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.AuthzMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.authz.AuthzResponse;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.authz.ROApprovalResponse;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2AuthnException;
@@ -57,10 +56,6 @@ public class OIDCCodeResponseProcessor extends CodeResponseProcessor {
 
     private OAuthIssuerImpl oltuIssuer = new OAuthIssuerImpl(new MD5Generator());
 
-    public String getName() {
-        return "OIDCCodeResponseProcessor";
-    }
-
     public boolean canHandle(IdentityRequest identityRequest) {
         if(super.canHandle(identityRequest)) {
             Set<String> scopes = OAuth2Util.buildScopeSet(identityRequest.getParameter(OAuth.OAUTH_SCOPE));
@@ -74,7 +69,7 @@ public class OIDCCodeResponseProcessor extends CodeResponseProcessor {
     @Override
     public ROApprovalResponse.ROApprovalResponseBuilder process(IdentityRequest identityRequest) throws FrameworkException {
 
-        OAuth2AuthzMessageContext messageContext = (OAuth2AuthzMessageContext)getContextIfAvailable(identityRequest);
+        AuthzMessageContext messageContext = (AuthzMessageContext)getContextIfAvailable(identityRequest);
 
         if(messageContext.getAuthzUser() == null) { // authentication response
 
@@ -96,9 +91,8 @@ public class OIDCCodeResponseProcessor extends CodeResponseProcessor {
                 return initiateResourceOwnerConsent(messageContext);
             } else if (!OAuth2ServerConfig.getInstance().isSkipConsentPage()) {
 
-                String spName = ((ServiceProvider) messageContext.getParameter(OAuth2.OAUTH2_SERVICE_PROVIDER)).getApplicationName();
-                int applicationId = ((ServiceProvider) messageContext.getParameter(OAuth2.OAUTH2_SERVICE_PROVIDER))
-                        .getApplicationID();
+                String spName = messageContext.getApplication().getAppName();
+                int applicationId = messageContext.getApplication().getAppId();
 
                 if (!hasUserApprovedAppAlways(authenticatedUser, spName, applicationId)) {
                     if(!isPromptNone) {
@@ -140,7 +134,7 @@ public class OIDCCodeResponseProcessor extends CodeResponseProcessor {
         return buildAuthzResponse(messageContext);
     }
 
-    protected AuthzResponse.AuthzResponseBuilder buildAuthzResponse(OAuth2AuthzMessageContext messageContext) {
+    protected AuthzResponse.AuthzResponseBuilder buildAuthzResponse(AuthzMessageContext messageContext) {
 
         AuthzResponse.AuthzResponseBuilder oauth2Builder = super.buildAuthzResponse(messageContext);
 
@@ -165,7 +159,7 @@ public class OIDCCodeResponseProcessor extends CodeResponseProcessor {
         return oauth2Builder;
     }
 
-    protected void addIDToken(OIDCAuthzResponse.OIDCAuthzResponseBuilder builder, OAuth2AuthzMessageContext messageContext) {
+    protected void addIDToken(OIDCAuthzResponse.OIDCAuthzResponseBuilder builder, AuthzMessageContext messageContext) {
 
         IDTokenClaimsSet idTokenClaimsSet = OIDCHandlerManager.getInstance().buildIDToken(messageContext);
         builder.setIdTokenClaimsSet(idTokenClaimsSet);

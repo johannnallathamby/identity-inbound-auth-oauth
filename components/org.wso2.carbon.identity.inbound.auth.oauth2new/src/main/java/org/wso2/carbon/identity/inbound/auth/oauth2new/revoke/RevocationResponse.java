@@ -23,6 +23,8 @@ import org.wso2.carbon.identity.application.authentication.framework.inbound.Ide
 
 public class RevocationResponse extends IdentityResponse {
 
+    private static final long serialVersionUID = -3050959062604113480L;
+
     private String callback;
 
     protected RevocationResponse(RevocationResponseBuilder builder) {

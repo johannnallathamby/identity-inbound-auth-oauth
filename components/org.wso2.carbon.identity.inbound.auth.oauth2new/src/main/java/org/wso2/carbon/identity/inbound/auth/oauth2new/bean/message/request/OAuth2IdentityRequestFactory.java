@@ -21,18 +21,12 @@ package org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request;
 import org.apache.commons.lang.StringUtils;
 import org.apache.oltu.oauth2.common.OAuth;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.HttpIdentityRequestFactory;
-import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 
 public class OAuth2IdentityRequestFactory extends HttpIdentityRequestFactory {
-
-    @Override
-    public String getName() {
-        return "OAuth2InboundRequestFactory";
-    }
 
     @Override
     public boolean canHandle(HttpServletRequest request, HttpServletResponse response) {

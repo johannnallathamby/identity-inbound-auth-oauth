@@ -24,6 +24,8 @@ import org.wso2.carbon.identity.application.authentication.framework.inbound.Ide
 
 public class AuthzResponse extends ROApprovalResponse {
 
+    private static final long serialVersionUID = 2602695389647693274L;
+
     protected OAuthASResponse.OAuthAuthorizationResponseBuilder builder;
 
     protected AuthzResponse(AuthzResponseBuilder builder) {

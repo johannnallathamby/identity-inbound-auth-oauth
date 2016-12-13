@@ -20,7 +20,9 @@ package org.wso2.carbon.identity.inbound.auth.oauth2new.handler.persist;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.wso2.carbon.identity.core.bean.context.MessageContext;
+import org.wso2.carbon.core.util.CryptoException;
+import org.wso2.carbon.core.util.CryptoUtil;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2RuntimeException;
 
 /**
  * Stores encrypted tokens in the database.
@@ -30,62 +32,92 @@ public class EncryptionDecryptionPersistenceProcessor extends TokenPersistencePr
     protected Log log = LogFactory.getLog(EncryptionDecryptionPersistenceProcessor.class);
 
     @Override
-    public String getName() {
-        return "EncryptionDecryptionPersistenceProcessor";
-    }
-
-    @Override
-    public boolean canHandle(MessageContext messageContext) {
-        return false;
-    }
-
-    @Override
     public String getProcessedClientId(String clientId) {
-        return null;
+        try {
+            return CryptoUtil.getDefaultCryptoUtil().encryptAndBase64Encode(clientId.getBytes());
+        } catch (CryptoException e) {
+            throw OAuth2RuntimeException.error(e.getMessage(), e);
+        }
     }
 
     @Override
     public String getPreprocessedClientId(String processedClientId) {
-        return null;
+        try {
+            return new String(CryptoUtil.getDefaultCryptoUtil().base64DecodeAndDecrypt(processedClientId));
+        } catch (CryptoException e) {
+            throw OAuth2RuntimeException.error(e.getMessage(), e);
+        }
     }
 
     @Override
     public String getProcessedClientSecret(String clientSecret) {
-        return null;
+        try {
+            return CryptoUtil.getDefaultCryptoUtil().encryptAndBase64Encode(clientSecret.getBytes());
+        } catch (CryptoException e) {
+            throw OAuth2RuntimeException.error(e.getMessage(), e);
+        }
     }
 
     @Override
     public String getPreprocessedClientSecret(String processedClientSecret) {
-        return null;
+        try {
+            return new String(CryptoUtil.getDefaultCryptoUtil().base64DecodeAndDecrypt(processedClientSecret));
+        } catch (CryptoException e) {
+            throw OAuth2RuntimeException.error(e.getMessage(), e);
+        }
     }
 
     @Override
     public String getProcessedAuthzCode(String authzCode) {
-        return null;
+        try {
+            return CryptoUtil.getDefaultCryptoUtil().encryptAndBase64Encode(authzCode.getBytes());
+        } catch (CryptoException e) {
+            throw OAuth2RuntimeException.error(e.getMessage(), e);
+        }
     }
 
     @Override
     public String getPreprocessedAuthzCode(String processedAuthzCode) {
-        return null;
+        try {
+            return new String(CryptoUtil.getDefaultCryptoUtil().base64DecodeAndDecrypt(processedAuthzCode));
+        } catch (CryptoException e) {
+            throw OAuth2RuntimeException.error(e.getMessage(), e);
+        }
     }
 
     @Override
     public String getProcessedAccessToken(String accessToken) {
-        return null;
+        try {
+            return CryptoUtil.getDefaultCryptoUtil().encryptAndBase64Encode(accessToken.getBytes());
+        } catch (CryptoException e) {
+            throw OAuth2RuntimeException.error(e.getMessage(), e);
+        }
     }
 
     @Override
     public String getPreprocessedAccessToken(String processedAccessToken) {
-        return null;
+        try {
+            return new String(CryptoUtil.getDefaultCryptoUtil().base64DecodeAndDecrypt(processedAccessToken));
+        } catch (CryptoException e) {
+            throw OAuth2RuntimeException.error(e.getMessage(), e);
+        }
     }
 
     @Override
     public String getProcessedRefreshToken(String refreshToken) {
-        return null;
+        try {
+            return CryptoUtil.getDefaultCryptoUtil().encryptAndBase64Encode(refreshToken.getBytes());
+        } catch (CryptoException e) {
+            throw OAuth2RuntimeException.error(e.getMessage(), e);
+        }
     }
 
     @Override
     public String getPreprocessedRefreshToken(String processedRefreshToken) {
-        return null;
+        try {
+            return new String(CryptoUtil.getDefaultCryptoUtil().base64DecodeAndDecrypt(processedRefreshToken));
+        } catch (CryptoException e) {
+            throw OAuth2RuntimeException.error(e.getMessage(), e);
+        }
     }
 }

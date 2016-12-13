@@ -28,9 +28,8 @@ import org.wso2.carbon.identity.application.authentication.framework.inbound.Ide
 import org.wso2.carbon.identity.application.authentication.framework.inbound.InboundUtil;
 import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
 import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticationResult;
-import org.wso2.carbon.identity.application.common.model.ServiceProvider;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2AuthzMessageContext;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.AuthzMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.authz.AuthzRequest;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.authz.ConsentResponse;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.authz.ROApprovalResponse;
@@ -47,11 +46,6 @@ import java.util.UUID;
 public abstract class ROApprovalProcessor extends IdentityProcessor {
 
     private static final Log log = LogFactory.getLog(ROApprovalProcessor.class);
-
-    @Override
-    public String getName() {
-        return "ROApprovalProcessor";
-    }
 
     @Override
     public String getCallbackPath(IdentityMessageContext context) {
@@ -83,7 +77,7 @@ public abstract class ROApprovalProcessor extends IdentityProcessor {
     @Override
     public ROApprovalResponse.ROApprovalResponseBuilder process(IdentityRequest identityRequest) throws FrameworkException {
 
-        OAuth2AuthzMessageContext messageContext = (OAuth2AuthzMessageContext)getContextIfAvailable(identityRequest);
+        AuthzMessageContext messageContext = (AuthzMessageContext)getContextIfAvailable(identityRequest);
 
         if(messageContext.getAuthzUser() == null) { // authentication response
 
@@ -100,10 +94,8 @@ public abstract class ROApprovalProcessor extends IdentityProcessor {
 
             if (!OAuth2ServerConfig.getInstance().isSkipConsentPage()) {
 
-                String spName = ((ServiceProvider) messageContext.getParameter(OAuth2.OAUTH2_SERVICE_PROVIDER))
-                        .getApplicationName();
-                int applicationId = ((ServiceProvider) messageContext.getParameter(OAuth2.OAUTH2_SERVICE_PROVIDER))
-                        .getApplicationID();
+                String spName = messageContext.getApplication().getAppName();
+                int applicationId = messageContext.getApplication().getAppId();
 
                 if (!hasUserApprovedAppAlways(authenticatedUser, spName, applicationId)) {
                     return initiateResourceOwnerConsent(messageContext);
@@ -134,15 +126,14 @@ public abstract class ROApprovalProcessor extends IdentityProcessor {
      * @param messageContext The runtime message context
      * @return OAuth2 authorization endpoint
      */
-    protected ConsentResponse.ConsentResponseBuilder initiateResourceOwnerConsent(OAuth2AuthzMessageContext messageContext) {
+    protected ConsentResponse.ConsentResponseBuilder initiateResourceOwnerConsent(AuthzMessageContext messageContext) {
 
         String sessionDataKeyConsent = UUID.randomUUID().toString();
         InboundUtil.addContextToCache(sessionDataKeyConsent, messageContext);
 
         ConsentResponse.ConsentResponseBuilder builder = new ConsentResponse.ConsentResponseBuilder(messageContext);
         builder.setSessionDataKeyConsent(sessionDataKeyConsent);
-        builder.setApplicationName(((ServiceProvider)messageContext.getParameter(OAuth2.OAUTH2_SERVICE_PROVIDER))
-                                           .getApplicationName());
+        builder.setApplicationName(messageContext.getApplication().getAppName());
         builder.setAuthenticatedSubjectId(messageContext.getAuthzUser().getAuthenticatedSubjectIdentifier());
         builder.setRequestedScopes(messageContext.getRequest().getScopes());
         builder.setParameterMap(messageContext.getRequest().getParameterMap());
@@ -155,12 +146,11 @@ public abstract class ROApprovalProcessor extends IdentityProcessor {
      * @param messageContext The runtime message context
      * @throws OAuth2Exception Exception occurred while processing resource owner approval
      */
-    protected void processConsent(OAuth2AuthzMessageContext messageContext) throws OAuth2Exception {
+    protected void processConsent(AuthzMessageContext messageContext) throws OAuth2Exception {
 
         String consent = messageContext.getRequest().getParameter(OAuth2.CONSENT);
-        String spName = ((ServiceProvider)messageContext.getParameter(OAuth2.OAUTH2_SERVICE_PROVIDER)).getApplicationName();
-        int applicationId = ((ServiceProvider)messageContext.getParameter(OAuth2.OAUTH2_SERVICE_PROVIDER))
-                .getApplicationID();
+        String spName = messageContext.getApplication().getAppName();
+        int applicationId = messageContext.getApplication().getAppId();
         if (StringUtils.isNotBlank(consent)) {
             if(StringUtils.equals("ApproveAlways", consent)) {
                 UserConsentDAO.getInstance().approveAppAlways(new UserConsent(messageContext.getAuthzUser(),
@@ -183,7 +173,7 @@ public abstract class ROApprovalProcessor extends IdentityProcessor {
      * @param messageContext The runtime message context
      * @return OAuth2 authorization endpoint response
      */
-    protected abstract ROApprovalResponse.ROApprovalResponseBuilder buildAuthzResponse(OAuth2AuthzMessageContext messageContext);
+    protected abstract ROApprovalResponse.ROApprovalResponseBuilder buildAuthzResponse(AuthzMessageContext messageContext);
 
     protected boolean hasUserApprovedAppAlways(AuthenticatedUser authzUser, String appName, int applicationId) {
 

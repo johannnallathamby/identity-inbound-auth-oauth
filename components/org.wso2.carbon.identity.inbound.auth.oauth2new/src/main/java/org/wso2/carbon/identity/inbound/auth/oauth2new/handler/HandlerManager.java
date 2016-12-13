@@ -20,26 +20,26 @@ package org.wso2.carbon.identity.inbound.auth.oauth2new.handler;
 
 import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
 import org.wso2.carbon.identity.core.handler.MessageHandlerComparator;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2MessageContext;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2TokenMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2.ClientType;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2MessageContext;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.TokenMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.dao.AsyncDAO;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2ClientException;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2Exception;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2InternalException;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2RuntimeException;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.interceptor.OAuth2EventInterceptor;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.issuer.AccessTokenResponseIssuer;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.persist.TokenPersistenceProcessor;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AccessToken;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.dao.CacheBackedOAuth2DAO;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.dao.OAuth2DAO;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.dao.OAuth2DAOHandler;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2ClientException;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2Exception;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2RuntimeException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.client.ClientAuthHandler;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.grant.AuthorizationGrantHandler;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.interceptor.OAuth2EventInterceptor;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.issuer.AccessTokenResponseIssuer;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.persist.TokenPersistenceProcessor;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.internal.OAuth2DataHolder;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.introspect.IntrospectionHandler;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.introspect.IntrospectionMessageContext;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AccessToken;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.revoke.RORevocationMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.revoke.RevocationMessageContext;
 
 import java.util.Collections;
@@ -72,13 +72,13 @@ public class HandlerManager {
         throw OAuth2RuntimeException.error("Cannot find ClientAuthHandler to handle this request");
     }
 
-    public String authenticateClient(OAuth2MessageContext messageContext) throws OAuth2Exception {
+    public void authenticateClient(OAuth2MessageContext messageContext) throws OAuth2ClientException {
 
         List<ClientAuthHandler> handlers = OAuth2DataHolder.getInstance().getClientAuthHandlers();
         Collections.sort(handlers, new MessageHandlerComparator(messageContext));
         for(ClientAuthHandler handler:handlers){
             if(handler.isEnabled(messageContext) && handler.canHandle(messageContext)){
-                return handler.authenticate(messageContext);
+                handler.authenticate(messageContext);
             }
         }
         throw OAuth2RuntimeException.error("Cannot find ClientAuthHandler to handle this request");
@@ -133,7 +133,7 @@ public class HandlerManager {
         throw OAuth2RuntimeException.error("Cannot find AccessTokenResponseIssuer to handle this request");
     }
 
-    public void validateGrant(OAuth2TokenMessageContext messageContext) throws OAuth2ClientException, OAuth2Exception {
+    public void validateGrant(TokenMessageContext messageContext) throws OAuth2ClientException, OAuth2Exception {
 
         List<AuthorizationGrantHandler> handlers = OAuth2DataHolder.getInstance().getGrantHandlers();
         Collections.sort(handlers, new MessageHandlerComparator(messageContext));
@@ -189,34 +189,38 @@ public class HandlerManager {
         }
     }
 
-    public void triggerPreTokenRevocationsByResourceOwner(AuthenticatedUser user) {
+    public void triggerPreTokenRevocationsByResourceOwner(AuthenticatedUser user, RORevocationMessageContext
+            messageContext) {
         for(OAuth2EventInterceptor interceptor : OAuth2DataHolder.getInstance().getInterceptors()) {
-            if(interceptor.isEnabled(null) && interceptor.canHandle(null)) {
-                interceptor.onPreTokenRevocationByResourceOwner(user);
+            if(interceptor.isEnabled(messageContext) && interceptor.canHandle(messageContext)) {
+                interceptor.onPreTokenRevocationByResourceOwner(user, messageContext);
             }
         }
     }
 
-    public void triggerPostTokenRevocationsByResourceOwner(AuthenticatedUser user) {
+    public void triggerPostTokenRevocationsByResourceOwner(AuthenticatedUser user, RORevocationMessageContext
+            messageContext) {
         for(OAuth2EventInterceptor interceptor : OAuth2DataHolder.getInstance().getInterceptors()) {
-            if(interceptor.isEnabled(null) && interceptor.canHandle(null)) {
-                interceptor.onPostTokenRevocationByResourceOwner(user);
+            if(interceptor.isEnabled(messageContext) && interceptor.canHandle(messageContext)) {
+                interceptor.onPostTokenRevocationByResourceOwner(user, messageContext);
             }
         }
     }
 
-    public void triggerPreTokenRevocationsByResourceOwner(AuthenticatedUser user, String clientId) {
+    public void triggerPreTokenRevocationsByResourceOwner(AuthenticatedUser user, String clientId,
+                                                          RORevocationMessageContext messageContext) {
         for(OAuth2EventInterceptor interceptor : OAuth2DataHolder.getInstance().getInterceptors()) {
-            if(interceptor.isEnabled(null) && interceptor.canHandle(null)) {
-                interceptor.onPreTokenRevocationByResourceOwner(user, clientId);
+            if(interceptor.isEnabled(messageContext) && interceptor.canHandle(messageContext)) {
+                interceptor.onPreTokenRevocationByResourceOwner(user, clientId, messageContext);
             }
         }
     }
 
-    public void triggerPostTokenRevocationsByResourceOwner(AuthenticatedUser user, String clientId) {
+    public void triggerPostTokenRevocationsByResourceOwner(AuthenticatedUser user, String clientId,
+                                                           RORevocationMessageContext messageContext) {
         for(OAuth2EventInterceptor interceptor : OAuth2DataHolder.getInstance().getInterceptors()) {
-            if(interceptor.isEnabled(null) && interceptor.canHandle(null)) {
-                interceptor.onPostTokenRevocationByResourceOwner(user, clientId);
+            if(interceptor.isEnabled(messageContext) && interceptor.canHandle(messageContext)) {
+                interceptor.onPostTokenRevocationByResourceOwner(user, clientId, messageContext);
             }
         }
     }

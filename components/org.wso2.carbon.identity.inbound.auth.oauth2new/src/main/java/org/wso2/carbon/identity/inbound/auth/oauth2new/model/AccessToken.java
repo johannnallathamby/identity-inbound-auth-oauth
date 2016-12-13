@@ -26,7 +26,7 @@ import java.util.Set;
 
 public class AccessToken implements Serializable {
 
-    private static final long serialVersionUID = 5894325130475788975L;
+    private static final long serialVersionUID = -7422858868711412360L;
 
     // This will be populated only at the persistent layer
     private String accessTokenId;

@@ -23,7 +23,7 @@ import org.apache.oltu.oauth2.as.response.OAuthASResponse;
 import org.apache.oltu.oauth2.common.OAuth;
 import org.apache.oltu.oauth2.common.message.types.ResponseType;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2AuthzMessageContext;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.AuthzMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.authz.AuthzResponse;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.HandlerManager;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AccessToken;
@@ -32,10 +32,6 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Util;
 import javax.servlet.http.HttpServletResponse;
 
 public class TokenResponseProcessor extends ROApprovalProcessor {
-
-    public String getName() {
-        return "TokenResponseProcessor";
-    }
 
     public boolean canHandle(IdentityRequest identityRequest) {
         if(StringUtils.equals(ResponseType.CODE.toString(), identityRequest.getParameter(OAuth.OAUTH_RESPONSE_TYPE))) {
@@ -50,7 +46,7 @@ public class TokenResponseProcessor extends ROApprovalProcessor {
      * @param messageContext The runtime message context
      * @return OAuth2 authorization endpoint response
      */
-    protected AuthzResponse.AuthzResponseBuilder buildAuthzResponse(OAuth2AuthzMessageContext messageContext) {
+    protected AuthzResponse.AuthzResponseBuilder buildAuthzResponse(AuthzMessageContext messageContext) {
 
         AccessToken accessToken = HandlerManager.getInstance().issueAccessToken(messageContext);
 
@@ -82,7 +78,7 @@ public class TokenResponseProcessor extends ROApprovalProcessor {
         return builder;
     }
 
-    protected boolean issueRefreshToken(OAuth2AuthzMessageContext messageContext) {
+    protected boolean issueRefreshToken(AuthzMessageContext messageContext) {
         return false;
     }
 

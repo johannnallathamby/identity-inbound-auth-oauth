@@ -34,8 +34,8 @@ import org.wso2.carbon.identity.application.authentication.framework.inbound.Htt
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityResponse;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.token.TokenResponseFactory;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2RuntimeException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.OAuth2ServerConfig;
+import org.wso2.carbon.identity.inbound.auth.oidc.exception.OIDCRuntimeException;
 import org.wso2.carbon.identity.inbound.auth.oidc.model.OIDCServerConfig;
 import org.wso2.carbon.identity.inbound.auth.oidc.util.OIDCUtils;
 
@@ -44,11 +44,6 @@ public class OIDCTokenResponseFactory extends TokenResponseFactory {
     private static final Log log = LogFactory.getLog(OIDCTokenResponseFactory.class);
 
     private OAuth2ServerConfig config = null;
-
-    @Override
-    public String getName() {
-        return "HttpOIDCTokenResponseFactory";
-    }
 
     @Override
     public boolean canHandle(IdentityResponse identityResponse) {
@@ -78,7 +73,7 @@ public class OIDCTokenResponseFactory extends TokenResponseFactory {
         try {
             oauthResponse = tokenResponse.getBuilder().buildJSONMessage();
         } catch (OAuthSystemException e1) {
-            throw OAuth2RuntimeException.error("Error occurred while building JSON message fo token endpoint response");
+            throw OIDCRuntimeException.error("Error occurred while building JSON message fo token endpoint response");
         }
         builder.setStatusCode(oauthResponse.getResponseStatus());
         builder.setHeaders(oauthResponse.getHeaders());
@@ -95,7 +90,7 @@ public class OIDCTokenResponseFactory extends TokenResponseFactory {
         try {
             jwtClaimsSet = claimSet.toJWTClaimsSet();
         } catch (ParseException e) {
-            throw OAuth2RuntimeException.error("Error occurred while parsing IDTokenClaimSet to JWTClaimSet");
+            throw OIDCRuntimeException.error("Error occurred while parsing IDTokenClaimSet to JWTClaimSet");
         }
         if (JWSAlgorithm.NONE.equals(OIDCServerConfig.getInstance().getIdTokenSigAlg())) {
             return new PlainJWT(jwtClaimsSet);

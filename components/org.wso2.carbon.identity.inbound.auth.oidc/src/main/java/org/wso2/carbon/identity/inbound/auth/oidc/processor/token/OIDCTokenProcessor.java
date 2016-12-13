@@ -27,10 +27,10 @@ import org.wso2.carbon.identity.application.authentication.framework.exception.F
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityMessageContext;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2TokenMessageContext;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2.ClientType;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.TokenMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.token.TokenRequest;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.token.TokenResponse;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2.ClientType;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2ClientException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2Exception;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.HandlerManager;
@@ -53,11 +53,6 @@ import java.util.HashMap;
 public class OIDCTokenProcessor extends TokenProcessor {
 
     private static final Log log = LogFactory.getLog(OIDCTokenProcessor.class);
-
-    @Override
-    public String getName() {
-        return "OIDCTokenProcessor";
-    }
 
     @Override
     public int getPriority() {
@@ -86,12 +81,11 @@ public class OIDCTokenProcessor extends TokenProcessor {
     public TokenResponse.TokenResponseBuilder process(IdentityRequest identityRequest)
             throws FrameworkException {
 
-        OAuth2TokenMessageContext messageContext = new OAuth2TokenMessageContext(
+        TokenMessageContext messageContext = new TokenMessageContext(
                 (TokenRequest) identityRequest, new HashMap<String,String>());
 
         if(ClientType.CONFIDENTIAL == clientType(messageContext)) {
-            String clientId = authenticateClient(messageContext);
-            messageContext.setClientId(clientId);
+            authenticateClient(messageContext);
         }
 
         validateGrant(messageContext);
@@ -120,7 +114,7 @@ public class OIDCTokenProcessor extends TokenProcessor {
      * @return {@code true} only if the client was confidential and was authenticated successfully
      * @throws OAuth2Exception
      */
-    protected ClientType clientType(OAuth2TokenMessageContext messageContext) {
+    protected ClientType clientType(TokenMessageContext messageContext) {
         return HandlerManager.getInstance().clientType(messageContext);
     }
 
@@ -128,11 +122,10 @@ public class OIDCTokenProcessor extends TokenProcessor {
      * Authenticates confidential clients
      *
      * @param messageContext The runtime message context
-     * @return {@code true} only if the client was confidential and was authenticated successfully
-     * @throws OAuth2Exception
+     * @throws OAuth2ClientException if the client was not authenticated successfully
      */
-    protected String authenticateClient(OAuth2TokenMessageContext messageContext) throws OAuth2Exception {
-        return HandlerManager.getInstance().authenticateClient(messageContext);
+    protected void authenticateClient(TokenMessageContext messageContext) throws OAuth2ClientException {
+        HandlerManager.getInstance().authenticateClient(messageContext);
     }
 
     /**
@@ -142,12 +135,12 @@ public class OIDCTokenProcessor extends TokenProcessor {
      * @return {@code true} only if the authorization grant is valid
      * @throws OAuth2ClientException, OAuth2Exception
      */
-    protected void validateGrant(OAuth2TokenMessageContext messageContext) throws OAuth2ClientException, OAuth2Exception {
+    protected void validateGrant(TokenMessageContext messageContext) throws OAuth2ClientException, OAuth2Exception {
         HandlerManager.getInstance().validateGrant(messageContext);
     }
 
     protected TokenResponse.TokenResponseBuilder buildTokenResponse(AccessToken accessToken,
-                                                                    OAuth2TokenMessageContext messageContext) {
+                                                                    TokenMessageContext messageContext) {
 
         TokenResponse.TokenResponseBuilder oauth2Builder = super.buildTokenResponse(accessToken, messageContext);
 
@@ -161,7 +154,7 @@ public class OIDCTokenProcessor extends TokenProcessor {
         return oauth2Builder;
     }
 
-    protected void addIDToken(OIDCTokenResponse.OIDCTokenResponseBuilder builder, OAuth2TokenMessageContext messageContext) {
+    protected void addIDToken(OIDCTokenResponse.OIDCTokenResponseBuilder builder, TokenMessageContext messageContext) {
 
         IDTokenClaimsSet idTokenClaimsSet = OIDCHandlerManager.getInstance().buildIDToken(messageContext);
         builder.setIdTokenClaimsSet(idTokenClaimsSet);
@@ -173,7 +166,7 @@ public class OIDCTokenProcessor extends TokenProcessor {
      * @param messageContext The runtime message context
      * @return OAuth2 access token response
      */
-    protected AccessToken issueAccessToken(OAuth2TokenMessageContext messageContext) {
+    protected AccessToken issueAccessToken(TokenMessageContext messageContext) {
 
         AccessToken accessToken = HandlerManager.getInstance().issueAccessToken(messageContext);
         messageContext.addParameter(OIDC.ACCESS_TOKEN, accessToken);

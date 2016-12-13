@@ -29,11 +29,6 @@ import javax.servlet.http.HttpServletResponse;
 public class RevocationResponseFactory extends HttpIdentityResponseFactory {
 
     @Override
-    public String getName() {
-        return "HttpRevocationResponseFactory";
-    }
-
-    @Override
     public boolean canHandle(IdentityResponse identityResponse) {
         if(identityResponse instanceof RevocationResponse) {
             return true;

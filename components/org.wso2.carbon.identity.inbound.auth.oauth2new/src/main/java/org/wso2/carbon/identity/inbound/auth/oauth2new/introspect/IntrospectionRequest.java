@@ -19,14 +19,13 @@
 package org.wso2.carbon.identity.inbound.auth.oauth2new.introspect;
 
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.OAuth2IdentityRequest;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.IntrospectionClientException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 public class IntrospectionRequest extends OAuth2IdentityRequest {
 
-    private static final long serialVersionUID = -371925192220383152L;
+    private static final long serialVersionUID = -4849897972055646565L;
 
     private String token;
     private String tokenTypeHint;

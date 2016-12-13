@@ -28,6 +28,8 @@ import java.util.Set;
 
 public class OIDCCacheEntry extends CacheEntry {
 
+    private static final long serialVersionUID = 795751332737014029L;
+
     AuthenticationResult authnResult;
     String nonce;
     List<String> acrValues;

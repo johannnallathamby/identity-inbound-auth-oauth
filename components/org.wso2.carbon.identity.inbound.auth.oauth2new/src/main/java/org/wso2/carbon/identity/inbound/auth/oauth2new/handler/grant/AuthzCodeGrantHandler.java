@@ -23,20 +23,16 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.oltu.oauth2.common.message.types.GrantType;
-import org.wso2.carbon.identity.application.common.model.InboundAuthenticationRequestConfig;
-import org.wso2.carbon.identity.application.common.model.Property;
-import org.wso2.carbon.identity.application.common.model.ServiceProvider;
-import org.wso2.carbon.identity.application.common.util.IdentityApplicationConstants;
-import org.wso2.carbon.identity.application.common.util.IdentityApplicationManagementUtil;
 import org.wso2.carbon.identity.core.bean.context.MessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2TokenMessageContext;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.TokenMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.token.authzcode.AuthzCodeGrantRequest;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.dao.OAuth2DAO;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2ClientException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2Exception;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.HandlerManager;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AuthzCode;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.model.OAuth2App;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.OAuth2ServerConfig;
 
 import java.nio.charset.StandardCharsets;
@@ -52,15 +48,15 @@ public class AuthzCodeGrantHandler extends AuthorizationGrantHandler {
     //Precompile PKCE Regex pattern for performance improvement
     private static Pattern pkceCodeVerifierPattern = Pattern.compile("[\\w\\-\\._~]+");
 
-    @Override
+    // TODO: move this implementation to framework, remove it from here and update framework dependency version
     public String getName() {
-        return "AuthzCodeGrantHandler";
+        return this.getClass().getSimpleName();
     }
 
     @Override
     public boolean canHandle(MessageContext messageContext) {
-        if(messageContext instanceof OAuth2TokenMessageContext) {
-            if(GrantType.AUTHORIZATION_CODE.toString().equals(((OAuth2TokenMessageContext) messageContext).getRequest()
+        if(messageContext instanceof TokenMessageContext) {
+            if(GrantType.AUTHORIZATION_CODE.toString().equals(((TokenMessageContext) messageContext).getRequest()
                     .getGrantType())) {
                 return true;
             }
@@ -68,7 +64,7 @@ public class AuthzCodeGrantHandler extends AuthorizationGrantHandler {
         return false;
     }
 
-    public void validateGrant(OAuth2TokenMessageContext messageContext) throws OAuth2ClientException, OAuth2Exception {
+    public void validateGrant(TokenMessageContext messageContext) throws OAuth2ClientException, OAuth2Exception {
 
         super.validateGrant(messageContext);
 
@@ -101,24 +97,13 @@ public class AuthzCodeGrantHandler extends AuthorizationGrantHandler {
             throw OAuth2ClientException.error("Authorization code expired");
         }
 
-        ServiceProvider sp = (ServiceProvider)messageContext.getParameter(OAuth2.OAUTH2_SERVICE_PROVIDER);
-        sp.getInboundAuthenticationConfig().getInboundAuthenticationRequestConfigs();
-        boolean isPkceMandatory = false;
-        boolean isPkcePlainAllowed = false;
-        for(InboundAuthenticationRequestConfig config:sp.getInboundAuthenticationConfig()
-                .getInboundAuthenticationRequestConfigs()) {
-            if(IdentityApplicationConstants.OAuth2.NAME.equals(config.getInboundAuthType())) {
-                Property[] properties = config.getProperties();
-                isPkceMandatory = Boolean.parseBoolean(IdentityApplicationManagementUtil.getPropertyValue(properties,
-                                                                                                         "pkce_mandatory"));
-                isPkcePlainAllowed = Boolean.parseBoolean(IdentityApplicationManagementUtil.getPropertyValue(properties,
-                                                                                                             "pkce_plain_allowed"));
-                break;
-            }
-        }
-        doPKCEValidation(authzCode.getPkceCodeChallenge(), ((AuthzCodeGrantRequest) messageContext.getRequest())
-                                 .getPKCECodeVerifier(), authzCode.getPkceCodeChallengeMethod(), isPkceMandatory,
-                         isPkcePlainAllowed);
+        OAuth2App app = messageContext.getApplication();
+        String pkceCodeChallenge = authzCode.getPkceCodeChallenge();
+        String pkceCodeVerifier = ((AuthzCodeGrantRequest) messageContext.getRequest()).getPKCECodeVerifier();
+        String pkceChallengeMethod = authzCode.getPkceCodeChallengeMethod();
+
+        doPKCEValidation(pkceCodeChallenge, pkceCodeVerifier, pkceChallengeMethod,
+                         app.isPKCEMandatory(), app.isPKCEPainAllowed());
 
         messageContext.setAuthzUser(messageContext.getAuthzUser());
         messageContext.setApprovedScopes(authzCode.getScopes());
@@ -156,7 +141,7 @@ public class AuthzCodeGrantHandler extends AuthorizationGrantHandler {
             if(!validatePKCECodeVerifier(codeVerifier)) {
                 throw OAuth2ClientException.error("Code verifier used is not up to RFC 7636 specifications.");
             }
-            if (OAuth2.PKCE_PLAIN_CHALLENGE.equals(challenge_method)) {
+            if (OAuth2.PKCE.Challenge.PLAIN.equals(challenge_method)) {
                 //if the current application explicitly doesn't support plain, throw exception
                 if(!isPkcePlainAllowed) { // if pkce plain is supported
                     throw OAuth2ClientException.error("This application does not allow 'plain' transformation algorithm.");
@@ -164,7 +149,7 @@ public class AuthzCodeGrantHandler extends AuthorizationGrantHandler {
                 if (!referenceCodeChallenge.equals(codeVerifier)) {
                     throw OAuth2ClientException.error("code_verifier verification failed.");
                 }
-            } else if (OAuth2.PKCE_S256_CHALLENGE.equals(challenge_method)) {
+            } else if (OAuth2.PKCE.Challenge.S256.equals(challenge_method)) {
 
                 try {
                     MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");

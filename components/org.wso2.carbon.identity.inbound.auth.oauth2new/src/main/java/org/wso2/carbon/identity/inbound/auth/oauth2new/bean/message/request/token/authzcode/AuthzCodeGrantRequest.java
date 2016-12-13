@@ -25,7 +25,7 @@ import javax.servlet.http.HttpServletResponse;
 
 public class AuthzCodeGrantRequest extends TokenRequest {
 
-    private static final long serialVersionUID = -7079593227614826792L;
+    private static final long serialVersionUID = -6785270670949445146L;
 
     private String code;
     private String redirectURI;

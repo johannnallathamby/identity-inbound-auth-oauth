@@ -29,13 +29,12 @@ import com.nimbusds.openid.connect.sdk.claims.AuthorizedParty;
 import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.wso2.carbon.identity.application.common.model.ServiceProvider;
 import org.wso2.carbon.identity.core.handler.AbstractIdentityMessageHandler;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2AuthzMessageContext;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.AuthzMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2MessageContext;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2TokenMessageContext;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.TokenMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AccessToken;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.model.OAuth2App;
 import org.wso2.carbon.identity.inbound.auth.oidc.OIDC;
 import org.wso2.carbon.identity.inbound.auth.oidc.cache.OIDCCache;
 import org.wso2.carbon.identity.inbound.auth.oidc.cache.OIDCCacheAccessTokenKey;
@@ -53,30 +52,28 @@ public class IDTokenHandler extends AbstractIdentityMessageHandler {
 
     private static Log log = LogFactory.getLog(IDTokenHandler.class);
 
-    @Override
+    // TODO: move this implementation to framework, remove it from here and update framework dependency version
     public String getName() {
-        return "IDTokenHandler";
+        return this.getClass().getSimpleName();
     }
 
     public IDTokenClaimsSet buildIDToken(OAuth2MessageContext messageContext) {
 
-        if(messageContext instanceof OAuth2AuthzMessageContext) {
-            return buildIDToken((OAuth2AuthzMessageContext)messageContext);
+        if(messageContext instanceof AuthzMessageContext) {
+            return buildIDToken((AuthzMessageContext)messageContext);
         } else {
-            return buildIDToken((OAuth2TokenMessageContext)messageContext);
+            return buildIDToken((TokenMessageContext)messageContext);
         }
     }
 
-    protected IDTokenClaimsSet buildIDToken(OAuth2AuthzMessageContext messageContext) {
+    protected IDTokenClaimsSet buildIDToken(AuthzMessageContext messageContext) {
 
         String subject = messageContext.getAuthzUser().getAuthenticatedSubjectIdentifier();
         String username = null;
-        ServiceProvider sp = (ServiceProvider) messageContext.getParameter(OAuth2.OAUTH2_SERVICE_PROVIDER);
+        OAuth2App app = messageContext.getApplication();
         if(!messageContext.getAuthzUser().isFederatedUser()) {
-            boolean useTenantDomain = sp.getLocalAndOutBoundAuthenticationConfig()
-                    .isUseTenantDomainInLocalSubjectIdentifier();
-            boolean useUserstoreDomain = sp.getLocalAndOutBoundAuthenticationConfig()
-                    .isUseUserstoreDomainInLocalSubjectIdentifier();
+            boolean useTenantDomain = app.isUseTenantDomainInLocalSubjectIdentifier();
+            boolean useUserstoreDomain = app.isUseUserstoreDomainInLocalSubjectIdentifier();
             username = messageContext.getAuthzUser().getUsernameAsSubjectIdentifier(useUserstoreDomain,
                                                                                     useTenantDomain);
         } else {
@@ -106,23 +103,21 @@ public class IDTokenHandler extends AbstractIdentityMessageHandler {
         return buildIDToken(subject, username, clientId, atHash, nonce, acrValues, authTime, tenantDomain);
     }
 
-    protected IDTokenClaimsSet buildIDToken(OAuth2TokenMessageContext messageContext) {
+    protected IDTokenClaimsSet buildIDToken(TokenMessageContext messageContext) {
 
         String subject = messageContext.getAuthzUser().getAuthenticatedSubjectIdentifier();
         String username = null;
-        ServiceProvider sp = (ServiceProvider) messageContext.getParameter(OAuth2.OAUTH2_SERVICE_PROVIDER);
+        OAuth2App app = messageContext.getApplication();
         if(!messageContext.getAuthzUser().isFederatedUser()) {
-            boolean useTenantDomain = sp.getLocalAndOutBoundAuthenticationConfig()
-                    .isUseTenantDomainInLocalSubjectIdentifier();
-            boolean useUserstoreDomain = sp.getLocalAndOutBoundAuthenticationConfig()
-                    .isUseUserstoreDomainInLocalSubjectIdentifier();
+            boolean useTenantDomain = app.isUseTenantDomainInLocalSubjectIdentifier();
+            boolean useUserstoreDomain = app.isUseUserstoreDomainInLocalSubjectIdentifier();
             username = messageContext.getAuthzUser().getUsernameAsSubjectIdentifier(useUserstoreDomain,
                                                                                     useTenantDomain);
         } else {
             username = messageContext.getAuthzUser().getAuthenticatedSubjectIdentifier();
         }
         String tenantDomain = messageContext.getRequest().getTenantDomain();
-        String clientId = messageContext.getClientId();
+        String clientId = messageContext.getApplication().getClientId();
         String atHash = null;
         AccessToken accessToken = (AccessToken)messageContext.getParameter(OIDC.ACCESS_TOKEN);;
         if (!JWSAlgorithm.NONE.equals(OIDCServerConfig.getInstance().getIdTokenSigAlg())) {

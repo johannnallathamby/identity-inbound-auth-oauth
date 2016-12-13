@@ -37,8 +37,8 @@ import org.wso2.carbon.identity.application.common.util.IdentityApplicationConst
 import org.wso2.carbon.identity.application.common.util.IdentityApplicationManagementUtil;
 import org.wso2.carbon.identity.base.IdentityException;
 import org.wso2.carbon.identity.core.util.IdentityTenantUtil;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2RuntimeException;
 import org.wso2.carbon.identity.inbound.auth.oidc.OIDC;
+import org.wso2.carbon.identity.inbound.auth.oidc.exception.OIDCRuntimeException;
 import org.wso2.carbon.identity.inbound.auth.oidc.model.OIDCServerConfig;
 import org.wso2.carbon.idp.mgt.IdentityProviderManagementException;
 import org.wso2.carbon.idp.mgt.IdentityProviderManager;
@@ -71,7 +71,7 @@ public class OIDCUtils {
         try {;
             identityProvider = IdentityProviderManager.getInstance().getResidentIdP(tenantDomain);
         } catch (IdentityProviderManagementException e) {
-            throw OAuth2RuntimeException.error("Error occurred while retrieving Resident IDP for tenant domain: " +
+            throw OIDCRuntimeException.error("Error occurred while retrieving Resident IDP for tenant domain: " +
                                                tenantDomain);
         }
         FederatedAuthenticatorConfig oidcConfig =
@@ -81,7 +81,7 @@ public class OIDCUtils {
         String idTokenIssuer = IdentityApplicationManagementUtil.getPropertyValue(oidcConfig.getProperties(),
                                                                                   OIDC.IDP_ENTITY_ID);
         if(StringUtils.isBlank(idTokenIssuer)) {
-            throw OAuth2RuntimeException.error("Invalid OpenID Connect IdPEntityId value: " + idTokenIssuer);
+            throw OIDCRuntimeException.error("Invalid OpenID Connect IdPEntityId value: " + idTokenIssuer);
         }
         return idTokenIssuer;
     }
@@ -111,13 +111,13 @@ public class OIDCUtils {
                     try {
                         privateKey = tenantKSM.getDefaultPrivateKey();
                     } catch (Exception e) {
-                        throw OAuth2RuntimeException.error("Error while obtaining private key for super tenant", e);
+                        throw OIDCRuntimeException.error("Error while obtaining private key for super tenant", e);
                     }
                 }
                 if(privateKey != null) {
                     privateKeys.put(tenantId, privateKey);
                 } else {
-                    throw OAuth2RuntimeException.error("Cannot find private key for tenant domain: " + tenantDomain);
+                    throw OIDCRuntimeException.error("Cannot find private key for tenant domain: " + tenantDomain);
                 }
             } else {
                 privateKey = privateKeys.get(tenantId);
@@ -131,7 +131,7 @@ public class OIDCUtils {
             signedJWT.sign(signer);
             return signedJWT;
         } catch (JOSEException e) {
-            throw OAuth2RuntimeException.error("Error occurred while signing JWT for tenant domain: "+ tenantDomain, e);
+            throw OIDCRuntimeException.error("Error occurred while signing JWT for tenant domain: "+ tenantDomain, e);
         }
     }
 
@@ -151,7 +151,7 @@ public class OIDCUtils {
                    JWSAlgorithm.ES512.equals(sigAlg)) {
             return SHA512;
         }
-        throw OAuth2RuntimeException.error("Cannot map Signature Algorithm: " + sigAlg.getName() + " to a " +
+        throw OIDCRuntimeException.error("Cannot map Signature Algorithm: " + sigAlg.getName() + " to a " +
                                            "corresponding digest algorithm");
     }
 
@@ -176,10 +176,10 @@ public class OIDCUtils {
                     publicCertThumbprint.getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8);
             return base64EncodedThumbPrint;
         } catch (CertificateEncodingException e) {
-            throw OAuth2RuntimeException.error("Error occurred while encoding certificate for tenant domain: " +
+            throw OIDCRuntimeException.error("Error occurred while encoding certificate for tenant domain: " +
                                                tenantDomain);
         } catch (NoSuchAlgorithmException e) {
-            throw OAuth2RuntimeException.error("Invalid Algorithm: SHA-1");
+            throw OIDCRuntimeException.error("Invalid Algorithm: SHA-1");
         }
     }
 
@@ -190,7 +190,7 @@ public class OIDCUtils {
             try {
                 IdentityTenantUtil.initializeRegistry(tenantId, tenantDomain);
             } catch (IdentityException e) {
-                throw OAuth2RuntimeException.error("Error occurred while initializing registry for tenant " +
+                throw OIDCRuntimeException.error("Error occurred while initializing registry for tenant " +
                                                    tenantDomain, e);
             }
             // get tenant's key store manager
@@ -207,18 +207,18 @@ public class OIDCUtils {
                     publicCert = tenantKSM.getDefaultPrimaryCertificate();
                 }
             } catch (KeyStoreException e) {
-                throw OAuth2RuntimeException.error("Error occurred while getting primary certificate for tenant " +
+                throw OIDCRuntimeException.error("Error occurred while getting primary certificate for tenant " +
                                                    "domain: "
                                                    + tenantDomain);
             } catch (Exception e) {
-                throw OAuth2RuntimeException.error("Error occurred while getting primary certificate for tenant " +
+                throw OIDCRuntimeException.error("Error occurred while getting primary certificate for tenant " +
                                                    "domain: "
                                                    + tenantDomain);
             }
             if (publicCert != null) {
                 publicCerts.put(tenantId, publicCert);
             } else {
-                throw OAuth2RuntimeException.error("Cannot find primary certificate for tenant domain: " +
+                throw OIDCRuntimeException.error("Cannot find primary certificate for tenant domain: " +
                                                    tenantDomain);
             }
         } else {
@@ -256,7 +256,7 @@ public class OIDCUtils {
         try {
             md = MessageDigest.getInstance(digAlg);
         } catch (NoSuchAlgorithmException e) {
-            throw OAuth2RuntimeException.error("Invalid Algorithm: " + digAlg);
+            throw OIDCRuntimeException.error("Invalid Algorithm: " + digAlg);
         }
         md.update(accessToken.getBytes(StandardCharsets.UTF_8));
         byte[] digest = md.digest();

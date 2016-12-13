@@ -18,18 +18,21 @@
 
 package org.wso2.carbon.identity.inbound.auth.oauth2new.revoke;
 
-import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
-import org.wso2.carbon.identity.application.common.model.ServiceProvider;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2InternalException;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2MessageContext;
 
-import java.util.Set;
+import java.io.Serializable;
+import java.util.Map;
 
-public interface OAuth2TokenRevocationService {
+/*
+ * Message context that holds information about the resource owner revocation request
+ */
+public class RORevocationMessageContext<T1 extends Serializable, T2 extends Serializable> extends
+                                                                                          OAuth2MessageContext {
 
-    Set<ServiceProvider> getAppsAuthorizedByUser(AuthenticatedUser user) throws OAuth2InternalException;
+    private static final long serialVersionUID = 8957814451266828857L;
 
-    void revokeApplication(AuthenticatedUser user, String clientId) throws OAuth2InternalException;
-
-    void revokeApplications(AuthenticatedUser user) throws OAuth2InternalException;
+    public RORevocationMessageContext(RORevocationRequest request, Map<T1, T2> parameters) {
+        super(request, parameters);
+    }
 
 }

@@ -34,8 +34,8 @@ import org.wso2.carbon.identity.application.authentication.framework.inbound.Htt
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityResponse;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.authz.AuthzResponseFactory;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2RuntimeException;
 import org.wso2.carbon.identity.inbound.auth.oidc.OIDC;
+import org.wso2.carbon.identity.inbound.auth.oidc.exception.OIDCRuntimeException;
 import org.wso2.carbon.identity.inbound.auth.oidc.model.OIDCServerConfig;
 import org.wso2.carbon.identity.inbound.auth.oidc.util.OIDCUtils;
 
@@ -74,7 +74,7 @@ public class FormPostResponseFactory extends AuthzResponseFactory {
         try {
             response = authzResponse.getBuilder().buildJSONMessage();
         } catch (OAuthSystemException e) {
-            throw OAuth2RuntimeException.error("Error occurred while building query message for authorization " +
+            throw OIDCRuntimeException.error("Error occurred while building query message for authorization " +
                                                "response");
         }
         builder.setStatusCode(response.getResponseStatus());
@@ -92,7 +92,7 @@ public class FormPostResponseFactory extends AuthzResponseFactory {
         try {
             jwtClaimsSet = claimSet.toJWTClaimsSet();
         } catch (ParseException e) {
-            throw OAuth2RuntimeException.error("Error occurred while parsing IDTokenClaimSet to JWTClaimSet");
+            throw OIDCRuntimeException.error("Error occurred while parsing IDTokenClaimSet to JWTClaimSet");
         }
         if (JWSAlgorithm.NONE.equals(OIDCServerConfig.getInstance().getIdTokenSigAlg())) {
             return new PlainJWT(jwtClaimsSet);
@@ -129,7 +129,7 @@ public class FormPostResponseFactory extends AuthzResponseFactory {
         try {
             jsonObject = JSONObjectUtils.parse(jsonPayLoad);
         } catch (ParseException e) {
-            throw OAuth2RuntimeException.error("Error occurred while parsing JSON payload: " + jsonPayLoad);
+            throw OIDCRuntimeException.error("Error occurred while parsing JSON payload: " + jsonPayLoad);
         }
 
         String formHead = "<html>\n" +

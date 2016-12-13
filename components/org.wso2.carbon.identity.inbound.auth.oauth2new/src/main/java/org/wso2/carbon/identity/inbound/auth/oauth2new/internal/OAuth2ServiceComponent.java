@@ -22,6 +22,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
+import org.wso2.carbon.event.stream.core.EventStreamService;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.HttpIdentityRequestFactory;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.HttpIdentityResponseFactory;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityProcessor;
@@ -48,20 +49,20 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.issuer.AccessToke
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.issuer.BearerTokenResponseIssuer;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.persist.PlainTextPersistenceProcessor;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.persist.TokenPersistenceProcessor;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.introspect.IntrospectionResponseFactory;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.introspect.IntrospectionHandler;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.introspect.IntrospectionProcessor;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.introspect.IntrospectionRequestFactory;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.introspect.IntrospectionResponseFactory;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.OAuth2ServerConfig;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.processor.authz.AuthzProcessor;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.processor.authz.CodeResponseProcessor;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.processor.authz.TokenResponseProcessor;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.processor.token.TokenProcessor;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.revoke.RevocationResponseFactory;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.revoke.OAuth2TokenRevocationService;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.revoke.OAuth2TokenRevocationServiceImpl;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.revoke.RevocationProcessor;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.revoke.RevocationRequestFactory;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.revoke.RevocationResponseFactory;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.revoke.RevocationService;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.revoke.RevocationServiceImpl;
 import org.wso2.carbon.registry.core.service.RegistryService;
 import org.wso2.carbon.user.core.service.RealmService;
 
@@ -102,6 +103,8 @@ import org.wso2.carbon.user.core.service.RealmService;
  * @scr.reference name="org.wso2.carbon.identity.oauth.event.OAuthEventInterceptor"
  * interface="org.wso2.carbon.identity.oauth.event.OAuthEventInterceptor" cardinality="0..n" policy="dynamic"
  * bind="setOAuth2EventInterceptor" unbind="unsetOAuth2EventInterceptor"
+ * interface="org.wso2.carbon.event.stream.core.EventStreamService" cardinality="1..1" policy="dynamic"
+ * bind="setEventStreamService" unbind="unsetEventStreamService"
  */
 public class OAuth2ServiceComponent {
 
@@ -269,7 +272,7 @@ public class OAuth2ServiceComponent {
                 log.error("RevocationProcessor could not be registered");
             }
             ServiceRegistration revocationService = context.getBundleContext().registerService(
-                    OAuth2TokenRevocationService.class.getName(), OAuth2TokenRevocationServiceImpl.getInstance(), null);
+                    RevocationService.class.getName(), RevocationServiceImpl.getInstance(), null);
             if (revokeProcessor != null) {
                 if (log.isDebugEnabled()) {
                     log.debug(" OAuth2RevocationServiceImpl is registered");
@@ -474,6 +477,22 @@ public class OAuth2ServiceComponent {
             log.debug("Un-setting OAuth2EventInterceptor " + interceptor.getClass().getName());
         }
         OAuth2DataHolder.getInstance().getInterceptors().remove(interceptor);
+    }
+
+    protected void setEventStreamService(EventStreamService eventStreamService) {
+
+        if (log.isDebugEnabled()) {
+            log.debug("Setting EventStreamService.");
+        }
+        OAuth2DataHolder.getInstance().setEventStreamService(eventStreamService);
+    }
+
+    protected void unsetEventStreamService(EventStreamService eventStreamService) {
+
+        if (log.isDebugEnabled()) {
+            log.debug("Un-setting EventStreamService.");
+        }
+        OAuth2DataHolder.getInstance().setEventStreamService(null);
     }
 
 }

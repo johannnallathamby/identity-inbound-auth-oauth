@@ -29,11 +29,6 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2RuntimeEx
 public class TokenResponseFactory extends HttpIdentityResponseFactory {
 
     @Override
-    public String getName() {
-        return "HttpTokenResponseFactory";
-    }
-
-    @Override
     public boolean canHandle(IdentityResponse identityResponse) {
         if(identityResponse instanceof TokenResponse) {
             return true;

@@ -48,7 +48,7 @@ import org.wso2.carbon.identity.base.IdentityException;
 import org.wso2.carbon.identity.core.bean.context.MessageContext;
 import org.wso2.carbon.identity.core.handler.InitConfig;
 import org.wso2.carbon.identity.core.util.IdentityUtil;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2TokenMessageContext;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.TokenMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2ClientException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2Exception;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2InternalException;
@@ -90,8 +90,8 @@ public class SAML2AssertionGrantHandler extends AuthorizationGrantHandler {
 
     @Override
     public boolean canHandle(MessageContext messageContext) {
-        if(messageContext instanceof OAuth2TokenMessageContext) {
-            if(SAML2GrantConstants.SAML2_GRANT_TYPE.equals(((OAuth2TokenMessageContext) messageContext).getRequest()
+        if(messageContext instanceof TokenMessageContext) {
+            if(SAML2GrantConstants.SAML2_GRANT_TYPE.equals(((TokenMessageContext) messageContext).getRequest()
                     .getGrantType())) {
                 return true;
             }
@@ -113,7 +113,7 @@ public class SAML2AssertionGrantHandler extends AuthorizationGrantHandler {
      * @param messageContext The runtime message context
      * @throws OAuth2ClientException, OAuth2Exception
      */
-    public void validateGrant(OAuth2TokenMessageContext messageContext) throws OAuth2ClientException, OAuth2Exception {
+    public void validateGrant(TokenMessageContext messageContext) throws OAuth2ClientException, OAuth2Exception {
 
         super.validateGrant(messageContext);
 

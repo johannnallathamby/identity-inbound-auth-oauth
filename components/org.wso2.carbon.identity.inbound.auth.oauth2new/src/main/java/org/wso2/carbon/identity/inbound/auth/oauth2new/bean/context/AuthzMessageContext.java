@@ -19,6 +19,7 @@
 package org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context;
 
 import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.authz.AuthzRequest;
 
 import java.io.Serializable;
@@ -28,7 +29,7 @@ import java.util.Set;
 /*
  * Message context that holds information about the authorization request to the authorization endpoint
  */
-public class OAuth2AuthzMessageContext<T1 extends Serializable, T2 extends Serializable> extends OAuth2MessageContext {
+public class AuthzMessageContext<T1 extends Serializable, T2 extends Serializable> extends OAuth2MessageContext {
 
     private static final long serialVersionUID = 7631264521948153017L;
 
@@ -36,11 +37,11 @@ public class OAuth2AuthzMessageContext<T1 extends Serializable, T2 extends Seria
 
     private Set<String> approvedScopes;
 
-    private long accessTokenValidityPeriod;
+    private long accessTokenValidityPeriod = OAuth2.UNASSIGNED_VALIDITY_PERIOD;
 
-    private long refreshTokenValidityPeriod;
+    private long refreshTokenValidityPeriod = OAuth2.UNASSIGNED_VALIDITY_PERIOD;
 
-    public OAuth2AuthzMessageContext(AuthzRequest request, Map<T1,T2> parameters) {
+    public AuthzMessageContext(AuthzRequest request, Map<T1,T2> parameters) {
         super(request, parameters);
     }
 

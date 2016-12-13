@@ -33,11 +33,6 @@ import javax.servlet.http.HttpServletResponse;
 public class AuthzRequestFactory extends OAuth2IdentityRequestFactory {
 
     @Override
-    public String getName() {
-        return "AuthzRequestFactory";
-    }
-
-    @Override
     public boolean canHandle(HttpServletRequest request, HttpServletResponse response) {
         if(StringUtils.isNotBlank(request.getParameter(OAuth.OAUTH_RESPONSE_TYPE))) {
             return true;
@@ -69,7 +64,7 @@ public class AuthzRequestFactory extends OAuth2IdentityRequestFactory {
         authzRequestBuilder.setRedirectURI(request.getParameter(OAuth.OAUTH_REDIRECT_URI));
         authzRequestBuilder.setState(request.getParameter(OAuth.OAUTH_STATE));
         authzRequestBuilder.setScopes(OAuth2Util.buildScopeSet(request.getParameter(OAuth.OAUTH_SCOPE)));
-        authzRequestBuilder.setPkceCodeChallenge(request.getParameter(OAuth2.PKCE_CODE_CHALLENGE));
-        authzRequestBuilder.setPkceCodeChallengeMethod(request.getParameter(OAuth2.PKCE_CODE_CHALLENGE_METHOD));
+        authzRequestBuilder.setPkceCodeChallenge(request.getParameter(OAuth2.PKCE.CODE_CHALLENGE));
+        authzRequestBuilder.setPkceCodeChallengeMethod(request.getParameter(OAuth2.PKCE.CODE_CHALLENGE_METHOD));
     }
 }

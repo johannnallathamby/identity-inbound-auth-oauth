@@ -31,18 +31,8 @@ public class RevocationMessageContext<T1 extends Serializable, T2 extends Serial
 
     private static final long serialVersionUID = 8957814451266828857L;
 
-    private String clientId;
-
     public RevocationMessageContext(RevocationRequest request, Map<T1, T2> parameters) {
         super(request, parameters);
-    }
-
-    public String getClientId() {
-        return clientId;
-    }
-
-    public void setClientId(String clientId) {
-        this.clientId = clientId;
     }
 
 }

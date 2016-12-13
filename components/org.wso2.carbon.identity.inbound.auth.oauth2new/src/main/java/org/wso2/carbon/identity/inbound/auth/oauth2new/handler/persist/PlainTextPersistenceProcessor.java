@@ -18,23 +18,11 @@
 
 package org.wso2.carbon.identity.inbound.auth.oauth2new.handler.persist;
 
-import org.wso2.carbon.identity.core.bean.context.MessageContext;
-
 /**
  * Stores the tokens in plain text in the database.
  */
 
 public class PlainTextPersistenceProcessor extends TokenPersistenceProcessor {
-
-    @Override
-    public String getName() {
-        return "PlainTextPersistenceProcessor";
-    }
-
-    @Override
-    public boolean canHandle(MessageContext messageContext) {
-        return false;
-    }
 
     @Override
     public String getProcessedClientId(String clientId) {

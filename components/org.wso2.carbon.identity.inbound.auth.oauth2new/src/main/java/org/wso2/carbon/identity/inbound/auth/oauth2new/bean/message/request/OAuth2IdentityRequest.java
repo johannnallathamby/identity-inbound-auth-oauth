@@ -25,7 +25,7 @@ import javax.servlet.http.HttpServletResponse;
 
 public class OAuth2IdentityRequest extends IdentityRequest {
 
-    private static final long serialVersionUID = 5255384558894431030L;
+    private static final long serialVersionUID = -468541536503145007L;
 
     protected OAuth2IdentityRequest(OAuth2IdentityRequestBuilder builder) {
         super(builder);

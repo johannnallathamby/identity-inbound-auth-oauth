@@ -22,8 +22,16 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
+import org.wso2.carbon.identity.application.common.IdentityApplicationManagementException;
+import org.wso2.carbon.identity.application.common.model.InboundAuthenticationRequestConfig;
 import org.wso2.carbon.identity.application.common.model.Property;
+import org.wso2.carbon.identity.application.common.model.ServiceProvider;
+import org.wso2.carbon.identity.application.common.util.IdentityApplicationConstants;
+import org.wso2.carbon.identity.application.common.util.IdentityApplicationManagementUtil;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2RuntimeException;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.internal.OAuth2DataHolder;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AccessToken;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.model.OAuth2App;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.OAuth2ServerConfig;
 
 import java.util.ArrayList;
@@ -79,42 +87,12 @@ public class OAuth2Util {
             throw new IllegalArgumentException("AccessToken is NULL");
         }
 
-        long accessTokenValidityPeriodMillis = accessToken.getAccessTokenValidity();
-
-        if(accessTokenValidityPeriodMillis < 0) {
-            return -1;
-        }
-
-        long skew = OAuth2ServerConfig.getInstance().getTimeStampSkew();
-
-        long accessTokenIssuedTime = accessToken.getAccessTokenIssuedTime().getTime();
-        long refreshTokenIssuedTime = accessToken.getRefreshTokenIssuedTime().getTime();
-        long currentTime = System.currentTimeMillis();
-        long refreshTokenValidityPeriodMillis = accessToken.getRefreshTokenValidity();
-        long remainingAccessTokenValidity = accessTokenIssuedTime + accessTokenValidityPeriodMillis - (currentTime +
-                skew);
-        long remainingRefreshTokenValidity = (refreshTokenIssuedTime + refreshTokenValidityPeriodMillis) -
-                (currentTime + skew);
-        if(remainingAccessTokenValidity > 1000 && remainingRefreshTokenValidity > 1000){
+        long remainingAccessTokenValidity = getAccessTokenValidityPeriod(accessToken);
+        long remainingRefreshTokenValidity = getRefreshTokenValidityPeriod(accessToken);
+        if(remainingAccessTokenValidity > 1000 && remainingRefreshTokenValidity != 0){
             return remainingAccessTokenValidity;
-        }
-        return 0;
-    }
-
-    public static long getRefreshTokenValidityPeriod(AccessToken accessToken) {
-
-        if (accessToken == null) {
-            throw new IllegalArgumentException("AccessToken is NULL");
-        }
-
-        long skew = OAuth2ServerConfig.getInstance().getTimeStampSkew();
-        long refreshTokenValidity = accessToken.getRefreshTokenValidity();
-        long currentTime = System.currentTimeMillis();
-        long refreshTokenIssuedTime = accessToken.getRefreshTokenIssuedTime().getTime();
-        long remainingRefreshTokenValidity = (refreshTokenIssuedTime + refreshTokenValidity)
-                - (currentTime + skew);
-        if(remainingRefreshTokenValidity > 1000){
-            return remainingRefreshTokenValidity;
+        } else if(remainingAccessTokenValidity < 0 && remainingRefreshTokenValidity != 0) {
+            return -1;
         }
         return 0;
     }
@@ -138,6 +116,28 @@ public class OAuth2Util {
         } else {
             return 0;
         }
+    }
+
+    public static long getRefreshTokenValidityPeriod(AccessToken accessToken) {
+
+        if (accessToken == null) {
+            throw new IllegalArgumentException("AccessToken is NULL");
+        }
+
+        long validityPeriod = accessToken.getRefreshTokenValidity();
+        if (validityPeriod < 0) {
+            return -1;
+        }
+        long skew = OAuth2ServerConfig.getInstance().getTimeStampSkew();
+        long refreshTokenValidity = accessToken.getRefreshTokenValidity();
+        long currentTime = System.currentTimeMillis();
+        long refreshTokenIssuedTime = accessToken.getRefreshTokenIssuedTime().getTime();
+        long remainingRefreshTokenValidity = (refreshTokenIssuedTime + refreshTokenValidity)
+                - (currentTime + skew);
+        if(remainingRefreshTokenValidity > 1000){
+            return remainingRefreshTokenValidity;
+        }
+        return 0;
     }
 
     public static String createUniqueAuthzGrantString(AccessToken accessToken) {
@@ -167,5 +167,56 @@ public class OAuth2Util {
             }
         }
         return propValueSet;
+    }
+
+    public static OAuth2App getOAuth2App(ServiceProvider serviceProvider) {
+
+        if(serviceProvider == null) {
+            throw new IllegalArgumentException("ServiceProvider is null.");
+        }
+        for (InboundAuthenticationRequestConfig config : serviceProvider.getInboundAuthenticationConfig()
+                .getInboundAuthenticationRequestConfigs()) {
+            if (IdentityApplicationConstants.OAuth2.NAME.equals(config.getInboundAuthType())) {
+                Property[] properties = config.getProperties();
+                String clientId = IdentityApplicationManagementUtil.getPropertyValue(
+                        properties, IdentityApplicationConstants.OAuth2.CLIENT_ID);
+                char[] clientSecret = IdentityApplicationManagementUtil.getPropertyValue(
+                        properties, IdentityApplicationConstants.OAuth2.CLIENT_SECRET).toCharArray();
+                String redirectUri = IdentityApplicationManagementUtil.getPropertyValue(
+                        properties, IdentityApplicationConstants.OAuth2.CALLBACK_URL);
+                List<String> responseTypes = OAuth2Util.getPropertyValuesOfPropertyNameStartsWith(
+                        properties, "response_type");
+                List<String> grantTypes = OAuth2Util.getPropertyValuesOfPropertyNameStartsWith(
+                        properties, "grant_type");
+                boolean isPkceMandatory = Boolean.parseBoolean(IdentityApplicationManagementUtil.getPropertyValue
+                        (properties, "pkce_mandatory"));
+                boolean isPkcePlainAllowed = Boolean.parseBoolean(IdentityApplicationManagementUtil.getPropertyValue
+                        (properties, "pkce_plain_allowed"));
+                OAuth2App app = new OAuth2App(serviceProvider, clientId);
+                app.setClientSecret(clientSecret);
+                app.setResponseTypes(responseTypes);
+                app.setGrantTypes(grantTypes);
+                app.setRedirectUri(redirectUri);
+                app.setPKCEMandatory(isPkceMandatory);
+                app.setPKCEPainAllowed(isPkcePlainAllowed);
+                return app;
+            }
+        }
+        return null;
+    }
+
+    public static OAuth2App getOAuth2App(String clientId, String tenantDomain) {
+
+        ServiceProvider serviceProvider = null;
+        try {
+            serviceProvider = OAuth2DataHolder.getInstance().getAppMgtService()
+                    .getServiceProviderByClientId(clientId, IdentityApplicationConstants.OAuth2.NAME, tenantDomain);
+        } catch (IdentityApplicationManagementException e) {
+            throw OAuth2RuntimeException.error("Error occurred while retrieving service provider.");
+        }
+        if(serviceProvider != null) {
+            return getOAuth2App(serviceProvider);
+        }
+        return null;
     }
 }

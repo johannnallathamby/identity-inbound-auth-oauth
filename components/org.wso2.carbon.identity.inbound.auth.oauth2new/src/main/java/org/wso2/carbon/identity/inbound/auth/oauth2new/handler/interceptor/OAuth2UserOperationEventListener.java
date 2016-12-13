@@ -26,8 +26,7 @@ import org.wso2.carbon.identity.core.model.IdentityErrorMsgContext;
 import org.wso2.carbon.identity.core.util.IdentityCoreConstants;
 import org.wso2.carbon.identity.core.util.IdentityTenantUtil;
 import org.wso2.carbon.identity.core.util.IdentityUtil;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2InternalException;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.revoke.OAuth2TokenRevocationServiceImpl;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.revoke.RevocationServiceImpl;
 import org.wso2.carbon.user.core.UserCoreConstants;
 import org.wso2.carbon.user.core.UserStoreException;
 import org.wso2.carbon.user.core.UserStoreManager;
@@ -42,9 +41,6 @@ public class OAuth2UserOperationEventListener extends AbstractIdentityUserOperat
 
     private static final Log log = LogFactory.getLog(OAuth2UserOperationEventListener.class);
 
-    /**
-     * Bundle execution order id.
-     */
     @Override
     public int getExecutionOrderId() {
         int orderId = getOrderId();
@@ -54,9 +50,6 @@ public class OAuth2UserOperationEventListener extends AbstractIdentityUserOperat
         return 60;
     }
 
-    /**
-     * Deleting user from the identity database prerequisites.
-     */
     @Override
     public boolean doPreDeleteUser(String username, UserStoreManager userStoreManager) throws UserStoreException {
 
@@ -67,12 +60,7 @@ public class OAuth2UserOperationEventListener extends AbstractIdentityUserOperat
         user.setUserName(username);
         user.setUserStoreDomain(UserCoreUtil.getDomainName(userStoreManager.getRealmConfiguration()));
         user.setTenantDomain(IdentityTenantUtil.getTenantDomain(userStoreManager.getTenantId()));
-        try {
-            OAuth2TokenRevocationServiceImpl.getInstance().revokeApplications(user);
-        } catch (OAuth2InternalException e) {
-            throw new UserStoreException("Error occurred while revoking applications authorized by user " +
-                                         user.toString(), e);
-        }
+        ((RevocationServiceImpl)RevocationServiceImpl.getInstance()).revokeApplications(user);
         return true;
     }
 
@@ -154,11 +142,6 @@ public class OAuth2UserOperationEventListener extends AbstractIdentityUserOperat
         user.setUserName(userName);
         user.setUserStoreDomain(UserCoreUtil.getDomainName(userStoreManager.getRealmConfiguration()));
         user.setTenantDomain(IdentityTenantUtil.getTenantDomain(userStoreManager.getTenantId()));
-        try {
-            OAuth2TokenRevocationServiceImpl.getInstance().revokeApplications(user);
-        } catch (OAuth2InternalException e) {
-            throw new UserStoreException("Error occurred while revoking applications authorized by user " +
-                                         user.toString(), e);
-        }
+        ((RevocationServiceImpl) RevocationServiceImpl.getInstance()).revokeApplications(user);
     }
 }

@@ -31,7 +31,7 @@ import java.util.Set;
 
 public class OIDCAuthzRequest extends AuthzRequest {
 
-    private static final long serialVersionUID = -3009563708954787261L;
+    private static final long serialVersionUID = -3230825445894730219L;
 
     protected String nonce;
     protected String display;

@@ -20,7 +20,7 @@ package org.wso2.carbon.identity.inbound.auth.oidc.cache;
 
 public class OIDCCacheAccessTokenKey extends OIDCCacheKey {
 
-    private static final long serialVersionUID = -7255309637157895736L;
+    private static final long serialVersionUID = -6784753051542513105L;
 
     public OIDCCacheAccessTokenKey(String accessTokenId, String accessToken) {
         super(accessTokenId, accessToken);

@@ -32,7 +32,6 @@ import org.wso2.carbon.identity.application.authentication.framework.inbound.Ide
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
 import org.wso2.carbon.identity.application.common.model.ClaimMapping;
 import org.wso2.carbon.identity.core.util.IdentityTenantUtil;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2AuthnException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2InternalException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.HandlerManager;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.introspect.IntrospectionRequest;
@@ -61,11 +60,6 @@ import java.util.Set;
 public class UserInfoProcessor extends OAuth2IdentityRequestProcessor {
 
     private static final Log log = LogFactory.getLog(UserInfoResponse.class);
-
-    @Override
-    public String getName() {
-        return "UserInfoProcessor";
-    }
 
     @Override
     public String getCallbackPath(IdentityMessageContext context) {

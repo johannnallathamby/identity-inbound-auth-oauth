@@ -22,6 +22,7 @@ import org.wso2.carbon.identity.application.authentication.framework.model.Authe
 import org.wso2.carbon.identity.core.handler.AbstractIdentityMessageHandler;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2MessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.introspect.IntrospectionMessageContext;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.revoke.RORevocationMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.revoke.RevocationMessageContext;
 
 public abstract class OAuth2EventInterceptor extends AbstractIdentityMessageHandler {
@@ -42,19 +43,19 @@ public abstract class OAuth2EventInterceptor extends AbstractIdentityMessageHand
         // Nothing to implement
     }
 
-    public void onPreTokenRevocationByResourceOwner(AuthenticatedUser user) {
+    public void onPreTokenRevocationByResourceOwner(AuthenticatedUser user, RORevocationMessageContext messageContext) {
         // Nothing to implement
     }
 
-    public void onPostTokenRevocationByResourceOwner(AuthenticatedUser user)  {
+    public void onPostTokenRevocationByResourceOwner(AuthenticatedUser user, RORevocationMessageContext messageContext)  {
         // Nothing to implement
     }
 
-    public void onPreTokenRevocationByResourceOwner(AuthenticatedUser user, String clientId) {
+    public void onPreTokenRevocationByResourceOwner(AuthenticatedUser user, String clientId, RORevocationMessageContext messageContext) {
         // Nothing to implement
     }
 
-    public void onPostTokenRevocationByResourceOwner(AuthenticatedUser user, String clientId)  {
+    public void onPostTokenRevocationByResourceOwner(AuthenticatedUser user, String clientId, RORevocationMessageContext messageContext)  {
         // Nothing to implement
     }
 

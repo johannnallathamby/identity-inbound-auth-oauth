@@ -25,7 +25,7 @@ import javax.servlet.http.HttpServletResponse;
 
 public class TokenRequest extends OAuth2IdentityRequest {
 
-    private static final long serialVersionUID = -4100425188456499228L;
+    private static final long serialVersionUID = 2113773120127290578L;
 
     private String grantType;
 

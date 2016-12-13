@@ -19,13 +19,14 @@
 package org.wso2.carbon.identity.inbound.auth.oauth2new.cache;
 
 import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
+import org.wso2.carbon.identity.application.common.cache.CacheKey;
 
 import java.io.Serializable;
 import java.util.Set;
 
-public class AuthorizationGrantCacheKey implements Serializable {
+public class AuthorizationGrantCacheKey extends CacheKey {
 
-    private static final long serialVersionUID = 5616911505786188948L;
+    private static final long serialVersionUID = -2587261479454489617L;
     
     private String clientId;
     private AuthenticatedUser authzUser;

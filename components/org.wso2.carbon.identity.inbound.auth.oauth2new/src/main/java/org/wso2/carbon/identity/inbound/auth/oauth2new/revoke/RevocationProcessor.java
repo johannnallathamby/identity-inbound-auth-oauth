@@ -24,20 +24,16 @@ import org.wso2.carbon.identity.application.authentication.framework.exception.F
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityMessageContext;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2.ClientType;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.dao.OAuth2DAO;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2ClientException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2Exception;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.HandlerManager;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AccessToken;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.dao.OAuth2DAO;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.processor.OAuth2IdentityRequestProcessor;
 
 import java.util.HashMap;
 
 public class RevocationProcessor extends OAuth2IdentityRequestProcessor {
-
-    @Override
-    public String getName() {
-        return "RevocationProcessor";
-    }
 
     @Override
     public String getCallbackPath(IdentityMessageContext context) {
@@ -73,8 +69,7 @@ public class RevocationProcessor extends OAuth2IdentityRequestProcessor {
         HandlerManager.getInstance().triggerPreTokenRevocationsByClient(messageContext);
 
         if(ClientType.CONFIDENTIAL == clientType(messageContext)) {
-            String clientId = authenticateClient(messageContext);
-            messageContext.setClientId(clientId);
+            authenticateClient(messageContext);
         }
 
         String token = revocationRequest.getToken();
@@ -133,9 +128,9 @@ public class RevocationProcessor extends OAuth2IdentityRequestProcessor {
      *
      * @param messageContext The runtime message context
      * @return {@code true} only if the client was confidential and was authenticated successfully
-     * @throws OAuth2Exception
+     * @throws org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2ClientException
      */
-    protected String authenticateClient(RevocationMessageContext messageContext) throws OAuth2Exception {
-        return HandlerManager.getInstance().authenticateClient(messageContext);
+    protected void authenticateClient(RevocationMessageContext messageContext) throws OAuth2ClientException {
+        HandlerManager.getInstance().authenticateClient(messageContext);
     }
 }

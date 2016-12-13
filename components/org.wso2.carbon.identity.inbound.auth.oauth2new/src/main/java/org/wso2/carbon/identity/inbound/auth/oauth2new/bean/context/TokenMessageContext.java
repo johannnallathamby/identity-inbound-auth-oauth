@@ -19,6 +19,7 @@
 package org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context;
 
 import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.token.TokenRequest;
 
 import java.io.Serializable;
@@ -28,7 +29,7 @@ import java.util.Set;
 /*
  * Message context that holds information about the token request to the token endpoint
  */
-public class OAuth2TokenMessageContext<T1 extends Serializable, T2 extends Serializable> extends OAuth2MessageContext {
+public class TokenMessageContext<T1 extends Serializable, T2 extends Serializable> extends OAuth2MessageContext {
 
     private static final long serialVersionUID = -5732604278415475580L;
 
@@ -36,13 +37,11 @@ public class OAuth2TokenMessageContext<T1 extends Serializable, T2 extends Seria
 
     private Set<String> approvedScopes;
 
-    private long accessTokenValidityPeriod;
+    private long accessTokenValidityPeriod = OAuth2.UNASSIGNED_VALIDITY_PERIOD;
 
-    private long refreshTokenValidityPeriod;
+    private long refreshTokenValidityPeriod = OAuth2.UNASSIGNED_VALIDITY_PERIOD;
 
-    private String clientId;
-
-    public OAuth2TokenMessageContext(TokenRequest request, Map<T1,T2> parameters) {
+    public TokenMessageContext(TokenRequest request, Map<T1,T2> parameters) {
         super(request, parameters);
     }
 
@@ -77,15 +76,6 @@ public class OAuth2TokenMessageContext<T1 extends Serializable, T2 extends Seria
     public void setAuthzUser(AuthenticatedUser authzUser) {
         this.authzUser = authzUser;
     }
-
-    public String getClientId() {
-        return clientId;
-    }
-
-    public void setClientId(String clientId) {
-        this.clientId = clientId;
-    }
-
 
     @Override
     public TokenRequest getRequest() {

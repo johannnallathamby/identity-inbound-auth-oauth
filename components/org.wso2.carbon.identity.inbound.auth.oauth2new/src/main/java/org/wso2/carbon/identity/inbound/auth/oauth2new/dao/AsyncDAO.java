@@ -23,14 +23,12 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
 import org.wso2.carbon.identity.core.util.IdentityUtil;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2MessageContext;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2TokenMessageContext;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.TokenMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.dao.AccessTokenPersistenceTask.AccessTokenJob;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.dao.AuthzCodePersistenceTask.AuthzCodeJob;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AccessToken;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AuthzCode;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.revoke.RevocationMessageContext;
 
 import java.util.Set;
 import java.util.concurrent.BlockingDeque;
@@ -96,7 +94,7 @@ public class AsyncDAO extends OAuth2DAO {
 
     @Override
     public void updateAccessTokenState(String accessToken, String tokenState,
-                                       OAuth2TokenMessageContext messageContext) {
+                                       TokenMessageContext messageContext) {
         persistentDAO.updateAccessTokenState(accessToken, tokenState, messageContext);
     }
 
@@ -125,7 +123,7 @@ public class AsyncDAO extends OAuth2DAO {
     }
 
     @Override
-    public Set<AccessToken> getAuthorizedAccessTokens(AuthenticatedUser authzUser, RevocationMessageContext
+    public Set<AccessToken> getAuthorizedAccessTokens(AuthenticatedUser authzUser, OAuth2MessageContext
             messageContext) {
         return persistentDAO.getAuthorizedAccessTokens(authzUser, messageContext);
     }
@@ -136,12 +134,12 @@ public class AsyncDAO extends OAuth2DAO {
     }
 
     @Override
-    public void revokeAccessToken(String accessToken, RevocationMessageContext messageContext) {
+    public void revokeAccessToken(String accessToken, OAuth2MessageContext messageContext) {
         persistentDAO.revokeAccessToken(accessToken, messageContext);
     }
 
     @Override
-    public void revokeRefreshToken(String refreshToken, RevocationMessageContext messageContext) {
+    public void revokeRefreshToken(String refreshToken, OAuth2MessageContext messageContext) {
         persistentDAO.revokeRefreshToken(refreshToken, messageContext);
     }
 

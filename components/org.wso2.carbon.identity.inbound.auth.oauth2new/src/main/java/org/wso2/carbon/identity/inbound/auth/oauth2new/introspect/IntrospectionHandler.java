@@ -20,20 +20,22 @@ package org.wso2.carbon.identity.inbound.auth.oauth2new.introspect;
 
 import org.apache.oltu.oauth2.common.OAuth;
 import org.apache.oltu.oauth2.common.message.types.GrantType;
-import org.wso2.carbon.identity.application.common.model.ServiceProvider;
+import org.apache.oltu.oauth2.common.message.types.ResponseType;
 import org.wso2.carbon.identity.core.handler.AbstractIdentityMessageHandler;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.dao.OAuth2DAO;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2ClientException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.HandlerManager;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AccessToken;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.dao.OAuth2DAO;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.model.OAuth2App;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.model.OAuth2ServerConfig;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Util;
 
 public class IntrospectionHandler extends AbstractIdentityMessageHandler {
 
-    @Override
+    // TODO: move this implementation to framework, remove it from here and update framework dependency version
     public String getName() {
-        return "IntrospectionHandler";
+        return this.getClass().getSimpleName();
     }
 
     public IntrospectionResponse.IntrospectionResponseBuilder introspect(IntrospectionMessageContext messageContext)
@@ -61,6 +63,7 @@ public class IntrospectionHandler extends AbstractIdentityMessageHandler {
         }
 
         if(accessToken != null) {
+            messageContext.addParameter(OAuth2.ACCESS_TOKEN, accessToken);
             if(isRefreshToken) {
                 return introspectRefreshToken(accessToken, messageContext);
             } else {
@@ -77,41 +80,13 @@ public class IntrospectionHandler extends AbstractIdentityMessageHandler {
         IntrospectionResponse.IntrospectionResponseBuilder builder = new IntrospectionResponse
                 .IntrospectionResponseBuilder(messageContext);
 
-        if(!OAuth2.TokenState.ACTIVE.equals(accessToken.getAccessTokenState())) {
-            // json string should not contain other attributes, only active=false
-            builder.setActive(false);
-            return builder;
-        } else if (OAuth2Util.getAccessTokenValidityPeriod(accessToken) == 0) {
-            // json string should not contain other attributes, only active=false
-            builder.setActive(false);
-            return builder;
-        } else {
-            builder.setActive(true);
-            builder.setScope(OAuth2Util.buildScopeString(accessToken.getScopes()));
-            builder.setClientId(accessToken.getClientId());
-            ServiceProvider sp = (ServiceProvider) messageContext.getParameter(OAuth2.OAUTH2_SERVICE_PROVIDER);
-            if(!accessToken.getAuthzUser().isFederatedUser()) {
-                boolean useTenantDomain = sp.getLocalAndOutBoundAuthenticationConfig()
-                        .isUseTenantDomainInLocalSubjectIdentifier();
-                boolean useUserstoreDomain = sp.getLocalAndOutBoundAuthenticationConfig()
-                        .isUseUserstoreDomainInLocalSubjectIdentifier();
-                builder.setUsername(accessToken.getAuthzUser().getUsernameAsSubjectIdentifier(useUserstoreDomain,
-                                                                                              useTenantDomain));
-            } else {
-                builder.setUsername(accessToken.getAuthzUser().getAuthenticatedSubjectIdentifier());
-            }
-            builder.setTokenType(OAuth.OAUTH_ACCESS_TOKEN);
-            builder.setExp((accessToken.getAccessTokenIssuedTime().getTime() + accessToken.getAccessTokenValidity())
-                    / 1000);
-            builder.setIat(accessToken.getAccessTokenIssuedTime().getTime()/1000);
-            builder.setNbf(accessToken.getAccessTokenIssuedTime().getTime()/1000);
-            builder.setSub(accessToken.getSubjectIdentifier());
-            builder.setAud(accessToken.getClientId());
-            // set the issuer of the access token to the token endpoint or authz endpoint
-            // builder.setIss()
-            builder.setJti(accessToken.getAccessToken());
-            return builder;
-        }
+        builder.setTokenType(OAuth.OAUTH_ACCESS_TOKEN);
+        builder.setExp((accessToken.getAccessTokenIssuedTime().getTime() + accessToken.getAccessTokenValidity())
+                       / 1000);
+        builder.setIat(accessToken.getAccessTokenIssuedTime().getTime()/1000);
+        builder.setNbf(accessToken.getAccessTokenIssuedTime().getTime()/1000);
+        builder.setJti(accessToken.getAccessToken());
+        return builder;
     }
 
     public IntrospectionResponse.IntrospectionResponseBuilder introspectRefreshToken(AccessToken accessToken,
@@ -120,6 +95,19 @@ public class IntrospectionHandler extends AbstractIdentityMessageHandler {
         IntrospectionResponse.IntrospectionResponseBuilder builder = new IntrospectionResponse
                 .IntrospectionResponseBuilder(messageContext);
 
+        builder.setTokenType(OAuth.OAUTH_REFRESH_TOKEN);
+        builder.setExp((accessToken.getRefreshTokenIssuedTime().getTime() + accessToken.getRefreshTokenValidity())
+                       / 1000);
+        builder.setIat(accessToken.getRefreshTokenIssuedTime().getTime()/1000);
+        builder.setNbf(accessToken.getRefreshTokenIssuedTime().getTime()/1000);
+        builder.setJti(accessToken.getRefreshToken());
+        return builder;
+    }
+
+    protected IntrospectionResponse.IntrospectionResponseBuilder introspectToken(
+            AccessToken accessToken, IntrospectionMessageContext messageContext,
+            IntrospectionResponse.IntrospectionResponseBuilder builder) {
+
         if(!OAuth2.TokenState.ACTIVE.equals(accessToken.getAccessTokenState())) {
             // json string should not contain other attributes, only active=false
             builder.setActive(false);
@@ -132,17 +120,21 @@ public class IntrospectionHandler extends AbstractIdentityMessageHandler {
             builder.setActive(true);
             builder.setScope(OAuth2Util.buildScopeString(accessToken.getScopes()));
             builder.setClientId(accessToken.getClientId());
-            builder.setUsername(accessToken.getAuthzUser().getAuthenticatedSubjectIdentifier());
-            builder.setTokenType(OAuth.OAUTH_REFRESH_TOKEN);
-            builder.setExp((accessToken.getRefreshTokenIssuedTime().getTime() + accessToken.getRefreshTokenValidity())
-                    / 1000);
-            builder.setIat(accessToken.getRefreshTokenIssuedTime().getTime()/1000);
-            builder.setNbf(accessToken.getRefreshTokenIssuedTime().getTime()/1000);
-            builder.setSub(accessToken.getSubjectIdentifier());
+            OAuth2App app = messageContext.getApplication();
+            if(!accessToken.getAuthzUser().isFederatedUser()) {
+                boolean useTenantDomain = app.isUseTenantDomainInLocalSubjectIdentifier();
+                boolean useUserstoreDomain = app.isUseUserstoreDomainInLocalSubjectIdentifier();
+                builder.setUsername(accessToken.getAuthzUser().getUsernameAsSubjectIdentifier(useUserstoreDomain,
+                                                                                              useTenantDomain));
+            } else {
+                builder.setUsername(accessToken.getAuthzUser().getAuthenticatedSubjectIdentifier());
+            }
             builder.setAud(accessToken.getClientId());
-            // set the issuer of the access token to the token endpoint or authz endpoint
-            // builder.setIss()
-            builder.setJti(accessToken.getRefreshToken());
+            if(ResponseType.TOKEN.toString().equals(accessToken.getGrantType())) {
+                builder.setIss(OAuth2ServerConfig.getInstance().getOAuth2AuthzEPUrl());
+            } else {
+                builder.setIss(OAuth2ServerConfig.getInstance().getOAuth2TokenEPUrl());
+            }
             return builder;
         }
     }

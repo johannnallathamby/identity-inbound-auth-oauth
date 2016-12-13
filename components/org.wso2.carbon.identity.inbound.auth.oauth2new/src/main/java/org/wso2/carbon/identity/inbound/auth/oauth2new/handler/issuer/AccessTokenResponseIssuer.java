@@ -23,14 +23,14 @@ import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
 import org.wso2.carbon.identity.core.handler.AbstractIdentityMessageHandler;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2AuthzMessageContext;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.AuthzMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2MessageContext;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2TokenMessageContext;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AccessToken;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.TokenMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.dao.OAuth2DAO;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2Exception;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2RuntimeException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.HandlerManager;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AccessToken;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Util;
 
 import java.util.HashSet;
@@ -73,26 +73,26 @@ public abstract class AccessTokenResponseIssuer extends AbstractIdentityMessageH
 
     protected AccessToken validTokenExists(OAuth2MessageContext messageContext) {
 
-        if(messageContext instanceof OAuth2AuthzMessageContext) {
-            return validTokenExists((OAuth2AuthzMessageContext)messageContext);
-        } else if (messageContext instanceof OAuth2TokenMessageContext) {
-            return validTokenExists((OAuth2TokenMessageContext)messageContext);
+        if(messageContext instanceof AuthzMessageContext) {
+            return validTokenExists((AuthzMessageContext)messageContext);
+        } else if (messageContext instanceof TokenMessageContext) {
+            return validTokenExists((TokenMessageContext)messageContext);
         } else {
             throw OAuth2RuntimeException.error("");
         }
     }
 
-    protected AccessToken validTokenExists(OAuth2AuthzMessageContext messageContext) {
+    protected AccessToken validTokenExists(AuthzMessageContext messageContext) {
 
-        String clientId = messageContext.getRequest().getClientId();
+        String clientId = messageContext.getApplication().getClientId();
         AuthenticatedUser authzUser = messageContext.getAuthzUser();
         Set<String> scopes = messageContext.getApprovedScopes();
         return validTokenExists(clientId, authzUser, scopes, messageContext);
     }
 
-    protected AccessToken validTokenExists(OAuth2TokenMessageContext messageContext) {
+    protected AccessToken validTokenExists(TokenMessageContext messageContext) {
 
-        String clientId = messageContext.getClientId();
+        String clientId = messageContext.getApplication().getClientId();
         AuthenticatedUser authzUser = messageContext.getAuthzUser();
         Set<String> scopes = messageContext.getApprovedScopes();
         return validTokenExists(clientId, authzUser, scopes, messageContext);
@@ -182,16 +182,16 @@ public abstract class AccessTokenResponseIssuer extends AbstractIdentityMessageH
 
     protected AccessToken issueNewAccessToken(OAuth2MessageContext messageContext) {
 
-        if(messageContext instanceof OAuth2AuthzMessageContext) {
-            return issueNewAccessToken((OAuth2AuthzMessageContext) messageContext);
-        } else if (messageContext instanceof OAuth2TokenMessageContext) {
-            return issueNewAccessToken((OAuth2TokenMessageContext) messageContext);
+        if(messageContext instanceof AuthzMessageContext) {
+            return issueNewAccessToken((AuthzMessageContext) messageContext);
+        } else if (messageContext instanceof TokenMessageContext) {
+            return issueNewAccessToken((TokenMessageContext) messageContext);
         } else {
             throw OAuth2RuntimeException.error("");
         }
     }
 
-    protected AccessToken issueNewAccessToken(OAuth2AuthzMessageContext messageContext) {
+    protected AccessToken issueNewAccessToken(AuthzMessageContext messageContext) {
 
         boolean isRefreshTokenValid = (Boolean)messageContext.getParameter(IS_REFRESH_TOKEN_VALID);
         boolean markAccessTokenExpired = (Boolean)messageContext.getParameter(MARK_ACCESS_TOKEN_EXPIRED);
@@ -207,12 +207,12 @@ public abstract class AccessTokenResponseIssuer extends AbstractIdentityMessageH
                 responseType, messageContext);
     }
 
-    protected AccessToken issueNewAccessToken(OAuth2TokenMessageContext messageContext) {
+    protected AccessToken issueNewAccessToken(TokenMessageContext messageContext) {
 
         boolean isRefreshTokenValid = (Boolean)messageContext.getParameter(IS_REFRESH_TOKEN_VALID);
         boolean markAccessTokenExpired = (Boolean)messageContext.getParameter(MARK_ACCESS_TOKEN_EXPIRED);
         AccessToken prevAccessToken = (AccessToken)messageContext.getParameter(OAuth2.PREV_ACCESS_TOKEN);
-        String clientId = messageContext.getClientId();
+        String clientId = messageContext.getApplication().getClientId();
         AuthenticatedUser authzUser = messageContext.getAuthzUser();
         Set<String> scopes = messageContext.getApprovedScopes();
         long accessTokenValidityPeriod = messageContext.getAccessTokenValidityPeriod();

@@ -27,6 +27,8 @@ import java.util.Set;
 
 public class RefreshGrantRequest extends TokenRequest {
 
+    private static final long serialVersionUID = -4697220553951745165L;
+
     private String refreshToken;
     private Set<String> scopes = new HashSet<>();
 

@@ -32,11 +32,6 @@ import javax.servlet.http.HttpServletResponse;
 public class ClientCredentialsGrantFactory extends TokenRequestFactory {
 
     @Override
-    public String getName() {
-        return "ClientCredentialsGrantFactory";
-    }
-
-    @Override
     public boolean canHandle(HttpServletRequest request, HttpServletResponse response) {
         if(StringUtils.equals(GrantType.CLIENT_CREDENTIALS.toString(), request.getParameter(OAuth.OAUTH_GRANT_TYPE))) {
             return true;

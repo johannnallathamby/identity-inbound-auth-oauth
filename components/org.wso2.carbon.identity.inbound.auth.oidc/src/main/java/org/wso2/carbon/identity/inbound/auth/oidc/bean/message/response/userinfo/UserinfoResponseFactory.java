@@ -25,10 +25,6 @@ import org.wso2.carbon.identity.application.authentication.framework.inbound.Ide
 
 public class UserinfoResponseFactory extends HttpIdentityResponseFactory {
 
-    public String getName() {
-        return "HttpUserinfoResponseFactory";
-    }
-
     @Override
     public boolean canHandle(IdentityResponse identityResponse) {
         return identityResponse instanceof UserInfoResponse ? true : false;
