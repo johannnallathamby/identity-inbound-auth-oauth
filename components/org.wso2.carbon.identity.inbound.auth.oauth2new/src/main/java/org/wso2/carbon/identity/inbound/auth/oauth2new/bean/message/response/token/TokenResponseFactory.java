@@ -30,10 +30,7 @@ public class TokenResponseFactory extends HttpIdentityResponseFactory {
 
     @Override
     public boolean canHandle(IdentityResponse identityResponse) {
-        if(identityResponse instanceof TokenResponse) {
-            return true;
-        }
-        return false;
+        return identityResponse instanceof TokenResponse;
     }
 
     @Override

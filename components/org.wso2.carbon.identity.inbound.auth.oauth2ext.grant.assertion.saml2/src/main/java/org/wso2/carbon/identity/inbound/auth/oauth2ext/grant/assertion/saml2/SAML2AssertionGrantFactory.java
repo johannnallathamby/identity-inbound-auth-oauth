@@ -41,11 +41,6 @@ public class SAML2AssertionGrantFactory extends TokenRequestFactory {
     private static Log log = LogFactory.getLog(SAML2AssertionGrantFactory.class);
 
     @Override
-    public String getName() {
-        return "SAML2AssertionGrantFactory";
-    }
-
-    @Override
     public boolean canHandle(HttpServletRequest request, HttpServletResponse response) {
         if(super.canHandle(request, response)) {
             if (StringUtils.equals(SAML2GrantConstants.SAML2_GRANT_TYPE, request.getParameter(OAuth.OAUTH_GRANT_TYPE))) {

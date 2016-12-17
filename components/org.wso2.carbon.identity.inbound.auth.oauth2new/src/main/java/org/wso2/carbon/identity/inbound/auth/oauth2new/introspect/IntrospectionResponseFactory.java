@@ -30,10 +30,7 @@ public class IntrospectionResponseFactory extends HttpIdentityResponseFactory {
 
     @Override
     public boolean canHandle(IdentityResponse identityResponse) {
-        if(identityResponse instanceof IntrospectionResponse) {
-            return true;
-        }
-        return false;
+        return identityResponse instanceof IntrospectionResponse;
     }
 
     @Override

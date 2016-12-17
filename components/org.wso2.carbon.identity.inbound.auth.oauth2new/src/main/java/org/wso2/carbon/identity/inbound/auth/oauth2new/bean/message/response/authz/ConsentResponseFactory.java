@@ -36,10 +36,7 @@ public class ConsentResponseFactory extends HttpIdentityResponseFactory {
 
     @Override
     public boolean canHandle(IdentityResponse identityResponse) {
-        if(identityResponse instanceof ConsentResponse) {
-            return true;
-        }
-        return false;
+        return identityResponse instanceof ConsentResponse;
     }
 
     @Override

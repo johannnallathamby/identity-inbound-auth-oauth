@@ -34,10 +34,7 @@ public class AuthzRequestFactory extends OAuth2IdentityRequestFactory {
 
     @Override
     public boolean canHandle(HttpServletRequest request, HttpServletResponse response) {
-        if(StringUtils.isNotBlank(request.getParameter(OAuth.OAUTH_RESPONSE_TYPE))) {
-            return true;
-        }
-        return false;
+        return StringUtils.isNotBlank(request.getParameter(OAuth.OAUTH_RESPONSE_TYPE));
     }
 
     public AuthzRequest.AuthzRequestBuilder create(HttpServletRequest request,

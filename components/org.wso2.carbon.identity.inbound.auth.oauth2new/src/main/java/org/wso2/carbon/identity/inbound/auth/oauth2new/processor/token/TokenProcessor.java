@@ -61,10 +61,7 @@ public class TokenProcessor extends OAuth2IdentityRequestProcessor {
 
     @Override
     public boolean canHandle(IdentityRequest identityRequest) {
-        if(identityRequest.getParameter(OAuth.OAUTH_GRANT_TYPE) != null) {
-            return true;
-        }
-        return false;
+        return identityRequest instanceof TokenRequest ? true : false;
     }
 
     @Override

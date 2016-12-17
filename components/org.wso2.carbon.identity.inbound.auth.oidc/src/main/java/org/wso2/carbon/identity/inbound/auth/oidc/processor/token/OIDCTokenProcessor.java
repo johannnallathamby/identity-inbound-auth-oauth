@@ -22,7 +22,6 @@ package org.wso2.carbon.identity.inbound.auth.oidc.processor.token;
 import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.oltu.oauth2.common.OAuth;
 import org.wso2.carbon.identity.application.authentication.framework.exception.FrameworkException;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityMessageContext;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
@@ -69,9 +68,10 @@ public class OIDCTokenProcessor extends TokenProcessor {
         return null;
     }
 
+    // need to think about this logic. how to differentiate between oauth2 and oidc token requests
     @Override
     public boolean canHandle(IdentityRequest identityRequest) {
-        if(identityRequest.getParameter(OAuth.OAUTH_GRANT_TYPE) != null) {
+        if(super.canHandle(identityRequest)) {
             return true;
         }
         return false;

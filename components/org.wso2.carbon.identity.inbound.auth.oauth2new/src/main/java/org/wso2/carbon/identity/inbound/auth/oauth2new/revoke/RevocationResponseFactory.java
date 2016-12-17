@@ -30,10 +30,7 @@ public class RevocationResponseFactory extends HttpIdentityResponseFactory {
 
     @Override
     public boolean canHandle(IdentityResponse identityResponse) {
-        if(identityResponse instanceof RevocationResponse) {
-            return true;
-        }
-        return false;
+        return identityResponse instanceof RevocationResponse;
     }
 
     @Override

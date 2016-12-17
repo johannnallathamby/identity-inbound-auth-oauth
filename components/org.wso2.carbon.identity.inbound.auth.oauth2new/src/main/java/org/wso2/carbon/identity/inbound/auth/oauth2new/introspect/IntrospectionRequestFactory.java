@@ -30,10 +30,7 @@ public class IntrospectionRequestFactory extends OAuth2IdentityRequestFactory {
 
     @Override
     public boolean canHandle(HttpServletRequest request, HttpServletResponse response) {
-        if(request.getRequestURI().contains("introspect")) {
-            return true;
-        }
-        return false;
+        return request.getRequestURI().contains("introspect");
     }
 
     @Override
@@ -43,14 +40,7 @@ public class IntrospectionRequestFactory extends OAuth2IdentityRequestFactory {
 
         IntrospectionRequest.IntrospectionRequestBuilder builder = new IntrospectionRequest.IntrospectionRequestBuilder
                 (request, response);
-        try {
-            super.create(builder, request, response);
-        } catch (FrameworkClientException e) {
-            throw IntrospectionClientException.error(e.getMessage(), e);
-        }
-        builder.setTenantDomain(request.getParameter(MultitenantConstants.TENANT_DOMAIN));
-        builder.setToken(request.getParameter("token"));
-        builder.setTokenTypeHint(request.getParameter("token_type_hint"));
+        create(builder, request, response);
         return builder;
     }
 

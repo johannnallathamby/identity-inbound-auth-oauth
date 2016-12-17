@@ -38,8 +38,6 @@ public class AccessToken implements Serializable {
 
     private String clientId;
 
-    private String subjectIdentifier;
-
     private AuthenticatedUser authzUser;
 
     private Set<String> scopes = new HashSet();
@@ -56,12 +54,11 @@ public class AccessToken implements Serializable {
 
     private long refreshTokenValidity;
 
-    public AccessToken(String accessToken, String clientId, String subjectIdentifier,
-                       String grantType, String accessTokenState, Timestamp accessTokenIssuedTime,
-                       long accessTokenValidity) {
+    public AccessToken(String accessToken, String clientId, AuthenticatedUser authzUser, String grantType,
+                       String accessTokenState, Timestamp accessTokenIssuedTime, long accessTokenValidity) {
         this.accessToken = accessToken;
         this.clientId = clientId;
-        this.subjectIdentifier = subjectIdentifier;
+        this.authzUser = authzUser;
         this.grantType = grantType;
         this.accessTokenState = accessTokenState;
         this.accessTokenIssuedTime = accessTokenIssuedTime;
@@ -72,10 +69,9 @@ public class AccessToken implements Serializable {
     public static AccessToken createAccessToken(AccessToken accessToken, String tokenState) {
 
         AccessToken newAccessToken = new AccessToken(accessToken.getAccessToken(), accessToken.getClientId(),
-                accessToken.getSubjectIdentifier(), accessToken.getGrantType(), tokenState,
+                accessToken.getAuthzUser(), accessToken.getGrantType(), tokenState,
                 accessToken.getAccessTokenIssuedTime(), accessToken.getAccessTokenValidity());
         newAccessToken.setAccessTokenId(accessToken.getAccessTokenId());
-        newAccessToken.setAuthzUser(accessToken.getAuthzUser());
         newAccessToken.setScopes(accessToken.getScopes());
         newAccessToken.setRefreshToken(accessToken.getRefreshToken());
         newAccessToken.setRefreshTokenIssuedTime(accessToken.getRefreshTokenIssuedTime());
@@ -97,10 +93,6 @@ public class AccessToken implements Serializable {
 
     public String getClientId() {
         return clientId;
-    }
-
-    public String getSubjectIdentifier() {
-        return subjectIdentifier;
     }
 
     public AuthenticatedUser getAuthzUser() {
@@ -143,10 +135,6 @@ public class AccessToken implements Serializable {
         this.refreshToken = refreshToken;
     }
 
-    public void setAuthzUser(AuthenticatedUser authzUser) {
-        this.authzUser = authzUser;
-    }
-
     public void setScopes(Set<String> scopes) {
         if(scopes != null) {
             this.scopes = scopes;
@@ -166,7 +154,6 @@ public class AccessToken implements Serializable {
         return "AccessToken{" +
                 "accessTokenId='" + accessTokenId + '\'' +
                 ", clientId='" + clientId + '\'' +
-                ", subjectIdentifier='" + subjectIdentifier + '\'' +
                 ", authzUser=" + authzUser +
                 ", scopes=" + scopes +
                 ", grantType='" + grantType + '\'' +

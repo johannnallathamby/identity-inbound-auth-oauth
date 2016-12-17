@@ -111,10 +111,9 @@ public class BearerTokenResponseIssuer extends AccessTokenResponseIssuer {
             }
         }
 
-        AccessToken newAccessToken = new AccessToken(bearerToken, clientId, subjectIdentifier,
+        AccessToken newAccessToken = new AccessToken(bearerToken, clientId, authzUser,
                 grantOrResponseType, OAuth2.TokenState.ACTIVE, accessTokenIssuedTime, accessTokenValidity);
 
-        newAccessToken.setAuthzUser(authzUser);
         newAccessToken.setScopes(scopes);
         newAccessToken.setRefreshToken(refreshToken);
         newAccessToken.setRefreshTokenIssuedTime(refreshTokenIssuedTime);

@@ -41,10 +41,7 @@ public class OIDCAuthzResponseFactory extends AuthzResponseFactory {
 
     @Override
     public boolean canHandle(IdentityResponse identityResponse) {
-        if(identityResponse instanceof OIDCAuthzResponse) {
-            return true;
-        }
-        return false;
+        return identityResponse instanceof OIDCAuthzResponse;
     }
 
     @Override

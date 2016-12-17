@@ -18,7 +18,6 @@
 
 package org.wso2.carbon.identity.inbound.auth.oauth2new.revoke;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.oltu.oauth2.common.message.types.GrantType;
 import org.wso2.carbon.identity.application.authentication.framework.exception.FrameworkException;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityMessageContext;
@@ -52,10 +51,7 @@ public class RevocationProcessor extends OAuth2IdentityRequestProcessor {
 
     @Override
     public boolean canHandle(IdentityRequest identityRequest) {
-        if(StringUtils.isNotBlank(identityRequest.getParameter("token"))) {
-            return true;
-        }
-        return false;
+        return identityRequest instanceof RevocationRequest ? true: false;
     }
 
     @Override

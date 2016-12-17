@@ -47,10 +47,7 @@ public class OIDCTokenResponseFactory extends TokenResponseFactory {
 
     @Override
     public boolean canHandle(IdentityResponse identityResponse) {
-        if(identityResponse instanceof OIDCTokenResponse) {
-            return true;
-        }
-        return false;
+        return identityResponse instanceof OIDCTokenResponse;
     }
 
     @Override

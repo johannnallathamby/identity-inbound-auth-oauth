@@ -27,7 +27,7 @@ public class UserinfoResponseFactory extends HttpIdentityResponseFactory {
 
     @Override
     public boolean canHandle(IdentityResponse identityResponse) {
-        return identityResponse instanceof UserInfoResponse ? true : false;
+        return identityResponse instanceof UserInfoResponse;
     }
 
     @Override

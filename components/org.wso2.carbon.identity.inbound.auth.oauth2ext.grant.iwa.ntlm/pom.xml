@@ -112,6 +112,7 @@
                             org.wso2.carbon.identity.inbound.auth.oauth2ext.grant.iwa.ntlm.*;
                             version="${identity.inbound.auth.oauth.exp.pkg.version}"
                         </Export-Package>
+                        <DynamicImport-Package>*</DynamicImport-Package>
                     </instructions>
                 </configuration>
             </plugin>

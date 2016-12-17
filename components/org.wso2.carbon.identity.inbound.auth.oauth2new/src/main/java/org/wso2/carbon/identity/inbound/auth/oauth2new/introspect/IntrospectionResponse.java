@@ -97,6 +97,10 @@ public class IntrospectionResponse extends IdentityResponse {
 
     protected IntrospectionResponse(IdentityResponseBuilder builder) {
         super(builder);
+        // TODO:
+        // setting context to null, otherwise the context also gets serialized and comes back in IntrospectionResponse
+        // instead of doing this try to customize the json building in the IntrospectionResponseFactory
+        context = null;
         IntrospectionResponseBuilder introspectionResponseBuilder = (IntrospectionResponseBuilder)builder;
         this.active = introspectionResponseBuilder.active;
         this.aud = introspectionResponseBuilder.aud;

@@ -32,10 +32,7 @@ public abstract class TokenRequestFactory extends OAuth2IdentityRequestFactory {
 
     @Override
     public boolean canHandle(HttpServletRequest request, HttpServletResponse response) {
-        if(StringUtils.isNotBlank(request.getParameter(OAuth.OAUTH_GRANT_TYPE))) {
-            return true;
-        }
-        return false;
+        return StringUtils.isNotBlank(request.getParameter(OAuth.OAUTH_GRANT_TYPE));
     }
 
     public TokenRequest.TokenRequestBuilder create(HttpServletRequest request,

@@ -78,7 +78,9 @@ public class UserInfoProcessor extends OAuth2IdentityRequestProcessor {
 
     @Override
     public boolean canHandle(IdentityRequest identityRequest) {
-        return identityRequest.getRequestURI().contains("/userinfo");
+        // since we don't build a UserinfoRequest specifically we need to rely purely on the endpoint path to
+        // identity userinfo requests
+        return identityRequest.getRequestURI().contains("userinfo");
     }
 
     @Override

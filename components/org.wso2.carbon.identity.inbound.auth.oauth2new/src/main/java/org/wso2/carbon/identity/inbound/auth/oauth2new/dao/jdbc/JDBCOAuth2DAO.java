@@ -203,9 +203,8 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
                 String grantType = resultSet.getString(9);
                 String subjectId = resultSet.getString(10);
 
-                AccessToken accessToken = new AccessToken(accessTokenId, clientId, subjectId, grantType, state,
+                AccessToken accessToken = new AccessToken(accessTokenId, clientId, authzUser, grantType, state,
                                                           new Timestamp(issuedTime), validityPeriod);
-                accessToken.setAuthzUser(authzUser);
                 accessToken.setScopes(scopes);
                 accessToken.setAccessTokenId(tokenId);
                 accessToken.setRefreshToken(refreshToken);
@@ -516,7 +515,6 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
             String grantType = null;
             String subjectIdentifier = null;
             String clientId = null;
-            AuthenticatedUser user = new AuthenticatedUser();
             while (resultSet.next()) {
                 if (iterateId == 0) {
                     accessTokenId = resultSet.getString(1);
@@ -535,32 +533,29 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
                     grantType = resultSet.getString(12);
                     subjectIdentifier = resultSet.getString(13);
                     clientId = resultSet.getString(14);
-                    user.setUserName(userName);
-                    user.setUserStoreDomain(userDomain);
-                    user.setTenantDomain(IdentityTenantUtil.getTenantDomain(tenantId));
-                    user.setAuthenticatedSubjectIdentifier(subjectIdentifier);
                 } else {
                     scopeSet.add(resultSet.getString(6));
                 }
                 iterateId++;
             }
             if(bearerToken != null){
-                accessToken = new AccessToken(bearerToken, clientId, subjectIdentifier, grantType,
-                        accessTokenState, accessTokenIssuedTime, accessTokenValidity);
-                accessToken.setAccessTokenId(accessTokenId);
+
                 AuthenticatedUser authzUser = new AuthenticatedUser();
-                if(userName != null) {
+                authzUser.setAuthenticatedSubjectIdentifier(subjectIdentifier);
+                if(MultitenantConstants.INVALID_TENANT_ID != tenantId) {
                     authzUser.setUserName(userName);
                     authzUser.setUserStoreDomain(userDomain);
                     authzUser.setTenantDomain(IdentityTenantUtil.getTenantDomain(tenantId));
-                    authzUser.setAuthenticatedSubjectIdentifier(subjectIdentifier);
                 } else {
                     authzUser.setFederatedUser(true);
                     // hack to store federated IDP name in user store domain column
                     authzUser.setFederatedIdPName(userDomain);
-                    authzUser.setAuthenticatedSubjectIdentifier(subjectIdentifier);
                 }
-                accessToken.setAuthzUser(authzUser);
+
+                accessToken = new AccessToken(bearerToken, clientId, authzUser, grantType,
+                        accessTokenState, accessTokenIssuedTime, accessTokenValidity);
+                accessToken.setAccessTokenId(accessTokenId);
+
                 if(!scopeSet.isEmpty()) {
                     accessToken.setScopes(scopeSet);
                 }
@@ -632,10 +627,9 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
             resultSet = prepStmt.executeQuery();
             if (resultSet.next()) {
                 String authzCodeId = resultSet.getString(1);
-                String authorizedUser = resultSet.getString(2);
+                String username = resultSet.getString(2);
                 String userStoreDomain = resultSet.getString(3);
                 int tenantId = resultSet.getInt(4);
-                String tenantDomain = IdentityTenantUtil.getTenantDomain(tenantId);
                 String scopeString = resultSet.getString(5);
                 String redirectUri = resultSet.getString(6);
                 Timestamp issuedTime = resultSet.getTimestamp(7, Calendar.getInstance(TimeZone.getTimeZone("UTC")));
@@ -645,15 +639,22 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
                 String clientId = resultSet.getString(11);
                 String pkceCodeChallenge = resultSet.getString(12);
                 String pkceCodeChallengeMethod = resultSet.getString(13);
-                AuthenticatedUser user = new AuthenticatedUser();
-                user.setUserName(authorizedUser);
-                user.setTenantDomain(tenantDomain);
-                user.setUserStoreDomain(userStoreDomain);
-                user.setAuthenticatedSubjectIdentifier(subjectIdentifier);
-                authorizationCode =  new AuthzCode(authzCode, clientId, redirectUri, subjectIdentifier,
+
+                AuthenticatedUser authzUser = new AuthenticatedUser();
+                authzUser.setAuthenticatedSubjectIdentifier(subjectIdentifier);
+                if(MultitenantConstants.INVALID_TENANT_ID != tenantId) {
+                    authzUser.setUserName(username);
+                    authzUser.setUserStoreDomain(userStoreDomain);
+                    authzUser.setTenantDomain(IdentityTenantUtil.getTenantDomain(tenantId));
+                } else {
+                    authzUser.setFederatedUser(true);
+                    // hack to store federated IDP name in user store domain column
+                    authzUser.setFederatedIdPName(userStoreDomain);
+                }
+
+                authorizationCode =  new AuthzCode(authzCode, clientId, redirectUri, authzUser,
                         issuedTime, validityPeriod, codeState);
                 authorizationCode.setAuthzCodeId(authzCodeId);
-                authorizationCode.setAuthzUser(user);
                 authorizationCode.setScopes(OAuth2Util.buildScopeSet(scopeString));
                 authorizationCode.setPkceCodeChallenge(pkceCodeChallenge);
                 authorizationCode.setPkceCodeChallengeMethod(pkceCodeChallengeMethod);
@@ -803,13 +804,19 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
                     String subjectIdentifier = resultSet.getString(13);
                     String tokenState = resultSet.getString(14);
 
-                    AuthenticatedUser user = new AuthenticatedUser();
-                    user.setUserName(authorizedUser);
-                    user.setUserStoreDomain(userDomain);
-                    user.setTenantDomain(IdentityTenantUtil.getTenantDomain(tenantId));
-                    user.setAuthenticatedSubjectIdentifier(subjectIdentifier);
+                    AuthenticatedUser authzUser = new AuthenticatedUser();
+                    authzUser.setAuthenticatedSubjectIdentifier(subjectIdentifier);
+                    if(MultitenantConstants.INVALID_TENANT_ID != tenantId) {
+                        authzUser.setUserName(authorizedUser);
+                        authzUser.setUserStoreDomain(userDomain);
+                        authzUser.setTenantDomain(IdentityTenantUtil.getTenantDomain(tenantId));
+                    } else {
+                        authzUser.setFederatedUser(true);
+                        // hack to store federated IDP name in user store domain column
+                        authzUser.setFederatedIdPName(userDomain);
+                    }
 
-                    accessToken = new AccessToken(bearerToken, clientId, subjectIdentifier, grantType, tokenState,
+                    accessToken = new AccessToken(bearerToken, clientId, authzUser, grantType, tokenState,
                             accessTokenIssuedTime, accessTokenValidity);
                     accessToken.setAccessTokenId(accessTokenId);
                     accessToken.setRefreshToken(refreshToken);
@@ -956,7 +963,7 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
                     String accessTokenId = processor.getPreprocessedAccessToken(resultSet.getString(2));
                     String refreshToken = processor.getPreprocessedRefreshToken(resultSet.getString(3));
                     String clientId = resultSet.getString(4);
-                    String authzUser = resultSet.getString(5);
+                    String username = resultSet.getString(5);
                     String userStoreDomain = resultSet.getString(6);
                     Set<String> scope = OAuth2Util.buildScopeSet(resultSet.getString(7));
                     String state = resultSet.getString(8);
@@ -968,14 +975,14 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
                     String grantType = resultSet.getString(13);
                     String subjectIdentifier = resultSet.getString(14);
 
-                    AuthenticatedUser user = new AuthenticatedUser();
-                    user.setUserName(authzUser);
-                    user.setUserStoreDomain(userStoreDomain);
-                    user.setTenantDomain(tenantDomain);
-                    AccessToken accessToken = new AccessToken(accessTokenId, clientId, subjectIdentifier, grantType,
+                    AuthenticatedUser authzUser = new AuthenticatedUser();
+                    authzUser.setUserName(username);
+                    authzUser.setUserStoreDomain(userStoreDomain);
+                    authzUser.setTenantDomain(tenantDomain);
+                    authzUser.setAuthenticatedSubjectIdentifier(subjectIdentifier);
+                    AccessToken accessToken = new AccessToken(accessTokenId, clientId, authzUser, grantType,
                                                               state, issuedTime, validityPeriodInMillis);
                     accessToken.setScopes(scope);
-                    accessToken.setAuthzUser(user);
                     accessToken.setRefreshToken(refreshToken);
                     accessToken.setRefreshTokenIssuedTime(refreshTokenIssuedTime);
                     accessToken.setRefreshTokenValidity(refreshTokenValidityPeriodMillis);
@@ -1014,7 +1021,7 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
                 String authzCodeId = rs.getString(1);
                 String code = processor.getPreprocessedAuthzCode(rs.getString(2));
                 String clientId = rs.getString(3);
-                String authzUser = rs.getString(4);
+                String username = rs.getString(4);
                 Set<String> scopes = OAuth2Util.buildScopeSet(rs.getString(5));
                 Timestamp issuedTime = rs.getTimestamp(6, Calendar.getInstance(TimeZone.getTimeZone(UTC)));
                 long validityPeriodInMillis = rs.getLong(7);
@@ -1026,12 +1033,12 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
                 String pkceChallengeMethod = rs.getString(13);
 
                 AuthenticatedUser user = new AuthenticatedUser();
-                user.setUserName(authzUser);
+                user.setUserName(username);
                 user.setUserStoreDomain(userStoreDomain);
                 user.setTenantDomain(tenantDomain);
-                AuthzCode authzCode = new AuthzCode(code, clientId, callbackUrl, subjectIdentifier, issuedTime,
+                user.setAuthenticatedSubjectIdentifier(subjectIdentifier);
+                AuthzCode authzCode = new AuthzCode(code, clientId, callbackUrl, user, issuedTime,
                                                     validityPeriodInMillis, state);
-                authzCode.setAuthzUser(user);
                 authzCode.setScopes(scopes);
                 authzCode.setAuthzCodeId(authzCodeId);
                 authzCode.setPkceCodeChallenge(pkceChallenge);
@@ -1071,7 +1078,7 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
                     String accessTokenId = processor.getPreprocessedAccessToken(resultSet.getString(2));
                     String refreshToken = processor.getPreprocessedRefreshToken(resultSet.getString(3));
                     String clientId = resultSet.getString(4);
-                    String authzUser = resultSet.getString(5);
+                    String username = resultSet.getString(5);
                     Set<String> scope = OAuth2Util.buildScopeSet(resultSet.getString(6));
                     String state = resultSet.getString(7);
                     Timestamp issuedTime = resultSet.getTimestamp(8, Calendar.getInstance(TimeZone.getTimeZone(UTC)));
@@ -1082,14 +1089,14 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
                     String grantType = resultSet.getString(12);
                     String subjectIdentifier = resultSet.getString(13);
 
-                    AuthenticatedUser user = new AuthenticatedUser();
-                    user.setUserName(authzUser);
-                    user.setUserStoreDomain(userStoreDomain);
-                    user.setTenantDomain(tenantDomain);
-                    AccessToken accessToken = new AccessToken(accessTokenId, clientId, subjectIdentifier, grantType,
+                    AuthenticatedUser authzUser = new AuthenticatedUser();
+                    authzUser.setUserName(username);
+                    authzUser.setUserStoreDomain(userStoreDomain);
+                    authzUser.setTenantDomain(tenantDomain);
+                    authzUser.setAuthenticatedSubjectIdentifier(subjectIdentifier);
+                    AccessToken accessToken = new AccessToken(accessTokenId, clientId, authzUser, grantType,
                                                               state, issuedTime, validityPeriodInMillis);
                     accessToken.setScopes(scope);
-                    accessToken.setAuthzUser(user);
                     accessToken.setRefreshToken(refreshToken);
                     accessToken.setRefreshTokenIssuedTime(refreshTokenIssuedTime);
                     accessToken.setRefreshTokenValidity(refreshTokenValidityPeriodMillis);
@@ -1130,7 +1137,7 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
                 String authzCodeId = rs.getString(1);
                 String code = processor.getPreprocessedAuthzCode(rs.getString(2));
                 String clientId = rs.getString(3);
-                String authzUser = rs.getString(4);
+                String username = rs.getString(4);
                 Set<String> scopes = OAuth2Util.buildScopeSet(rs.getString(5));
                 Timestamp issuedTime = rs.getTimestamp(6, Calendar.getInstance(TimeZone.getTimeZone(UTC)));
                 long validityPeriodInMillis = rs.getLong(7);
@@ -1140,13 +1147,13 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
                 String pkceChallenge = rs.getString(11);
                 String pkceChallengeMethod = rs.getString(12);
 
-                AuthenticatedUser user = new AuthenticatedUser();
-                user.setUserName(authzUser);
-                user.setUserStoreDomain(userStoreDomain);
-                user.setTenantDomain(tenantDomain);
-                AuthzCode authzCode = new AuthzCode(code, clientId, callbackUrl, subjectIdentifier, issuedTime,
+                AuthenticatedUser authzUser = new AuthenticatedUser();
+                authzUser.setUserName(username);
+                authzUser.setUserStoreDomain(userStoreDomain);
+                authzUser.setTenantDomain(tenantDomain);
+                authzUser.setAuthenticatedSubjectIdentifier(subjectIdentifier);
+                AuthzCode authzCode = new AuthzCode(code, clientId, callbackUrl, authzUser, issuedTime,
                                                     validityPeriodInMillis, state);
-                authzCode.setAuthzUser(user);
                 authzCode.setScopes(scopes);
                 authzCode.setAuthzCodeId(authzCodeId);
                 authzCode.setPkceCodeChallenge(pkceChallenge);
@@ -1199,13 +1206,12 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
 
         AccessToken clonedAccessToken = new AccessToken(accessToken.getAccessToken(),
                                                         accessToken.getClientId(),
-                                                        accessToken.getSubjectIdentifier(),
+                                                        accessToken.getAuthzUser(),
                                                         accessToken.getGrantType(),
                                                         accessToken.getAccessTokenState(),
                                                         new Timestamp(new Date().getTime()),
                                                         accessToken.getAccessTokenValidity());
         clonedAccessToken.setAccessTokenId(accessToken.getAccessTokenId());
-        clonedAccessToken.setAuthzUser(accessToken.getAuthzUser());
         clonedAccessToken.setScopes(accessToken.getScopes());
         clonedAccessToken.setRefreshToken(accessToken.getRefreshToken());
         clonedAccessToken.setRefreshTokenIssuedTime(accessToken.getRefreshTokenIssuedTime());

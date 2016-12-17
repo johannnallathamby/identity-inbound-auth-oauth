@@ -21,6 +21,7 @@ package org.wso2.carbon.identity.inbound.auth.oauth2new.introspect;
 import org.apache.oltu.oauth2.common.OAuth;
 import org.apache.oltu.oauth2.common.message.types.GrantType;
 import org.apache.oltu.oauth2.common.message.types.ResponseType;
+import org.wso2.carbon.identity.core.bean.context.MessageContext;
 import org.wso2.carbon.identity.core.handler.AbstractIdentityMessageHandler;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.dao.OAuth2DAO;
@@ -38,6 +39,10 @@ public class IntrospectionHandler extends AbstractIdentityMessageHandler {
         return this.getClass().getSimpleName();
     }
 
+    public boolean canHandle(MessageContext messageContext) {
+        return true;
+    }
+
     public IntrospectionResponse.IntrospectionResponseBuilder introspect(IntrospectionMessageContext messageContext)
             throws OAuth2ClientException {
 
@@ -45,7 +50,7 @@ public class IntrospectionHandler extends AbstractIdentityMessageHandler {
         String token = introspectionRequest.getToken();
         String tokenTypeHint = introspectionRequest.getTokenTypeHint();
         OAuth2DAO dao = HandlerManager.getInstance().getOAuth2DAO(messageContext);
-        boolean refreshTokenFirst = GrantType.REFRESH_TOKEN.toString().equals(tokenTypeHint) ? true : false;
+        boolean refreshTokenFirst = GrantType.REFRESH_TOKEN.toString().equals(tokenTypeHint);
         boolean isRefreshToken = false;
         AccessToken accessToken = null;
         if (refreshTokenFirst) {
@@ -80,12 +85,15 @@ public class IntrospectionHandler extends AbstractIdentityMessageHandler {
         IntrospectionResponse.IntrospectionResponseBuilder builder = new IntrospectionResponse
                 .IntrospectionResponseBuilder(messageContext);
 
+        introspectToken(accessToken, messageContext, builder);
+
         builder.setTokenType(OAuth.OAUTH_ACCESS_TOKEN);
         builder.setExp((accessToken.getAccessTokenIssuedTime().getTime() + accessToken.getAccessTokenValidity())
                        / 1000);
         builder.setIat(accessToken.getAccessTokenIssuedTime().getTime()/1000);
         builder.setNbf(accessToken.getAccessTokenIssuedTime().getTime()/1000);
         builder.setJti(accessToken.getAccessToken());
+
         return builder;
     }
 
@@ -95,12 +103,15 @@ public class IntrospectionHandler extends AbstractIdentityMessageHandler {
         IntrospectionResponse.IntrospectionResponseBuilder builder = new IntrospectionResponse
                 .IntrospectionResponseBuilder(messageContext);
 
+        introspectToken(accessToken, messageContext, builder);
+
         builder.setTokenType(OAuth.OAUTH_REFRESH_TOKEN);
         builder.setExp((accessToken.getRefreshTokenIssuedTime().getTime() + accessToken.getRefreshTokenValidity())
                        / 1000);
         builder.setIat(accessToken.getRefreshTokenIssuedTime().getTime()/1000);
         builder.setNbf(accessToken.getRefreshTokenIssuedTime().getTime()/1000);
         builder.setJti(accessToken.getRefreshToken());
+
         return builder;
     }
 

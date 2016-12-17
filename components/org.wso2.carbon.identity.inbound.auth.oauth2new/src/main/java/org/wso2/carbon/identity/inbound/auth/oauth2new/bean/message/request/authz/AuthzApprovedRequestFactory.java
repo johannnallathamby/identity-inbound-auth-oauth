@@ -34,10 +34,7 @@ public class AuthzApprovedRequestFactory extends OAuth2IdentityRequestFactory {
     @Override
     public boolean canHandle(HttpServletRequest request, HttpServletResponse response) {
 
-        if(StringUtils.isNotBlank(request.getParameter(OAuth2.CONSENT))){
-           return true;
-        }
-        return false;
+        return StringUtils.isNotBlank(request.getParameter(OAuth2.CONSENT));
     }
 
     @Override

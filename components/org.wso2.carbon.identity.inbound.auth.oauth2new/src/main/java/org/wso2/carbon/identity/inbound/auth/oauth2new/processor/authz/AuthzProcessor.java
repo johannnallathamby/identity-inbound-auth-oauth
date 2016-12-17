@@ -18,7 +18,6 @@
 
 package org.wso2.carbon.identity.inbound.auth.oauth2new.processor.authz;
 
-import org.apache.oltu.oauth2.common.OAuth;
 import org.wso2.carbon.identity.application.authentication.framework.exception.FrameworkException;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.FrameworkLoginResponse;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityMessageContext;
@@ -56,10 +55,7 @@ public class AuthzProcessor extends OAuth2IdentityRequestProcessor {
     }
 
     public boolean canHandle(IdentityRequest identityRequest) {
-        if(identityRequest.getParameter(OAuth.OAUTH_RESPONSE_TYPE) != null) {
-            return true;
-        }
-        return false;
+        return identityRequest instanceof AuthzRequest ? true: false;
     }
 
     public FrameworkLoginResponse.FrameworkLoginResponseBuilder process(IdentityRequest identityRequest)

@@ -30,10 +30,7 @@ public class RevocationRequestFactory extends OAuth2IdentityRequestFactory {
 
     @Override
     public boolean canHandle(HttpServletRequest request, HttpServletResponse response) {
-        if(request.getRequestURI().contains("revoke")) {
-            return true;
-        }
-        return false;
+        return request.getRequestURI().contains("revoke");
     }
 
     @Override

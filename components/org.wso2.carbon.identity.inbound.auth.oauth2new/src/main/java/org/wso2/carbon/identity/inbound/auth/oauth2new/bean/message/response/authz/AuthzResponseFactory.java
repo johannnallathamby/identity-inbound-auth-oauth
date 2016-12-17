@@ -31,10 +31,7 @@ public class AuthzResponseFactory extends HttpIdentityResponseFactory {
 
     @Override
     public boolean canHandle(IdentityResponse identityResponse) {
-        if(identityResponse instanceof AuthzResponse) {
-            return true;
-        }
-        return false;
+        return identityResponse instanceof AuthzResponse;
     }
 
     @Override

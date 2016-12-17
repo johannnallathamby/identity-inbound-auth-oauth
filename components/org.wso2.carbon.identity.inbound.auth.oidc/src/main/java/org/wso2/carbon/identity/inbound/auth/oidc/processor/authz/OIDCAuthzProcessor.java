@@ -18,18 +18,13 @@
 
 package org.wso2.carbon.identity.inbound.auth.oidc.processor.authz;
 
-import org.apache.oltu.oauth2.common.OAuth;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.FrameworkLoginResponse;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityMessageContext;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.InboundConstants;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.AuthzMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.processor.authz.AuthzProcessor;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Util;
-import org.wso2.carbon.identity.inbound.auth.oidc.OIDC;
 import org.wso2.carbon.identity.inbound.auth.oidc.bean.message.request.authz.OIDCAuthzRequest;
-
-import java.util.Set;
 
 /*
  * InboundRequestProcessor for OAuth2 Authorization Endpoint
@@ -49,13 +44,7 @@ public class OIDCAuthzProcessor extends AuthzProcessor {
     }
 
     public boolean canHandle(IdentityRequest identityRequest) {
-        if(super.canHandle(identityRequest)) {
-            Set<String> scopes = OAuth2Util.buildScopeSet(identityRequest.getParameter(OAuth.OAUTH_SCOPE));
-            if (scopes.contains(OIDC.OPENID_SCOPE)) {
-                return true;
-            }
-        }
-        return false;
+        return identityRequest instanceof OIDCAuthzRequest ? true : false;
     }
 
     /**
