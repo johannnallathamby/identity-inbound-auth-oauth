@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  ~ Copyright (c) 2015, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+  ~ Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
   ~
   ~  WSO2 Inc. licenses this file to you under the Apache License,
   ~  Version 2.0 (the "License"); you may not use this file except
@@ -23,7 +23,6 @@
         <groupId>org.wso2.carbon.identity.inbound.auth.oauth2</groupId>
         <artifactId>identity-inbound-auth-oauth</artifactId>
         <version>5.2.7-SNAPSHOT</version>
-        <relativePath>../../pom.xml</relativePath>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
@@ -34,6 +33,17 @@
     <url>http://wso2.org</url>
 
     <dependencies>
+        <dependency>
+            <groupId>org.wso2.eclipse.osgi</groupId>
+            <artifactId>org.eclipse.osgi.services</artifactId>
+            <version>${equinox.osgi.services.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.scr.ds-annotations</artifactId>
+            <scope>provided</scope>
+            <version>${apache.felix.scr.ds.annotations.version}</version>
+        </dependency>
         <dependency>
             <groupId>commons-lang.wso2</groupId>
             <artifactId>commons-lang</artifactId>
@@ -96,6 +106,11 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.felix</groupId>
+                <artifactId>maven-scr-plugin</artifactId>
+                <version>1.9.0</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
                 <extensions>true</extensions>
                 <configuration>
@@ -147,11 +162,17 @@
                             !org.wso2.carbon.identity.inbound.auth.oauth2new.internal,
                             org.wso2.carbon.identity.inbound.auth.oauth2new.*; version="${identity.inbound.auth.oauth.exp.pkg.version}",
                         </Export-Package>
+                        <DynamicImport-Package>*</DynamicImport-Package>
                     </instructions>
                 </configuration>
             </plugin>
         </plugins>
     </build>
+
+    <properties>
+        <equinox.osgi.services.version>3.5.100.v20160504-1419</equinox.osgi.services.version>
+        <apache.felix.scr.ds.annotations.version>1.2.4</apache.felix.scr.ds.annotations.version>
+    </properties>
 
 </project>
 

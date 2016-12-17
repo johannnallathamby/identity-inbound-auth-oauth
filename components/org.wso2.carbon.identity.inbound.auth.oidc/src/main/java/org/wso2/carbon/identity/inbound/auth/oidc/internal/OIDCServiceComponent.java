@@ -26,12 +26,14 @@ import org.wso2.carbon.base.MultitenantConstants;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.HttpIdentityRequestFactory;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityProcessor;
 import org.wso2.carbon.identity.application.mgt.ApplicationManagementService;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.introspect.IntrospectionHandler;
 import org.wso2.carbon.identity.inbound.auth.oidc.bean.message.request.authz.OIDCAuthzRequestFactory;
 import org.wso2.carbon.identity.inbound.auth.oidc.bean.message.response.authz.OIDCAuthzResponseFactory;
 import org.wso2.carbon.identity.inbound.auth.oidc.bean.message.response.token.OIDCTokenResponseFactory;
 import org.wso2.carbon.identity.inbound.auth.oidc.bean.message.response.userinfo.UserinfoResponseFactory;
 import org.wso2.carbon.identity.inbound.auth.oidc.dao.OIDCDAO;
 import org.wso2.carbon.identity.inbound.auth.oidc.handler.IDTokenHandler;
+import org.wso2.carbon.identity.inbound.auth.oidc.handler.OIDCIntrospectionHandler;
 import org.wso2.carbon.identity.inbound.auth.oidc.model.OIDCServerConfig;
 import org.wso2.carbon.identity.inbound.auth.oidc.processor.authz.OIDCAuthzProcessor;
 import org.wso2.carbon.identity.inbound.auth.oidc.processor.token.OIDCTokenProcessor;
@@ -143,6 +145,15 @@ public class OIDCServiceComponent {
                     .SUPER_TENANT_DOMAIN_NAME, MultitenantConstants.SUPER_TENANT_ID);
             if (log.isDebugEnabled()) {
                 log.debug("Inbound OIDC Authenticator bundle is activated");
+            }
+            ServiceRegistration oidcIntrospectionHandler = context.getBundleContext().registerService(
+                    IntrospectionHandler.class.getName(), new OIDCIntrospectionHandler(), null);
+            if (oidcIntrospectionHandler != null) {
+                if (log.isDebugEnabled()) {
+                    log.debug(" OIDCIntrospectionHandler is registered");
+                }
+            } else {
+                log.error("OIDCIntrospectionHandler could not be registered");
             }
         } catch (Throwable e) {
             log.error("Error occurred while activating Inbound OIDC Authenticator bundle");

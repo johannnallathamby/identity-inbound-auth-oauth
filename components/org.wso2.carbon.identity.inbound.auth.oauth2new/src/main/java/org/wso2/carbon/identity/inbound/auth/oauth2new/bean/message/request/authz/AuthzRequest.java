@@ -33,7 +33,7 @@ public class AuthzRequest extends OAuth2IdentityRequest {
     protected String clientId;
     protected String redirectURI;
     protected String state;
-    protected Set<String> scopes = new HashSet<>();
+    protected Set<String> scopes = new HashSet();
     protected String pkceCodeChallenge;
     protected String pkceCodeChallengeMethod;
 
@@ -82,7 +82,7 @@ public class AuthzRequest extends OAuth2IdentityRequest {
         protected String clientId;
         protected String redirectURI;
         protected String state;
-        protected Set<String> scopes = new HashSet<>();
+        protected Set<String> scopes = new HashSet();
         protected String pkceCodeChallenge;
         protected String pkceCodeChallengeMethod;
 

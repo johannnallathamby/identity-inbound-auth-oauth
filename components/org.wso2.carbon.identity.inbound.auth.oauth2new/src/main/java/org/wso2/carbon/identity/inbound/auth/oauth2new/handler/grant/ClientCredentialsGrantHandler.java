@@ -18,19 +18,15 @@
 
 package org.wso2.carbon.identity.inbound.auth.oauth2new.handler.grant;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.oltu.oauth2.common.message.types.GrantType;
 import org.wso2.carbon.identity.core.bean.context.MessageContext;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.TokenMessageContext;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.token.refresh.RefreshGrantRequest;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.dao.OAuth2DAO;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.token.clientcredentials.ClientCredentialsGrantRequest;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2ClientException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2Exception;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.HandlerManager;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AccessToken;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Util;
 
-public class RefreshGrantHandler extends AuthorizationGrantHandler {
+public class ClientCredentialsGrantHandler extends AuthorizationGrantHandler {
 
     // TODO: move this implementation to framework, remove it from here and update framework dependency version
     public String getName() {
@@ -40,34 +36,23 @@ public class RefreshGrantHandler extends AuthorizationGrantHandler {
     @Override
     public boolean canHandle(MessageContext messageContext) {
         TokenMessageContext tokenMessageContext = (TokenMessageContext)messageContext;
-        if(GrantType.REFRESH_TOKEN.toString().equals(
+        if(GrantType.CLIENT_CREDENTIALS.toString().equals(
                 ((TokenMessageContext) messageContext).getRequest().getGrantType())) {
             return true;
         }
         return false;
     }
 
+    /**
+     * Validate the authorization grant.
+     *
+     * @param messageContext The runtime message context
+     */
     public void validateGrant(TokenMessageContext messageContext) throws OAuth2ClientException, OAuth2Exception {
 
         super.validateGrant(messageContext);
-
-        String refreshToken = ((RefreshGrantRequest)messageContext.getRequest()).getRefreshToken();
-
-        OAuth2DAO dao = HandlerManager.getInstance().getOAuth2DAO(messageContext);
-
-        AccessToken accessToken = dao.getLatestAccessTokenByRefreshToken(refreshToken, messageContext);
-
-        if(StringUtils.equals(accessToken.getClientId(), messageContext.getApplication().getClientId())) {
-            throw OAuth2ClientException.error("Unauthorized client trying to refresh token");
-        }
-
-        if (!OAuth2.TokenState.ACTIVE.equals(accessToken.getAccessTokenState()) &&
-                !OAuth2.TokenState.EXPIRED.equals(accessToken.getAccessTokenState())) {
-            throw OAuth2ClientException.error("Invalid refresh token");
-        }
-
-        messageContext.setAuthzUser(accessToken.getAuthzUser());
-        messageContext.setApprovedScopes(accessToken.getScopes());
-        messageContext.addParameter(OAuth2.PREV_ACCESS_TOKEN, accessToken);
+        messageContext.setAuthzUser(OAuth2Util.createLocalAuthenticatedUser(
+                messageContext.getApplication().getServiceProvider().getOwner(), messageContext));
+        messageContext.setApprovedScopes(((ClientCredentialsGrantRequest)messageContext.getRequest()).getScopes());
     }
 }

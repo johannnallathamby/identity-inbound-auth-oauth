@@ -82,6 +82,8 @@ public class OIDCCacheEntry extends CacheEntry {
     }
 
     public void setScopes(Set<String> scopes) {
-        this.scopes = scopes;
+        if(scopes != null) {
+            this.scopes = scopes;
+        }
     }
 }

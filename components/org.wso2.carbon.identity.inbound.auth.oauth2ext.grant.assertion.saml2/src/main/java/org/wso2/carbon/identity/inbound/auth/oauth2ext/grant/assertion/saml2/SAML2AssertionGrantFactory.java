@@ -18,9 +18,17 @@
 
 package org.wso2.carbon.identity.inbound.auth.oauth2ext.grant.assertion.saml2;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.oltu.oauth2.common.OAuth;
+import org.opensaml.saml2.core.Assertion;
+import org.opensaml.xml.XMLObject;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
+import org.wso2.carbon.identity.base.IdentityConstants;
+import org.wso2.carbon.identity.base.IdentityException;
+import org.wso2.carbon.identity.core.util.IdentityUtil;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.token.TokenRequestFactory;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2ClientException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Util;
@@ -30,6 +38,8 @@ import javax.servlet.http.HttpServletResponse;
 
 public class SAML2AssertionGrantFactory extends TokenRequestFactory {
 
+    private static Log log = LogFactory.getLog(SAML2AssertionGrantFactory.class);
+
     @Override
     public String getName() {
         return "SAML2AssertionGrantFactory";
@@ -37,8 +47,10 @@ public class SAML2AssertionGrantFactory extends TokenRequestFactory {
 
     @Override
     public boolean canHandle(HttpServletRequest request, HttpServletResponse response) {
-        if(StringUtils.equals(SAML2GrantConstants.SAML2_GRANT_TYPE, request.getParameter(OAuth.OAUTH_GRANT_TYPE))) {
-            return true;
+        if(super.canHandle(request, response)) {
+            if (StringUtils.equals(SAML2GrantConstants.SAML2_GRANT_TYPE, request.getParameter(OAuth.OAUTH_GRANT_TYPE))) {
+                return true;
+            }
         }
         return false;
     }
@@ -50,10 +62,7 @@ public class SAML2AssertionGrantFactory extends TokenRequestFactory {
 
         SAML2AssertionGrantRequest.SAML2AssertionGrantBuilder builder = new SAML2AssertionGrantRequest.SAML2AssertionGrantBuilder
                 (request, response);
-        super.create(builder, request, response);
-        builder.setAssertion(request.getParameter(OAuth.OAUTH_ASSERTION));
-        builder.setAssertionType(request.getParameter(OAuth.OAUTH_ASSERTION_TYPE));
-        builder.setScopes(OAuth2Util.buildScopeSet(request.getParameter(OAuth.OAUTH_SCOPE)));
+        create(builder, request, response);
         return builder;
     }
 
@@ -62,10 +71,24 @@ public class SAML2AssertionGrantFactory extends TokenRequestFactory {
                        HttpServletResponse response)
             throws OAuth2ClientException {
 
+        super.create(builder, request, response);
+
         SAML2AssertionGrantRequest.SAML2AssertionGrantBuilder saml2AssertionGrantBuilder = (SAML2AssertionGrantRequest
                 .SAML2AssertionGrantBuilder)builder;
-        super.create(saml2AssertionGrantBuilder, request, response);
-        saml2AssertionGrantBuilder.setAssertion(request.getParameter(OAuth.OAUTH_ASSERTION));
+        String assertionString = request.getParameter(OAuth.OAUTH_ASSERTION);
+        if (log.isDebugEnabled() && IdentityUtil.isTokenLoggable(IdentityConstants.IdentityTokens.SAML_ASSERTION)) {
+            log.debug("SAML2 assertion: " + new String(Base64.decodeBase64(assertionString)));
+        }
+        Assertion assertion = null;
+        try {
+            XMLObject saml2Object = IdentityUtil.unmarshall(new String(Base64.decodeBase64(assertionString)));
+            assertion = (Assertion) saml2Object;
+        } catch (IdentityException e) {
+            throw OAuth2ClientException.error("Error occurred while unmarshalling SAML2 assertion", e);
+        } catch (ClassCastException e) {
+            throw OAuth2ClientException.error("XML object is not a SAML2 assertion", e);
+        }
+        saml2AssertionGrantBuilder.setAssertion(assertion);
         saml2AssertionGrantBuilder.setAssertionType(request.getParameter(OAuth.OAUTH_ASSERTION_TYPE));
         saml2AssertionGrantBuilder.setScopes(OAuth2Util.buildScopeSet(request.getParameter(OAuth.OAUTH_SCOPE)));
     }

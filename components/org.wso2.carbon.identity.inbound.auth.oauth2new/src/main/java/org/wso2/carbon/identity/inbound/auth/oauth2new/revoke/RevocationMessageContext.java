@@ -26,10 +26,9 @@ import java.util.Map;
 /*
  * Message context that holds information about the token revocation request to the token revocation endpoint
  */
-public class RevocationMessageContext<T1 extends Serializable, T2 extends Serializable> extends
-        OAuth2MessageContext {
+public class RevocationMessageContext<T1 extends Serializable, T2 extends Serializable> extends OAuth2MessageContext {
 
-    private static final long serialVersionUID = 8957814451266828857L;
+    private static final long serialVersionUID = 6904305934619584222L;
 
     public RevocationMessageContext(RevocationRequest request, Map<T1, T2> parameters) {
         super(request, parameters);

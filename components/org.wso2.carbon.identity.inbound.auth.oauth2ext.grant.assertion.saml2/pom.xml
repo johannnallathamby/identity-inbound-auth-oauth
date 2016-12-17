@@ -35,8 +35,23 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.wso2.eclipse.osgi</groupId>
+            <artifactId>org.eclipse.osgi.services</artifactId>
+            <version>${equinox.osgi.services.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.scr.ds-annotations</artifactId>
+            <scope>provided</scope>
+            <version>${apache.felix.scr.ds.annotations.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.wso2.orbit.org.apache.oltu.oauth2</groupId>
             <artifactId>oltu</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
         </dependency>
         <dependency>
             <groupId>org.wso2.carbon.identity.framework</groupId>
@@ -47,12 +62,9 @@
             <artifactId>org.wso2.carbon.identity.application.authentication.framework</artifactId>
         </dependency>
         <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>servlet-api</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.wso2.carbon.identity.inbound.auth.oauth2</groupId>
             <artifactId>org.wso2.carbon.identity.inbound.auth.oauth2new</artifactId>
+            <version>5.2.7-SNAPSHOT</version>
         </dependency>
     </dependencies>
 
@@ -61,6 +73,7 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-scr-plugin</artifactId>
+                <version>1.9.0</version>
             </plugin>
             <plugin>
                 <groupId>org.apache.felix</groupId>
@@ -84,11 +97,17 @@
                             org.wso2.carbon.identity.inbound.auth.oauth2ext.grant.assertion.saml2.*;
                             version="${identity.inbound.auth.oauth.exp.pkg.version}"
                         </Export-Package>
+                        <DynamicImport-Package>*</DynamicImport-Package>
                     </instructions>
                 </configuration>
             </plugin>
         </plugins>
     </build>
+
+    <properties>
+        <equinox.osgi.services.version>3.5.100.v20160504-1419</equinox.osgi.services.version>
+        <apache.felix.scr.ds.annotations.version>1.2.4</apache.felix.scr.ds.annotations.version>
+    </properties>
 
 </project>
 

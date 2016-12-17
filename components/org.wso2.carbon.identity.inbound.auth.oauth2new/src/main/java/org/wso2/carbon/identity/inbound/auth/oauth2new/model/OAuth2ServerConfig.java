@@ -61,26 +61,26 @@ public class OAuth2ServerConfig {
     private void buildOAuth2ServerConfig() {
 
         IdentityConfigParser configParser = IdentityConfigParser.getInstance();
-        OMElement oauthElem = configParser.getConfigElement(CONFIG_ELEM_OAUTH);
+        OMElement oauth2Elem = configParser.getConfigElement(CONFIG_ELEM_OAUTH);
 
-        if (oauthElem == null) {
+        if (oauth2Elem == null) {
             log.warn("OAuth2 element is not available. Initializing with default values for OAuth2 configurations");
             return;
         }
 
         // read OAuth URLs
-        parseOAuth2URLs(oauthElem);
+        parseOAuth2URLs(oauth2Elem);
 
         // read default timeout periods
-        parseDefaultValidityPeriods(oauthElem);
+        parseDefaultValidityPeriods(oauth2Elem);
 
         // read refresh token renewal config
-        parseRefreshTokenRenewal(oauthElem);
+        parseRefreshTokenRenewal(oauth2Elem);
 
         // read skip consent page config
-        parseSkipConsentPage(oauthElem);
+        parseSkipConsentPage(oauth2Elem);
 
-        parsePersistenceRetryCount(oauthElem);
+        parsePersistenceRetryCount(oauth2Elem);
     }
 
     public String getOAuth2AuthzEPUrl() {
@@ -288,15 +288,16 @@ public class OAuth2ServerConfig {
     private class ConfigElements {
 
         // URLs
-        public static final String OAUTH2_AUTHZ_EP_URL = "OAuth2AuthzEPUrl";
-        public static final String OAUTH2_TOKEN_EP_URL = "OAuth2TokenEPUrl";
-        public static final String OAUTH2_CONSENT_PAGE_URL = "OAuth2ConsentPage";
-        public static final String OAUTH2_ERROR_PAGE_URL = "OAuth2ErrorPage";
+        private static final String OAUTH2_AUTHZ_EP_URL = "OAuth2AuthzEPUrl";
+        private static final String OAUTH2_TOKEN_EP_URL = "OAuth2TokenEPUrl";
+        private static final String OAUTH2_CONSENT_PAGE_URL = "OAuth2ConsentPage";
+        private static final String OAUTH2_ERROR_PAGE_URL = "OAuth2ErrorPage";
 
         // Default validity periods
         private static final String AUTHORIZATION_CODE_DEFAULT_VALIDITY_PERIOD = "AuthorizationCodeDefaultValidityPeriod";
         private static final String USER_ACCESS_TOKEN_DEFAULT_VALIDITY_PERIOD = "UserAccessTokenDefaultValidityPeriod";
-        private static final String APPLICATION_ACCESS_TOKEN_DEFAULT_VALIDITY_PERIOD = "AccessTokenDefaultValidityPeriod";
+        private static final String APPLICATION_ACCESS_TOKEN_DEFAULT_VALIDITY_PERIOD =
+                "ApplicationAccessTokenDefaultValidityPeriod";
         private static final String REFRESH_TOKEN_DEFAULT_VALIDITY_PERIOD = "RefreshTokenDefaultValidityPeriod";
 
         // Default timestamp skew

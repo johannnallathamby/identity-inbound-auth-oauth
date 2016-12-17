@@ -27,10 +27,10 @@ import java.util.Set;
 
 public class IWANTLMGrantRequest extends TokenRequest {
 
-    private static final long serialVersionUID = -4072916934667966426L;
+    private static final long serialVersionUID = 8177989119965121010L;
 
-    private String windowsToken;
-    private Set<String> scopes = new HashSet<>();
+    protected String windowsToken;
+    protected Set<String> scopes = new HashSet<>();
 
     protected IWANTLMGrantRequest(IWANTLMGrantBuilder builder) {
         super(builder);
@@ -48,8 +48,8 @@ public class IWANTLMGrantRequest extends TokenRequest {
 
     public static class IWANTLMGrantBuilder extends TokenRequestBuilder {
 
-        private String windowsToken;
-        private Set<String> scopes;
+        protected String windowsToken;
+        protected Set<String> scopes;
 
         public IWANTLMGrantBuilder(HttpServletRequest request, HttpServletResponse response) {
             super(request, response);

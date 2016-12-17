@@ -33,8 +33,10 @@ public class PasswordGrantFactory extends TokenRequestFactory {
 
     @Override
     public boolean canHandle(HttpServletRequest request, HttpServletResponse response) {
-        if(StringUtils.equals(GrantType.PASSWORD.toString(), request.getParameter(OAuth.OAUTH_GRANT_TYPE))) {
-            return true;
+        if(super.canHandle(request, response)) {
+            if (StringUtils.equals(GrantType.PASSWORD.toString(), request.getParameter(OAuth.OAUTH_GRANT_TYPE))) {
+                return true;
+            }
         }
         return false;
     }

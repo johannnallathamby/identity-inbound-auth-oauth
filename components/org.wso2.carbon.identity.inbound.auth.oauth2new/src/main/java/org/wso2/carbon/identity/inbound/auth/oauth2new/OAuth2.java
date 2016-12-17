@@ -46,9 +46,9 @@ public class OAuth2 {
         public static final String REVOKED = "REVOKED";
 
         public static void validate(String tokenState) {
-            if(StringUtils.isBlank(tokenState) || !StringUtils.equals(ACTIVE, tokenState) ||
-               !StringUtils.equals(INACTIVE, tokenState) || !StringUtils.equals(EXPIRED, tokenState) ||
-               !StringUtils.equals(REVOKED, tokenState)){
+            if(StringUtils.isBlank(tokenState) || !(StringUtils.equals(ACTIVE, tokenState) ||
+               StringUtils.equals(INACTIVE, tokenState) || StringUtils.equals(EXPIRED, tokenState) ||
+               StringUtils.equals(REVOKED, tokenState))){
                 throw new IllegalArgumentException("Invalid Token State " + tokenState);
             }
         }

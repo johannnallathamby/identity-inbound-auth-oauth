@@ -22,6 +22,8 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.math.NumberUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.oltu.oauth2.common.message.types.GrantType;
+import org.wso2.carbon.base.MultitenantConstants;
 import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
 import org.wso2.carbon.identity.core.util.IdentityDatabaseUtil;
 import org.wso2.carbon.identity.core.util.IdentityTenantUtil;
@@ -81,14 +83,13 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
                                             OAuth2MessageContext messageContext) {
 
         if(CollectionUtils.isEmpty(states)) {
-            throw new IllegalArgumentException("States cannot be empty.");
+            throw OAuth2RuntimeException.error("States cannot be empty.");
         }
         for(String state:states) {
             OAuth2.TokenState.validate(state);
         }
 
         TokenPersistenceProcessor processor = HandlerManager.getInstance().getTokenPersistenceProcessor(messageContext);
-        boolean isUsernameCaseSensitive = IdentityUtil.isUserStoreInUsernameCaseSensitive(authzUser.toString());
         PreparedStatement prepStmt = null;
         ResultSet resultSet = null;
 
@@ -122,13 +123,25 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
                 sb.append("TOKEN_STATE='ACTIVE'");
             }
             if(states.contains(OAuth2.TokenState.EXPIRED)) {
-                sb.append(" AND TOKEN_STATE='EXPIRED'");
+                if(sb.charAt(sb.length()-1) == '(') {
+                    sb.append("TOKEN_STATE='EXPIRED'");
+                } else {
+                    sb.append(" OR TOKEN_STATE='EXPIRED'");
+                }
             }
             if(states.contains(OAuth2.TokenState.INACTIVE)) {
-                sb.append(" AND TOKEN_STATE='INACTIVE'");
+                if(sb.charAt(sb.length()-1) == '(') {
+                    sb.append("TOKEN_STATE='INACTIVE'");
+                } else {
+                    sb.append(" OR TOKEN_STATE='INACTIVE'");
+                }
             }
             if(states.contains(OAuth2.TokenState.REVOKED)) {
-                sb.append(" AND TOKEN_STATE='REVOKED'");
+                if(sb.charAt(sb.length()-1) == '(') {
+                    sb.append("TOKEN_STATE='REVOKED'");
+                } else {
+                    sb.append(" OR TOKEN_STATE='REVOKED'");
+                }
             }
             if(states.contains(OAuth2.TokenState.ACTIVE) || states.contains(OAuth2.TokenState.EXPIRED) || states
                     .contains(OAuth2.TokenState.INACTIVE) || states.contains(OAuth2.TokenState.REVOKED)) {
@@ -136,8 +149,12 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
             }
             sql = sql.replace("TOKEN_SCOPE_HASH=?", sb.toString());
 
-            if (!isUsernameCaseSensitive){
-                sql = sql.replace(AUTHZ_USER, LOWER_AUTHZ_USER);
+            boolean isUsernameCaseSensitive = false;
+            if(!authzUser.isFederatedUser()) {
+                isUsernameCaseSensitive = IdentityUtil.isUserStoreInUsernameCaseSensitive(authzUser.toString());
+                if (!isUsernameCaseSensitive){
+                    sql = sql.replace(AUTHZ_USER, LOWER_AUTHZ_USER);
+                }
             }
 
             String hashedScope = OAuth2Util.hashScopes(scopes);
@@ -146,14 +163,20 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
             }
 
             prepStmt = connection.prepareStatement(sql);
-            prepStmt.setString(1, processor.getProcessedClientId(clientId));
-            if (isUsernameCaseSensitive) {
-                prepStmt.setString(2, authzUser.getUserName());
+            prepStmt.setInt(1, messageContext.getApplication().getServiceProvider().getApplicationID());
+            if(authzUser.isFederatedUser()) {
+                prepStmt.setString(2, null);
+                prepStmt.setInt(3, MultitenantConstants.INVALID_TENANT_ID);
+                prepStmt.setString(4, authzUser.getFederatedIdPName());
             } else {
-                prepStmt.setString(2, authzUser.getUserName().toLowerCase());
+                if (isUsernameCaseSensitive) {
+                    prepStmt.setString(2, authzUser.getUserName());
+                } else {
+                    prepStmt.setString(2, authzUser.getUserName().toLowerCase());
+                }
+                prepStmt.setInt(3, IdentityTenantUtil.getTenantId(authzUser.getTenantDomain()));
+                prepStmt.setString(4, authzUser.getUserStoreDomain());
             }
-            prepStmt.setInt(3, IdentityTenantUtil.getTenantId(authzUser.getTenantDomain()));
-            prepStmt.setString(4, authzUser.getUserStoreDomain());
             prepStmt.setString(5, authzUser.getAuthenticatedSubjectIdentifier());
 
             if (hashedScope != null) {
@@ -176,11 +199,12 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
                 long validityPeriod = resultSet.getLong(5);
                 long refreshTokenValidityPeriod = resultSet.getLong(6);
                 String tokenId = resultSet.getString(7);
-                String grantType = resultSet.getString(8);
-                String state = resultSet.getString(9);
-                AccessToken accessToken = new AccessToken(accessTokenId, clientId, authzUser
-                        .getAuthenticatedSubjectIdentifier(), grantType, state, new Timestamp(issuedTime),
-                                                          validityPeriod);
+                String state = resultSet.getString(8);
+                String grantType = resultSet.getString(9);
+                String subjectId = resultSet.getString(10);
+
+                AccessToken accessToken = new AccessToken(accessTokenId, clientId, subjectId, grantType, state,
+                                                          new Timestamp(issuedTime), validityPeriod);
                 accessToken.setAuthzUser(authzUser);
                 accessToken.setScopes(scopes);
                 accessToken.setAccessTokenId(tokenId);
@@ -200,18 +224,23 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
     }
 
     @Override
-    public void storeAccessToken(AccessToken newAccessToken, String oldAccessToken,
+    public void storeAccessToken(AccessToken newAccessToken, boolean markAccessTokenExpired,
+                                 boolean markAccessTokenInactive, String oldAccessToken,
                                  String authzCode, OAuth2MessageContext messageContext) {
 
         Connection connection = IdentityDatabaseUtil.getDBConnection();
 
-        // can we generate this access_token_id before hand and save it in authz_code table ?
+        //TODO: can we generate this access_token_id before hand and save it in authz_code table ?
         String accessTokenId = UUID.randomUUID().toString();
         newAccessToken.setAccessTokenId(accessTokenId);
 
         try {
-            if (oldAccessToken != null) {
-                updateAccessTokenState(connection, oldAccessToken, OAuth2.TokenState.EXPIRED, messageContext);
+            if (markAccessTokenExpired || markAccessTokenInactive) {
+                String newState = OAuth2.TokenState.EXPIRED;
+                if(markAccessTokenInactive) {
+                    newState = OAuth2.TokenState.INACTIVE;
+                }
+                updateAccessTokenState(connection, oldAccessToken, newState, messageContext);
             }
             if (authzCode != null) {
                 updateAuthzCodeState(connection, authzCode, OAuth2.TokenState.INACTIVE, messageContext);
@@ -232,7 +261,7 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
     protected void storeAccessToken(Connection connection, AccessToken newAccessToken, int retryCount,
                                     OAuth2MessageContext messageContext) {
 
-        if(retryCount == 0) {
+        if (retryCount == 0) {
             return;
         } else {
             retryCount--;
@@ -241,47 +270,42 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
         String sqlAddScopes = SQLQueries.INSERT_OAUTH2_TOKEN_SCOPE;
         TokenPersistenceProcessor processor = HandlerManager.getInstance().getTokenPersistenceProcessor(messageContext);
         PreparedStatement prepStmt = null;
+
         try {
             prepStmt = connection.prepareStatement(sql);
             prepStmt.setString(1, processor.getProcessedAccessToken(newAccessToken.getAccessToken()));
             prepStmt.setString(2, processor.getProcessedRefreshToken(newAccessToken.getRefreshToken()));
-            prepStmt.setString(3, newAccessToken.getAuthzUser().getUserName());
-            int tenantId = IdentityTenantUtil.getTenantId(newAccessToken.getAuthzUser().getTenantDomain());
-            prepStmt.setInt(4, tenantId);
-            prepStmt.setString(5, newAccessToken.getAuthzUser().getUserStoreDomain());
-            prepStmt.setTimestamp(6, newAccessToken.getAccessTokenIssuedTime(), Calendar.getInstance(TimeZone.getTimeZone("UTC")));
-            prepStmt.setTimestamp(7, newAccessToken.getRefreshTokenIssuedTime(), Calendar.getInstance(TimeZone
+            prepStmt.setInt(3, messageContext.getApplication().getAppId());
+            if(newAccessToken.getAuthzUser().isFederatedUser()) {
+                prepStmt.setString(4, null);
+                prepStmt.setInt(5, MultitenantConstants.INVALID_TENANT_ID);
+                prepStmt.setString(6, newAccessToken.getAuthzUser().getFederatedIdPName());
+            } else {
+                prepStmt.setString(4, newAccessToken.getAuthzUser().getUserName());
+                prepStmt.setInt(5, IdentityTenantUtil.getTenantId(newAccessToken.getAuthzUser().getTenantDomain()));
+                prepStmt.setString(6, newAccessToken.getAuthzUser().getUserStoreDomain());
+            }
+            prepStmt.setTimestamp(7, newAccessToken.getAccessTokenIssuedTime(), Calendar.getInstance(TimeZone
+                                                                                                             .getTimeZone("UTC")));
+            prepStmt.setTimestamp(8, newAccessToken.getRefreshTokenIssuedTime(), Calendar.getInstance(TimeZone
                                                                                                               .getTimeZone("UTC")));
-            prepStmt.setLong(8, newAccessToken.getAccessTokenValidity());
-            prepStmt.setLong(9, newAccessToken.getRefreshTokenValidity());
-            prepStmt.setString(10, OAuth2Util.hashScopes(newAccessToken.getScopes()));
-            prepStmt.setString(11, newAccessToken.getAccessTokenState());
-            prepStmt.setString(13, newAccessToken.getAccessTokenId());
-            prepStmt.setString(14, newAccessToken.getGrantType());
-            prepStmt.setString(15, newAccessToken.getAuthzUser().getAuthenticatedSubjectIdentifier());
-            prepStmt.setString(16, processor.getProcessedClientId(newAccessToken.getClientId()));
+            prepStmt.setLong(9, newAccessToken.getAccessTokenValidity());
+            prepStmt.setLong(10, newAccessToken.getRefreshTokenValidity());
+            prepStmt.setString(11, OAuth2Util.hashScopes(newAccessToken.getScopes()));
+            prepStmt.setString(12, newAccessToken.getAccessTokenState());
+            prepStmt.setString(13, GrantType.CLIENT_CREDENTIALS.toString().equals(newAccessToken.getGrantType()) ?
+                                   "APPLICATION" : "APPLICATION_USER");
+            prepStmt.setString(14, newAccessToken.getAccessTokenId());
+            prepStmt.setString(15, newAccessToken.getGrantType());
+            prepStmt.setString(16, newAccessToken.getAuthzUser().getAuthenticatedSubjectIdentifier());
+
             prepStmt.execute();
 
-            prepStmt = connection.prepareStatement(sqlAddScopes);
-
-            if (CollectionUtils.isNotEmpty(newAccessToken.getScopes())) {
-                for (String scope : newAccessToken.getScopes()) {
-                    prepStmt.setString(1, newAccessToken.getAccessTokenId());
-                    prepStmt.setString(2, scope);
-                    prepStmt.setInt(3, tenantId);
-                    prepStmt.execute();
-                }
-            }
-
-            if((Boolean) messageContext.getParameter("RetryingTokenPersistence")) {
-                log.info("Successfully recovered from 'CON_APP_KEY' constraint violation in " + (5 - retryCount) +
-                         " attempt(s) for " + OAuth2Util.createUniqueAuthzGrantString(newAccessToken));
-            }
-
         } catch (SQLException e) {
+
             IdentityDatabaseUtil.rollBack(connection);
             // Handle constraint violation in JDBC drivers which do not throw SQLIntegrityConstraintViolationException
-            if(e instanceof SQLIntegrityConstraintViolationException || e.getMessage().contains("CON_APP_KEY")) {
+            if (e instanceof SQLIntegrityConstraintViolationException || e.getMessage().contains("CON_APP_KEY")) {
 
                 Set<String> activeState = new HashSet();
                 activeState.add(OAuth2.TokenState.ACTIVE);
@@ -308,7 +332,7 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
                                 nonActiveAccessToken.getAccessTokenIssuedTime())) {
                         if (getPoolSize() == 0) {
                             // In here we can use existing token since we have a synchronised communication
-                            log.info("Successfully recovered from 'CON_APP_KEY' constraint violation in " + (5-retryCount) +
+                            log.info("Successfully recovered from 'CON_APP_KEY' constraint violation in " + (5 - retryCount) +
                                      " attempt(s) for " + OAuth2Util.createUniqueAuthzGrantString(newAccessToken));
                             throw AccessTokenExistsException.error(activeAccessToken, e);
                         } else {
@@ -342,7 +366,7 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
                     messageContext.addParameter("RetryingTokenPersistence", true);
                     storeAccessToken(connection, newAccessToken, retryCount, messageContext);
                 }
-                if(retryCount == 0) {
+                if (retryCount == 0) {
                     String errorMsg = "Couldn't recover from 'CON_APP_KEY' constraint violation within maximum retry count " +
                                       OAuth2ServerConfig.getInstance().getTokenPersistenceRetryCount() + " for " + OAuth2Util
                                               .createUniqueAuthzGrantString(newAccessToken);
@@ -351,7 +375,29 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
             }
             throw OAuth2RuntimeException.error("Error occurred while storing access token", e);
         } finally {
-            IdentityDatabaseUtil.closeAllConnections(null, null, prepStmt);
+            IdentityDatabaseUtil.closeStatement(prepStmt);
+        }
+
+        if (CollectionUtils.isNotEmpty(newAccessToken.getScopes())) {
+            for (String scope : newAccessToken.getScopes()) {
+                try {
+                    prepStmt = connection.prepareStatement(sqlAddScopes);
+                    prepStmt.setString(1, newAccessToken.getAccessTokenId());
+                    prepStmt.setString(2, scope);
+                    prepStmt.setInt(3, IdentityTenantUtil.getTenantId(newAccessToken.getAuthzUser().getTenantDomain()));
+                    prepStmt.execute();
+                } catch (SQLException e) {
+                    throw OAuth2RuntimeException.error("Error occurred while storing scopes for " + newAccessToken
+                            .getAccessTokenId());
+                } finally {
+                    IdentityDatabaseUtil.closeStatement(prepStmt);
+                }
+            }
+        }
+
+        if (Boolean.TRUE.equals(messageContext.getParameter("RetryingTokenPersistence"))) {
+            log.info("Successfully recovered from 'CON_APP_KEY' constraint violation in " + (5 - retryCount) +
+                     " attempt(s) for " + OAuth2Util.createUniqueAuthzGrantString(newAccessToken));
         }
     }
 
@@ -459,9 +505,9 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
             String accessTokenId = null;
             String bearerToken = null;
             String userName = null;
-            int tenantId;
+            int tenantId = MultitenantConstants.INVALID_TENANT_ID;
             String userDomain = null;
-            Set<String> scopeSet = new HashSet<>();
+            Set<String> scopeSet = new HashSet();
             String accessTokenState = null;
             Timestamp accessTokenIssuedTime = null;
             long accessTokenValidity = -1l;
@@ -501,6 +547,20 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
             if(bearerToken != null){
                 accessToken = new AccessToken(bearerToken, clientId, subjectIdentifier, grantType,
                         accessTokenState, accessTokenIssuedTime, accessTokenValidity);
+                accessToken.setAccessTokenId(accessTokenId);
+                AuthenticatedUser authzUser = new AuthenticatedUser();
+                if(userName != null) {
+                    authzUser.setUserName(userName);
+                    authzUser.setUserStoreDomain(userDomain);
+                    authzUser.setTenantDomain(IdentityTenantUtil.getTenantDomain(tenantId));
+                    authzUser.setAuthenticatedSubjectIdentifier(subjectIdentifier);
+                } else {
+                    authzUser.setFederatedUser(true);
+                    // hack to store federated IDP name in user store domain column
+                    authzUser.setFederatedIdPName(userDomain);
+                    authzUser.setAuthenticatedSubjectIdentifier(subjectIdentifier);
+                }
+                accessToken.setAuthzUser(authzUser);
                 if(!scopeSet.isEmpty()) {
                     accessToken.setScopes(scopeSet);
                 }
@@ -665,11 +725,15 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
     // need to fix this method to return all authorized access tokens by user
     public Set<AccessToken> getAuthorizedAccessTokens(AuthenticatedUser authzUser, OAuth2MessageContext messageContext) {
 
+        if(authzUser.isFederatedUser()) {
+            throw new UnsupportedOperationException("This method is not supported for federated users.");
+        }
+
         TokenPersistenceProcessor processor = HandlerManager.getInstance().getTokenPersistenceProcessor(messageContext);
         Connection connection = IdentityDatabaseUtil.getDBConnection();
         PreparedStatement ps = null;
         ResultSet rs = null;
-        Set<String> distinctConsumerKeys = new HashSet<>();
+        Set<String> distinctConsumerKeys = new HashSet();
         boolean isUsernameCaseSensitive = IdentityUtil.isUserStoreInUsernameCaseSensitive(authzUser.toString());
         String tenantDomain = authzUser.getTenantDomain();
         String tenantAwareUsernameWithNoUserDomain = authzUser.getUserName();
@@ -719,18 +783,17 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
             prepStmt.setString(1, processor.getProcessedAccessToken(bearerToken));
             resultSet = prepStmt.executeQuery();
             int iterateId = 0;
-            Set<String> scopes = new HashSet<>();
+            Set<String> scopes = new HashSet();
             while (resultSet.next()) {
                 if (iterateId == 0) {
                     String accessTokenId = resultSet.getString(1);
-                    String clientId = processor.getPreprocessedClientId(resultSet.getString(2));
+                    String clientId = resultSet.getString(2);
                     String authorizedUser = resultSet.getString(3);
                     int tenantId = resultSet.getInt(4);
                     String userDomain = resultSet.getString(5);
                     scopes.add(resultSet.getString(6));
                     Timestamp accessTokenIssuedTime = resultSet.getTimestamp(7,
-                            Calendar.getInstance(TimeZone.getTimeZone
-                                    ("UTC")));
+                            Calendar.getInstance(TimeZone.getTimeZone("UTC")));
                     Timestamp refreshTokenIssuedTime = resultSet.getTimestamp(8,
                             Calendar.getInstance(TimeZone.getTimeZone("UTC")));
                     long accessTokenValidity = resultSet.getLong(9);
@@ -819,7 +882,7 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
         Connection connection = IdentityDatabaseUtil.getDBConnection();
         PreparedStatement ps = null;
         ResultSet rs = null;
-        Set<String> accessTokens = new HashSet<>();
+        Set<String> accessTokens = new HashSet();
         try {
             String sqlQuery = SQLQueries.GET_ACCESS_TOKENS_FOR_CONSUMER_KEY;
             ps = connection.prepareStatement(sqlQuery);
@@ -848,7 +911,7 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
         Connection connection = IdentityDatabaseUtil.getDBConnection();
         PreparedStatement ps = null;
         ResultSet rs = null;
-        Set<String> authorizationCodes = new HashSet<>();
+        Set<String> authorizationCodes = new HashSet();
         try {
             String sqlQuery = SQLQueries.GET_AUTHORIZATION_CODES_FOR_CONSUMER_KEY;
             ps = connection.prepareStatement(sqlQuery);

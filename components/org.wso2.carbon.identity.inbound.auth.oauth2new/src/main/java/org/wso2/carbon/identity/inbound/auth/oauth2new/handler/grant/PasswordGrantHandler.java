@@ -48,11 +48,10 @@ public class PasswordGrantHandler extends AuthorizationGrantHandler {
 
     @Override
     public boolean canHandle(MessageContext messageContext) {
-        if(messageContext instanceof TokenMessageContext) {
-            if(GrantType.PASSWORD.toString().equals(((TokenMessageContext) messageContext).getRequest()
-                    .getGrantType())) {
-                return true;
-            }
+        TokenMessageContext tokenMessageContext = (TokenMessageContext)messageContext;
+        if(GrantType.PASSWORD.toString().equals(
+                ((TokenMessageContext) messageContext).getRequest().getGrantType())) {
+            return true;
         }
         return false;
     }
@@ -62,8 +61,8 @@ public class PasswordGrantHandler extends AuthorizationGrantHandler {
         super.validateGrant(messageContext);
 
         String username = ((PasswordGrantRequest)messageContext.getRequest()).getUsername();
-        String tenantAwareUserName = MultitenantUtils.getTenantAwareUsername(username);
         String userTenantDomain = MultitenantUtils.getTenantDomain(username);
+        username = MultitenantUtils.getTenantAwareUsername(username);
         char[] password = ((PasswordGrantRequest)messageContext.getRequest()).getPassword();
         String clientId = messageContext.getApplication().getClientId();
         String tenantDomain = messageContext.getRequest().getTenantDomain();
@@ -87,17 +86,20 @@ public class PasswordGrantHandler extends AuthorizationGrantHandler {
             throw OAuth2RuntimeException.error(e.getMessage(), e);
         }
         try {
-            authStatus = userStoreManager.authenticate(tenantAwareUserName, new String(password));
+            authStatus = userStoreManager.authenticate(username, new String(password));
         } catch (UserStoreException e) {
             throw OAuth2AuthnException.error(e.getMessage(), e);
         }
         if (authStatus) {
-            if (username.indexOf(CarbonConstants.DOMAIN_SEPARATOR) < 0 &&
-                    StringUtils.isNotBlank(UserCoreUtil.getDomainFromThreadLocal())) {
-                username = UserCoreUtil.getDomainFromThreadLocal() + CarbonConstants.DOMAIN_SEPARATOR + username;
+            if (username.indexOf(CarbonConstants.DOMAIN_SEPARATOR) > 0) {
+                username = username.substring(username.indexOf(CarbonConstants.DOMAIN_SEPARATOR),
+                                              username.length() - 1);
             }
-            UserCoreUtil.addTenantDomainToEntry(tenantAwareUserName, userTenantDomain); // is this needed
-            messageContext.setAuthzUser(AuthenticatedUser.createLocalAuthenticatedUserFromSubjectIdentifier(username));
+            AuthenticatedUser user = OAuth2Util.createLocalAuthenticatedUser(username,
+                                                                             UserCoreUtil.getDomainFromThreadLocal(),
+                                                                             userTenantDomain, messageContext);
+            messageContext.setAuthzUser(user);
+            messageContext.setApprovedScopes(((PasswordGrantRequest) messageContext.getRequest()).getScopes());
         } else {
             throw OAuth2AuthnException.error("Authentication failed for " + username);
         }

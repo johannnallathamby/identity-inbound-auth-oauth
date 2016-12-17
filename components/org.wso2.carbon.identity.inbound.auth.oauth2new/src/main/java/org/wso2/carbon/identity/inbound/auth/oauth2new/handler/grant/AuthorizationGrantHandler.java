@@ -25,27 +25,13 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2Exception
 
 import java.util.List;
 
-/*
- * client_credentials grant type uses this.
- */
-public class AuthorizationGrantHandler extends AbstractIdentityMessageHandler {
+public abstract class AuthorizationGrantHandler extends AbstractIdentityMessageHandler {
 
-    // TODO: move this implementation to framework, remove it from here and update framework dependency version
-    public String getName() {
-        return this.getClass().getSimpleName();
-    }
-
-    /**
-     * Validate the authorization grant.
-     *
-     * @param messageContext The runtime message context
-     */
     public void validateGrant(TokenMessageContext messageContext) throws OAuth2ClientException, OAuth2Exception {
 
         List<String> grantTypes = messageContext.getApplication().getGrantTypes();
         if(!grantTypes.contains(messageContext.getRequest().getGrantType())) {
             throw OAuth2ClientException.error("Unauthorized Grant Type " + messageContext.getRequest().getGrantType());
-
         }
     }
 }

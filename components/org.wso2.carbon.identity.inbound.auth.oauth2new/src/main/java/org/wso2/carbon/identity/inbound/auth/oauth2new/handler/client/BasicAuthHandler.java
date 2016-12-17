@@ -52,7 +52,7 @@ public class BasicAuthHandler extends ClientAuthHandler {
     @Override
     public void authenticate(OAuth2MessageContext messageContext) throws OAuth2ClientException {
 
-        String authzHeader = messageContext.getRequest().getHeaderMap().get(OAuth.HeaderType.AUTHORIZATION);
+        String authzHeader = messageContext.getRequest().getHeaderMap().get(OAuth.HeaderType.AUTHORIZATION.toLowerCase());
         String clientId = null;
         if(StringUtils.isNotBlank(authzHeader)) {
             String[] splitValues = authzHeader.trim().split(" ");

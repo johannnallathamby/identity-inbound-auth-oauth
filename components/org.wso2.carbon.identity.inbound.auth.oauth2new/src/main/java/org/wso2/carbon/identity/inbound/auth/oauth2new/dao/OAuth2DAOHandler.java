@@ -42,6 +42,11 @@ public final class OAuth2DAOHandler extends OAuth2DAO implements IdentityMessage
         public String getName() {
             return "DefaultOAuth2DAOHandler";
         }
+
+        @Override
+        public boolean canHandle(MessageContext messageContext) {
+            return true;
+        }
     };
 
     /*
@@ -100,9 +105,11 @@ public final class OAuth2DAOHandler extends OAuth2DAO implements IdentityMessage
     }
 
     @Override
-    public void storeAccessToken(AccessToken newAccessToken, String oldAccessToken, String authzCode,
-                                 OAuth2MessageContext messageContext) {
-        wrappedDAO.storeAccessToken(newAccessToken, oldAccessToken, authzCode, messageContext);
+    public void storeAccessToken(AccessToken newAccessToken, boolean markAccessTokenExpired,
+                                 boolean markAccessTokenInactive, String oldAccessToken,
+                                 String authzCode, OAuth2MessageContext messageContext) {
+        wrappedDAO.storeAccessToken(newAccessToken, markAccessTokenExpired, markAccessTokenInactive, oldAccessToken,
+                                    authzCode, messageContext);
     }
 
     public void updateAccessTokenState(String accessToken, String tokenState,

@@ -33,8 +33,10 @@ public class AuthzCodeGrantFactory extends TokenRequestFactory {
 
     @Override
     public boolean canHandle(HttpServletRequest request, HttpServletResponse response) {
-        if(StringUtils.equals(GrantType.AUTHORIZATION_CODE.toString(), request.getParameter(OAuth.OAUTH_GRANT_TYPE))) {
-            return true;
+        if (super.canHandle(request, response)) {
+            if (StringUtils.equals(GrantType.AUTHORIZATION_CODE.toString(), request.getParameter(OAuth.OAUTH_GRANT_TYPE))) {
+                return true;
+            }
         }
         return false;
     }

@@ -22,6 +22,7 @@ import org.wso2.carbon.identity.application.authentication.framework.model.Authe
 
 import java.io.Serializable;
 import java.sql.Timestamp;
+import java.util.HashSet;
 import java.util.Set;
 
 public class AccessToken implements Serializable {
@@ -41,7 +42,7 @@ public class AccessToken implements Serializable {
 
     private AuthenticatedUser authzUser;
 
-    private Set<String> scopes;
+    private Set<String> scopes = new HashSet();
 
     private String grantType;
 
@@ -147,7 +148,9 @@ public class AccessToken implements Serializable {
     }
 
     public void setScopes(Set<String> scopes) {
-        this.scopes = scopes;
+        if(scopes != null) {
+            this.scopes = scopes;
+        }
     }
 
     public void setRefreshTokenIssuedTime(Timestamp refreshTokenIssuedTime) {

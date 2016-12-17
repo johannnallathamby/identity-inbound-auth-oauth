@@ -18,7 +18,6 @@
 
 package org.wso2.carbon.identity.inbound.auth.oauth2new.revoke;
 
-import org.apache.commons.lang.StringUtils;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.FrameworkClientException;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.OAuth2IdentityRequestFactory;
@@ -31,7 +30,7 @@ public class RevocationRequestFactory extends OAuth2IdentityRequestFactory {
 
     @Override
     public boolean canHandle(HttpServletRequest request, HttpServletResponse response) {
-        if(StringUtils.isNotBlank(request.getParameter("token"))) {
+        if(request.getRequestURI().contains("revoke")) {
             return true;
         }
         return false;

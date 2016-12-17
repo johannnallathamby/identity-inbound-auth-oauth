@@ -26,8 +26,10 @@ import org.wso2.carbon.identity.application.common.IdentityApplicationManagement
 import org.wso2.carbon.identity.application.common.model.InboundAuthenticationRequestConfig;
 import org.wso2.carbon.identity.application.common.model.Property;
 import org.wso2.carbon.identity.application.common.model.ServiceProvider;
+import org.wso2.carbon.identity.application.common.model.User;
 import org.wso2.carbon.identity.application.common.util.IdentityApplicationConstants;
 import org.wso2.carbon.identity.application.common.util.IdentityApplicationManagementUtil;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.TokenMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2RuntimeException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.internal.OAuth2DataHolder;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AccessToken;
@@ -42,7 +44,7 @@ import java.util.Set;
 public class OAuth2Util {
 
     public static Set<String> buildScopeSet(String scopes) {
-        Set<String> scopeSet = new HashSet<>();
+        Set<String> scopeSet = new HashSet();
         if (StringUtils.isNotBlank(scopes)) {
             String[] scopeArray = scopes.split("\\s");
             for(String scope:scopeArray){
@@ -63,11 +65,12 @@ public class OAuth2Util {
                     builder.append(" ");
                 }
             }
-            if (builder.charAt(builder.length() - 1) == ' ') {
-                builder.substring(0, builder.charAt(builder.length() - 1));
-            }
         }
-        return builder.toString();
+        if (builder.length() > 0 && builder.charAt(builder.length() - 1) == ' ') {
+            return builder.substring(0, builder.length() - 1);
+        } else {
+            return builder.toString();
+        }
     }
 
     public static String hashScopes(Set<String> scopes){
@@ -176,7 +179,7 @@ public class OAuth2Util {
         }
         for (InboundAuthenticationRequestConfig config : serviceProvider.getInboundAuthenticationConfig()
                 .getInboundAuthenticationRequestConfigs()) {
-            if (IdentityApplicationConstants.OAuth2.NAME.equals(config.getInboundAuthType())) {
+            if ("test".equals(config.getInboundAuthType())) {
                 Property[] properties = config.getProperties();
                 String clientId = IdentityApplicationManagementUtil.getPropertyValue(
                         properties, IdentityApplicationConstants.OAuth2.CLIENT_ID);
@@ -185,9 +188,9 @@ public class OAuth2Util {
                 String redirectUri = IdentityApplicationManagementUtil.getPropertyValue(
                         properties, IdentityApplicationConstants.OAuth2.CALLBACK_URL);
                 List<String> responseTypes = OAuth2Util.getPropertyValuesOfPropertyNameStartsWith(
-                        properties, "response_type");
+                        properties, "supported_response_type");
                 List<String> grantTypes = OAuth2Util.getPropertyValuesOfPropertyNameStartsWith(
-                        properties, "grant_type");
+                        properties, "supported_grant_type");
                 boolean isPkceMandatory = Boolean.parseBoolean(IdentityApplicationManagementUtil.getPropertyValue
                         (properties, "pkce_mandatory"));
                 boolean isPkcePlainAllowed = Boolean.parseBoolean(IdentityApplicationManagementUtil.getPropertyValue
@@ -210,7 +213,7 @@ public class OAuth2Util {
         ServiceProvider serviceProvider = null;
         try {
             serviceProvider = OAuth2DataHolder.getInstance().getAppMgtService()
-                    .getServiceProviderByClientId(clientId, IdentityApplicationConstants.OAuth2.NAME, tenantDomain);
+                    .getServiceProviderByClientId(clientId, "test", tenantDomain);
         } catch (IdentityApplicationManagementException e) {
             throw OAuth2RuntimeException.error("Error occurred while retrieving service provider.");
         }
@@ -218,5 +221,30 @@ public class OAuth2Util {
             return getOAuth2App(serviceProvider);
         }
         return null;
+    }
+
+    public static AuthenticatedUser createLocalAuthenticatedUser(User user, TokenMessageContext messageContext) {
+
+        AuthenticatedUser authenticatedUser = AuthenticatedUser.createLocalAuthenticatedUserFromSubjectIdentifier(
+                user.toString());
+        boolean useTenantDomain = messageContext.getApplication().isUseUserstoreDomainInLocalSubjectIdentifier();
+        boolean useUserStoreDomain = messageContext.getApplication().isUseTenantDomainInLocalSubjectIdentifier();
+        String subjectId = authenticatedUser.getUsernameAsSubjectIdentifier(useUserStoreDomain, useTenantDomain);
+        authenticatedUser.setAuthenticatedSubjectIdentifier(subjectId);
+        return authenticatedUser;
+    }
+
+    public static AuthenticatedUser createLocalAuthenticatedUser(String username, String userStoreDomain, String
+            tenantDomain, TokenMessageContext messageContext) {
+
+        AuthenticatedUser authenticatedUser = new AuthenticatedUser();
+        authenticatedUser.setUserName(username);
+        authenticatedUser.setUserStoreDomain(userStoreDomain);
+        authenticatedUser.setTenantDomain(tenantDomain);
+        boolean useTenantDomain = messageContext.getApplication().isUseUserstoreDomainInLocalSubjectIdentifier();
+        boolean useUserStoreDomain = messageContext.getApplication().isUseTenantDomainInLocalSubjectIdentifier();
+        String subjectId = authenticatedUser.getUsernameAsSubjectIdentifier(useUserStoreDomain, useTenantDomain);
+        authenticatedUser.setAuthenticatedSubjectIdentifier(subjectId);
+        return authenticatedUser;
     }
 }

@@ -18,7 +18,6 @@
 
 package org.wso2.carbon.identity.inbound.auth.oauth2new.introspect;
 
-import org.apache.commons.lang.StringUtils;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.FrameworkClientException;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.OAuth2IdentityRequestFactory;
@@ -31,7 +30,7 @@ public class IntrospectionRequestFactory extends OAuth2IdentityRequestFactory {
 
     @Override
     public boolean canHandle(HttpServletRequest request, HttpServletResponse response) {
-        if(StringUtils.isNotBlank(request.getParameter("token"))) {
+        if(request.getRequestURI().contains("introspect")) {
             return true;
         }
         return false;

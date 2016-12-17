@@ -29,10 +29,11 @@ public class ClientCredentialsGrantRequest extends TokenRequest {
 
     private static final long serialVersionUID = -8383327642338337554L;
 
-    private Set<String> scopes = new HashSet<>();
+    private Set<String> scopes = new HashSet();
 
     protected ClientCredentialsGrantRequest(ClientCredentialsGrantBuilder builder) {
         super(builder);
+        this.scopes = builder.scopes;
     }
 
     public Set<String> getScopes() {
@@ -42,7 +43,7 @@ public class ClientCredentialsGrantRequest extends TokenRequest {
 
     public static class ClientCredentialsGrantBuilder extends TokenRequestBuilder {
 
-        private Set<String> scopes;
+        private Set<String> scopes = new HashSet();
 
         public ClientCredentialsGrantBuilder(HttpServletRequest request, HttpServletResponse response) {
             super(request, response);

@@ -83,8 +83,6 @@ public class OIDCInboundAuthenticatorConfig extends AbstractInboundAuthenticator
         supportedGrantType1.setDisplayOrder(4);
         supportedGrantType1.setType("checkbox");
         supportedGrantType1.setRequired(false);
-        supportedGrantType1.setDefaultValue("true");
-        supportedGrantType1.setValue("true");
         configProperties[3] = supportedGrantType1;
 
         Property supportedGrantType2 = new Property();
@@ -93,8 +91,6 @@ public class OIDCInboundAuthenticatorConfig extends AbstractInboundAuthenticator
         supportedGrantType2.setDisplayOrder(5);
         supportedGrantType2.setType("checkbox");
         supportedGrantType2.setRequired(false);
-        supportedGrantType2.setDefaultValue("true");
-        supportedGrantType2.setValue("true");
         configProperties[4] = supportedGrantType2;
 
         Property supportedGrantType3 = new Property();
@@ -103,8 +99,6 @@ public class OIDCInboundAuthenticatorConfig extends AbstractInboundAuthenticator
         supportedGrantType3.setDisplayOrder(6);
         supportedGrantType3.setType("checkbox");
         supportedGrantType3.setRequired(false);
-        supportedGrantType3.setDefaultValue("true");
-        supportedGrantType3.setValue("true");
         configProperties[5] = supportedGrantType3;
 
         Property supportedGrantType4 = new Property();
@@ -113,8 +107,6 @@ public class OIDCInboundAuthenticatorConfig extends AbstractInboundAuthenticator
         supportedGrantType4.setDisplayOrder(7);
         supportedGrantType4.setType("checkbox");
         supportedGrantType4.setRequired(false);
-        supportedGrantType4.setDefaultValue("true");
-        supportedGrantType4.setValue("true");
         configProperties[6] = supportedGrantType4;
 
         Property supportedGrantType5 = new Property();
@@ -123,8 +115,6 @@ public class OIDCInboundAuthenticatorConfig extends AbstractInboundAuthenticator
         supportedGrantType5.setDisplayOrder(8);
         supportedGrantType5.setType("checkbox");
         supportedGrantType5.setRequired(false);
-        supportedGrantType5.setDefaultValue("true");
-        supportedGrantType5.setValue("true");
         configProperties[7] = supportedGrantType5;
 
         Property supportedResponseType1 = new Property();
@@ -133,8 +123,6 @@ public class OIDCInboundAuthenticatorConfig extends AbstractInboundAuthenticator
         supportedResponseType1.setDisplayOrder(9);
         supportedResponseType1.setType("checkbox");
         supportedResponseType1.setRequired(false);
-        supportedResponseType1.setDefaultValue("true");
-        supportedResponseType1.setValue("true");
         configProperties[8] = supportedResponseType1;
 
         Property supportedResponseType2 = new Property();
@@ -143,8 +131,6 @@ public class OIDCInboundAuthenticatorConfig extends AbstractInboundAuthenticator
         supportedResponseType2.setDisplayOrder(10);
         supportedResponseType2.setType("checkbox");
         supportedResponseType2.setRequired(false);
-        supportedResponseType2.setDefaultValue("true");
-        supportedResponseType2.setValue("true");
         configProperties[9] = supportedResponseType2;
 
         Property supportedResponseType3 = new Property();
@@ -153,8 +139,6 @@ public class OIDCInboundAuthenticatorConfig extends AbstractInboundAuthenticator
         supportedResponseType3.setDisplayOrder(11);
         supportedResponseType3.setType("checkbox");
         supportedResponseType3.setRequired(false);
-        supportedResponseType3.setDefaultValue("true");
-        supportedResponseType3.setValue("true");
         configProperties[10] = supportedResponseType3;
 
         Property supportedResponseType4 = new Property();
@@ -163,8 +147,6 @@ public class OIDCInboundAuthenticatorConfig extends AbstractInboundAuthenticator
         supportedResponseType4.setType("checkbox");
         supportedResponseType4.setDisplayOrder(12);
         supportedResponseType4.setRequired(false);
-        supportedResponseType4.setDefaultValue("true");
-        supportedResponseType4.setValue("true");
         configProperties[11] = supportedResponseType4;
 
         Property pkceMandatory = new Property();
@@ -173,8 +155,6 @@ public class OIDCInboundAuthenticatorConfig extends AbstractInboundAuthenticator
         pkceMandatory.setDisplayName("PKCE Mandatory");
         pkceMandatory.setDisplayOrder(13);
         pkceMandatory.setType("checkbox");
-        pkceMandatory.setDefaultValue("false");
-        pkceMandatory.setValue("false");
         configProperties[12] = pkceMandatory;
 
         Property pkcePlainAllowed = new Property();
@@ -183,8 +163,6 @@ public class OIDCInboundAuthenticatorConfig extends AbstractInboundAuthenticator
         pkcePlainAllowed.setDisplayName("Support PKCE 'Plain' Transform Algorithm");
         pkcePlainAllowed.setDisplayOrder(14);
         pkcePlainAllowed.setType("checkbox");
-        pkcePlainAllowed.setDefaultValue("false");
-        pkcePlainAllowed.setValue("false");
         configProperties[13] = pkcePlainAllowed;
 
         Property clientSecretState = new Property();

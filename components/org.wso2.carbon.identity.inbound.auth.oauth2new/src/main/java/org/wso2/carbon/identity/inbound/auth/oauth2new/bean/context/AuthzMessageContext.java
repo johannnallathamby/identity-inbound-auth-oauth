@@ -23,6 +23,7 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.authz.AuthzRequest;
 
 import java.io.Serializable;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -35,7 +36,7 @@ public class AuthzMessageContext<T1 extends Serializable, T2 extends Serializabl
 
     private AuthenticatedUser authzUser;
 
-    private Set<String> approvedScopes;
+    private Set<String> approvedScopes = new HashSet();
 
     private long accessTokenValidityPeriod = OAuth2.UNASSIGNED_VALIDITY_PERIOD;
 
@@ -50,7 +51,9 @@ public class AuthzMessageContext<T1 extends Serializable, T2 extends Serializabl
     }
 
     public void setApprovedScopes(Set<String> approvedScopes) {
-        this.approvedScopes = approvedScopes;
+        if(approvedScopes != null) {
+            this.approvedScopes = approvedScopes;
+        }
     }
 
     public long getAccessTokenValidityPeriod() {

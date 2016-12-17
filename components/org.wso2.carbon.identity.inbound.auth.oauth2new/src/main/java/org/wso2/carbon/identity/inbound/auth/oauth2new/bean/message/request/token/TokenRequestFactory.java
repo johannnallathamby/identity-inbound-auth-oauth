@@ -28,7 +28,7 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2ClientExc
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-public class TokenRequestFactory extends OAuth2IdentityRequestFactory {
+public abstract class TokenRequestFactory extends OAuth2IdentityRequestFactory {
 
     @Override
     public boolean canHandle(HttpServletRequest request, HttpServletResponse response) {
@@ -53,7 +53,7 @@ public class TokenRequestFactory extends OAuth2IdentityRequestFactory {
         try {
             super.create(tokenRequestBuilder, request, response);
         } catch (FrameworkClientException e) {
-            throw OAuth2ClientException.error(e.getMessage(), e);
+            throw OAuth2ClientException.error("Error occurred while creating OAuth2IdentityRequest", e);
         }
         tokenRequestBuilder.setGrantType(request.getParameter(OAuth.OAUTH_GRANT_TYPE));
     }

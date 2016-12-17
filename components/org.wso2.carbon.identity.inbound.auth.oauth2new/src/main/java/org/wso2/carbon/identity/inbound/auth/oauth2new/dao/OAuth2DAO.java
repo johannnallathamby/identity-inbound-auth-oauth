@@ -35,7 +35,8 @@ public abstract class OAuth2DAO {
                                                      Set<String> scopes, Set<String> states,
                                                      OAuth2MessageContext messageContext);
 
-    public abstract void storeAccessToken(AccessToken newAccessToken, String oldAccessToken, String authzCode,
+    public abstract void storeAccessToken(AccessToken newAccessToken, boolean markAccessTokenExpired,
+                                          boolean markAccessTokenInactive, String oldAccessToken, String authzCode,
                                           OAuth2MessageContext messageContext);
 
     public abstract String getAccessTokenByAuthzCode(String authorizationCode, OAuth2MessageContext messageContext);

@@ -18,6 +18,7 @@
 
 package org.wso2.carbon.identity.inbound.auth.oauth2ext.grant.assertion.saml2;
 
+import org.opensaml.saml2.core.Assertion;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.FrameworkRuntimeException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.token.TokenRequest;
 
@@ -28,11 +29,11 @@ import java.util.Set;
 
 public class SAML2AssertionGrantRequest extends TokenRequest {
 
-    private static final long serialVersionUID = -4072916934667966426L;
+    private static final long serialVersionUID = -4197423839037643097L;
 
-    private String assertion;
+    private Assertion assertion;
     private String assertionType;
-    private Set<String> scopes = new HashSet<>();
+    private Set<String> scopes = new HashSet();
 
     protected SAML2AssertionGrantRequest(SAML2AssertionGrantBuilder builder) {
         super(builder);
@@ -41,7 +42,7 @@ public class SAML2AssertionGrantRequest extends TokenRequest {
         this.scopes = builder.scopes;
     }
 
-    public String getAssertion() {
+    public Assertion getAssertion() {
         return assertion;
     }
 
@@ -55,7 +56,7 @@ public class SAML2AssertionGrantRequest extends TokenRequest {
 
     public static class SAML2AssertionGrantBuilder extends TokenRequestBuilder {
 
-        private String assertion;
+        private Assertion assertion;
         private String assertionType;
         private Set<String> scopes;
 
@@ -63,7 +64,7 @@ public class SAML2AssertionGrantRequest extends TokenRequest {
             super(request, response);
         }
 
-        public SAML2AssertionGrantBuilder setAssertion(String assertion) {
+        public SAML2AssertionGrantBuilder setAssertion(Assertion assertion) {
             this.assertion = assertion;
             return this;
         }

@@ -33,8 +33,10 @@ public class ClientCredentialsGrantFactory extends TokenRequestFactory {
 
     @Override
     public boolean canHandle(HttpServletRequest request, HttpServletResponse response) {
-        if(StringUtils.equals(GrantType.CLIENT_CREDENTIALS.toString(), request.getParameter(OAuth.OAUTH_GRANT_TYPE))) {
-            return true;
+        if(super.canHandle(request, response)) {
+            if(StringUtils.equals(GrantType.CLIENT_CREDENTIALS.toString(), request.getParameter(OAuth.OAUTH_GRANT_TYPE))) {
+                return true;
+            }
         }
         return false;
     }

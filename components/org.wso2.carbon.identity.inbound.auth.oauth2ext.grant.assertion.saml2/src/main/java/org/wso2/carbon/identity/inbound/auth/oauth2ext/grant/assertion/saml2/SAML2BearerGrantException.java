@@ -18,9 +18,23 @@
 
 package org.wso2.carbon.identity.inbound.auth.oauth2ext.grant.assertion.saml2;
 
-public class SAML2GrantConstants {
+import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2ClientException;
 
-    public static final String SAML2_GRANT_TYPE = "urn:ietf:params:oauth:grant-type:saml2-bearer";
-    public static final String SAML2_BEARER_METHOD = "urn:oasis:names:tc:SAML:2.0:cm:bearer";
-    public static final String IDP_ENTITY_ID = "IdPEntityId";
+public class SAML2BearerGrantException extends OAuth2ClientException {
+
+    protected SAML2BearerGrantException(String errorDescription) {
+        super(errorDescription);
+    }
+
+    protected SAML2BearerGrantException(String errorDescription, Throwable cause) {
+        super(errorDescription, cause);
+    }
+
+    public static SAML2BearerGrantException error(String errorDescription){
+        return new SAML2BearerGrantException(errorDescription);
+    }
+
+    public static SAML2BearerGrantException error(String errorDescription, Throwable cause){
+        return new SAML2BearerGrantException(errorDescription, cause);
+    }
 }

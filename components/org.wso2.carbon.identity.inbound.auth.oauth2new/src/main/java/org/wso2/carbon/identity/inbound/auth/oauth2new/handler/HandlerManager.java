@@ -79,6 +79,7 @@ public class HandlerManager {
         for(ClientAuthHandler handler:handlers){
             if(handler.isEnabled(messageContext) && handler.canHandle(messageContext)){
                 handler.authenticate(messageContext);
+                return;
             }
         }
         throw OAuth2RuntimeException.error("Cannot find ClientAuthHandler to handle this request");
@@ -140,6 +141,7 @@ public class HandlerManager {
         for(AuthorizationGrantHandler handler:handlers){
             if(handler.isEnabled(messageContext) && handler.canHandle(messageContext)){
                 handler.validateGrant(messageContext);
+                return;
             }
         }
         throw OAuth2RuntimeException.error("Cannot find AuthorizationGrantHandler to handle this request");

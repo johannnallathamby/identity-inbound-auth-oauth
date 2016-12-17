@@ -49,9 +49,9 @@ public class IWANTLMGrantHandler extends AuthorizationGrantHandler {
 
     private static Log log = LogFactory.getLog(IWANTLMGrantHandler.class);
 
-    @Override
+    // TODO: move this implementation to framework, remove it from here and update framework dependency version
     public String getName() {
-        return "IWANTLMGrantHandler";
+        return this.getClass().getSimpleName();
     }
 
     @Override
@@ -80,7 +80,7 @@ public class IWANTLMGrantHandler extends AuthorizationGrantHandler {
         try {
             filter.init(null);
         } catch (ServletException e) {
-            throw OAuth2RuntimeException.error("Error while initializing Negotiate Security Filter", e);
+            throw OAuth2RuntimeException.error("Error while initializing Negotiate Security Filter.", e);
         }
         boolean authenticated;
         IWindowsCredentialsHandle clientCredentials;
@@ -118,12 +118,13 @@ public class IWANTLMGrantHandler extends AuthorizationGrantHandler {
                 authenticated = (subject != null && !subject.getPrincipals().isEmpty());
                 if (authenticated) {
                     if (log.isDebugEnabled()) {
-                        log.debug("NTLM token is authenticated");
+                        log.debug("NTLM token is authenticated.");
                     }
+                    //TODO: need to verify this logic of setting authorized user
                     String usernameWithDomain = WindowsAccountImpl.getCurrentUsername();
                     String username = usernameWithDomain.split("\\\\")[1];
                     messageContext.setAuthzUser(
-                            AuthenticatedUser.createFederateAuthenticatedUserFromSubjectIdentifier(username));
+                            AuthenticatedUser.createLocalAuthenticatedUserFromSubjectIdentifier(username));
                     messageContext.setApprovedScopes(scopes);
                     break;
                 }
@@ -135,17 +136,8 @@ public class IWANTLMGrantHandler extends AuthorizationGrantHandler {
                 clientContext.initialize(clientContext.getHandle(), continueTokenBuffer, "localhost");
                 windowsToken = Base64.encode(clientContext.getToken());
             } catch (Exception e) {
-                throw OAuth2RuntimeException.error("Error while validating the NTLM authentication grant", e);
+                throw OAuth2RuntimeException.error("Error while validating the IWA-NTLM grant.", e);
             }
         }
-    }
-
-    private NegotiateAuthenticator initializeNegotiateAuthenticator() {
-        NegotiateAuthenticator _authenticator = new NegotiateAuthenticator();
-        SimpleContext ctx = new SimpleContext();
-        Realm realm = new SimpleRealm();
-        ctx.setRealm(realm);
-        _authenticator.setContainer(ctx);
-        return _authenticator;
     }
 }

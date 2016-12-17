@@ -56,8 +56,8 @@ public class BearerTokenResponseIssuer extends AccessTokenResponseIssuer {
 
 
 
-    protected AccessToken issueNewAccessToken(String clientId, AuthenticatedUser authzUser, Set<String> scopes,
-                                              boolean isRefreshTokenValid, boolean markAccessTokenExpired,
+    protected AccessToken issueNewAccessToken(String clientId, AuthenticatedUser authzUser, String subjectIdentifier,
+                                              Set<String> scopes, boolean isRefreshTokenValid,
                                               AccessToken prevAccessToken, long accessTokenCallbackValidity,
                                               long refreshTokenCallbackValidity, String grantOrResponseType,
                                               OAuth2MessageContext messageContext) {
@@ -99,7 +99,7 @@ public class BearerTokenResponseIssuer extends AccessTokenResponseIssuer {
         } catch (OAuthSystemException e) {
             throw OAuth2RuntimeException.error(e.getMessage(), e);
         }
-        if (isRefreshTokenValid) {
+        if (isRefreshTokenValid && !OAuth2ServerConfig.getInstance().isRefreshTokenRenewalEnabled()) {
             refreshToken = prevAccessToken.getRefreshToken();
             refreshTokenIssuedTime = prevAccessToken.getRefreshTokenIssuedTime();
             refreshTokenValidity = prevAccessToken.getRefreshTokenValidity();
@@ -111,7 +111,7 @@ public class BearerTokenResponseIssuer extends AccessTokenResponseIssuer {
             }
         }
 
-        AccessToken newAccessToken = new AccessToken(bearerToken, clientId, authzUser.toString(),
+        AccessToken newAccessToken = new AccessToken(bearerToken, clientId, subjectIdentifier,
                 grantOrResponseType, OAuth2.TokenState.ACTIVE, accessTokenIssuedTime, accessTokenValidity);
 
         newAccessToken.setAuthzUser(authzUser);
@@ -124,13 +124,13 @@ public class BearerTokenResponseIssuer extends AccessTokenResponseIssuer {
         return newAccessToken;
     }
 
-    protected void storeNewAccessToken(AccessToken accessToken, OAuth2MessageContext messageContext) {
+    protected void storeNewAccessToken(AccessToken accessToken, boolean markAccessTokenExpired,
+                                       boolean markAccessTokenInactive, AccessToken previousAccessToken,
+                                       AuthzCode authzCode, OAuth2MessageContext messageContext) {
 
-        AuthzCode authzCode = (AuthzCode)messageContext.getParameter(OAuth2.AUTHZ_CODE);
-        boolean markAccessTokenExpired = (Boolean)messageContext.getParameter(MARK_ACCESS_TOKEN_EXPIRED);
-        AccessToken previousAccessToken = (AccessToken) messageContext.getParameter(OAuth2.PREV_ACCESS_TOKEN);
-        HandlerManager.getInstance().getOAuth2DAO(messageContext).storeAccessToken(accessToken,
-                markAccessTokenExpired ? previousAccessToken.getAccessToken() : null,
+        HandlerManager.getInstance().getOAuth2DAO(messageContext).storeAccessToken(
+                accessToken, markAccessTokenExpired, markAccessTokenInactive,
+                markAccessTokenExpired || markAccessTokenInactive ? previousAccessToken.getAccessToken() : null,
                 authzCode != null ? authzCode.getAuthzCode() : null, messageContext);
     }
 

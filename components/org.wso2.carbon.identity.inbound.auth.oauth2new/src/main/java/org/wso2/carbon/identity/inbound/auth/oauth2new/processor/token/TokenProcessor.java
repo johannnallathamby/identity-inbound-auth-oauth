@@ -21,6 +21,7 @@ package org.wso2.carbon.identity.inbound.auth.oauth2new.processor.token;
 
 import org.apache.oltu.oauth2.as.response.OAuthASResponse;
 import org.apache.oltu.oauth2.common.OAuth;
+import org.apache.oltu.oauth2.common.message.types.GrantType;
 import org.wso2.carbon.identity.application.authentication.framework.exception.FrameworkException;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityMessageContext;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
@@ -127,19 +128,21 @@ public class TokenProcessor extends OAuth2IdentityRequestProcessor {
             expiry = Long.MAX_VALUE/1000;
         }
 
-        // Have to check if refresh grant is allowed
-
         String refreshToken = null;
-        if(issueRefreshToken(messageContext)) {
-            refreshToken = accessToken.getRefreshToken();
+        if(messageContext.getApplication().getGrantTypes().contains(GrantType.REFRESH_TOKEN.toString())) {
+            if(issueRefreshToken(messageContext)) {
+                refreshToken = accessToken.getRefreshToken();
+            }
         }
 
         OAuthASResponse.OAuthTokenResponseBuilder oltuRespBuilder = OAuthASResponse
                 .tokenResponse(HttpServletResponse.SC_OK)
                 .setAccessToken(accessToken.getAccessToken())
-                .setRefreshToken(new String(refreshToken))
                 .setExpiresIn(Long.toString(expiry))
                 .setTokenType(OAuth.OAUTH_HEADER_NAME);
+        if(refreshToken != null) {
+            oltuRespBuilder.setRefreshToken(new String(refreshToken));
+        }
         oltuRespBuilder.setScope(OAuth2Util.buildScopeString(accessToken.getScopes()));
 
         TokenResponse.TokenResponseBuilder builder = new TokenResponse.TokenResponseBuilder(messageContext);

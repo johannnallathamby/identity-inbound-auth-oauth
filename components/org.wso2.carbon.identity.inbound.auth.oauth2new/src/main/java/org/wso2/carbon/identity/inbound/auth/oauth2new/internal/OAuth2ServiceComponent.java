@@ -22,12 +22,21 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
 import org.wso2.carbon.event.stream.core.EventStreamService;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.HttpIdentityRequestFactory;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.HttpIdentityResponseFactory;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityProcessor;
 import org.wso2.carbon.identity.application.mgt.ApplicationManagementService;
+import org.wso2.carbon.identity.core.handler.InitConfig;
 import org.wso2.carbon.identity.core.util.IdentityCoreInitializedEvent;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.analytics.DASDataPublisher;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.authz.AuthzApprovedRequestFactory;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.authz.AuthzRequestFactory;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.token.authzcode.AuthzCodeGrantFactory;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.token.clientcredentials.ClientCredentialsGrantFactory;
@@ -42,6 +51,7 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.client.BasicAuthH
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.client.ClientAuthHandler;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.grant.AuthorizationGrantHandler;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.grant.AuthzCodeGrantHandler;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.grant.ClientCredentialsGrantHandler;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.grant.PasswordGrantHandler;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.grant.RefreshGrantHandler;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.interceptor.OAuth2EventInterceptor;
@@ -66,53 +76,20 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.revoke.RevocationServiceI
 import org.wso2.carbon.registry.core.service.RegistryService;
 import org.wso2.carbon.user.core.service.RealmService;
 
-/**
- * @scr.component name="identity.oauth2.component" immediate="true"
- * @scr.reference name="registry.service"
- * interface="org.wso2.carbon.registry.core.service.RegistryService"
- * cardinality="1..1" policy="dynamic" bind="setRegistryService"
- * unbind="unsetRegistryService"
- * @scr.reference name="user.realmservice.default"
- * interface="org.wso2.carbon.user.core.service.RealmService" cardinality="1..1"
- * policy="dynamic" bind="setRealmService" unbind="unsetRealmService"
- * @scr.reference name="identityCoreInitializedEventService"
- * interface="org.wso2.carbon.identity.core.util.IdentityCoreInitializedEvent" cardinality="1..1"
- * policy="dynamic" bind="setIdentityCoreInitializedEventService" unbind="unsetIdentityCoreInitializedEventService"
- * @scr.reference name="ApplicationManagementService"
- * interface="org.wso2.carbon.identity.application.mgt.ApplicationManagementService" cardinality="1..1"
- * policy="dynamic" bind="setApplicationManagementService" unbind="unsetApplicationManagementService"
- * @scr.reference name="oauth2.handler.client.auth"
- * interface="org.wso2.carbon.identity.inbound.auth.oauth2new.handler.client.ClientAuthHandler" cardinality="0..n"
- * policy="dynamic" bind="addClientAuthHandler" unbind="removeClientAuthHandler"
- * @scr.reference name="oauth2.handler.issuer.token"
- * interface="org.wso2.carbon.identity.inbound.auth.oauth2new.handler.issuer.AccessTokenResponseIssuer"
- * cardinality="0..n"
- * policy="dynamic" bind="addAccessTokenResponseIssuer" unbind="removeAccessTokenResponseIssuer"
- * @scr.reference name="oauth2.handler.persist.token"
- * interface="org.wso2.carbon.identity.inbound.auth.oauth2new.handler.persist.TokenPersistenceProcessor" cardinality="0..n"
- * policy="dynamic" bind="addTokenPersistenceProcessor" unbind="removeTokenPersistenceProcessor"
- * @scr.reference name="oauth2.handler.dao"
- * interface="org.wso2.carbon.identity.inbound.auth.oauth2new.dao.OAuth2DAO" cardinality="0..n"
- * policy="dynamic" bind="addOAuth2DAOHandler" unbind="removeOAuth2DAOHandler"
- * @scr.reference name="oauth2.handler.grant"
- * interface="org.wso2.carbon.identity.inbound.auth.oauth2new.handler.grant.AuthorizationGrantHandler" cardinality="0..n"
- * policy="dynamic" bind="addAuthorizationGrantHandler" unbind="removeAuthorizationGrantHandler"
- * @scr.reference name="oauth2.handler.introspection"
- * interface="org.wso2.carbon.identity.inbound.auth.oauth2new.introspection.IntrospectionHandler" cardinality="0..n"
- * policy="dynamic" bind="addIntrospectionHandler" unbind="removeIntrospectionHandler"
- * @scr.reference name="org.wso2.carbon.identity.oauth.event.OAuthEventInterceptor"
- * interface="org.wso2.carbon.identity.oauth.event.OAuthEventInterceptor" cardinality="0..n" policy="dynamic"
- * bind="setOAuth2EventInterceptor" unbind="unsetOAuth2EventInterceptor"
- * interface="org.wso2.carbon.event.stream.core.EventStreamService" cardinality="1..1" policy="dynamic"
- * bind="setEventStreamService" unbind="unsetEventStreamService"
- */
+@Component(
+        name = "identity.oauth2new.component",
+        immediate = true
+)
 public class OAuth2ServiceComponent {
 
     private static Log log = LogFactory.getLog(OAuth2ServiceComponent.class);
 
+    @SuppressWarnings("unchecked")
+    @Activate
     protected void activate(ComponentContext context) {
 
         try {
+
             OAuth2ServerConfig.getInstance();
 
             OAuth2DataHolder.getInstance().getOAuth2DAOHandlers().add(new OAuth2DAOHandler(new JDBCOAuth2DAO()));
@@ -121,8 +98,11 @@ public class OAuth2ServiceComponent {
             OAuth2DataHolder.getInstance().getClientAuthHandlers().add(new BasicAuthHandler());
             OAuth2DataHolder.getInstance().getGrantHandlers().add(new AuthzCodeGrantHandler());
             OAuth2DataHolder.getInstance().getGrantHandlers().add(new PasswordGrantHandler());
+            OAuth2DataHolder.getInstance().getGrantHandlers().add(new ClientCredentialsGrantHandler());
             OAuth2DataHolder.getInstance().getGrantHandlers().add(new RefreshGrantHandler());
             OAuth2DataHolder.getInstance().getIntrospectionHandlers().add(new IntrospectionHandler());
+            OAuth2DataHolder.getInstance().getOAuth2DAOHandlers().add(new OAuth2DAOHandler(new JDBCOAuth2DAO()));
+            OAuth2DataHolder.getInstance().getInterceptors().add(new DASDataPublisher());
 
             ServiceRegistration authzProcessor = context.getBundleContext().registerService(
                     IdentityProcessor.class.getName(), new AuthzProcessor(), null);
@@ -171,13 +151,13 @@ public class OAuth2ServiceComponent {
                 log.error("AuthzRequestFactory could not be registered");
             }
             ServiceRegistration authzApprovedReqFactory = context.getBundleContext().registerService(
-                    HttpIdentityRequestFactory.class.getName(), new AuthzRequestFactory(), null);
+                    HttpIdentityRequestFactory.class.getName(), new AuthzApprovedRequestFactory(), null);
             if (authzApprovedReqFactory != null) {
                 if (log.isDebugEnabled()) {
-                    log.debug(" AuthzApprovedReqFactory is registered");
+                    log.debug(" AuthzApprovedRequestFactory is registered");
                 }
             } else {
-                log.error("AuthzApprovedReqFactory could not be registered");
+                log.error("AuthzApprovedRequestFactory could not be registered");
             }
             ServiceRegistration authzCodeGrantFactory = context.getBundleContext().registerService(
                     HttpIdentityRequestFactory.class.getName(), new AuthzCodeGrantFactory(), null);
@@ -245,7 +225,7 @@ public class OAuth2ServiceComponent {
             }
 
             ServiceRegistration revocationReqFactory = context.getBundleContext().registerService(
-                    HttpIdentityResponseFactory.class.getName(), new RevocationRequestFactory(), null);
+                    HttpIdentityRequestFactory.class.getName(), new RevocationRequestFactory(), null);
             if (revocationReqFactory != null) {
                 if (log.isDebugEnabled()) {
                     log.debug(" RevocationRequestFactory is registered");
@@ -312,10 +292,11 @@ public class OAuth2ServiceComponent {
                 log.debug("OAuth2 bundle is activated");
             }
         } catch (Throwable e) {
-            log.fatal("Error occurred while activating OAuth2 bundle");
+            log.fatal("Error occurred while activating OAuth2 bundle", e);
         }
     }
 
+    @Deactivate
     protected void deactivate(ComponentContext context) {
 
         if (log.isDebugEnabled()) {
@@ -323,6 +304,13 @@ public class OAuth2ServiceComponent {
         }
     }
 
+    @Reference(
+            name = "user.realmservice.default",
+            service = org.wso2.carbon.user.core.service.RealmService.class,
+            cardinality = ReferenceCardinality.MANDATORY,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetRealmService"
+    )
     protected void setRealmService(RealmService realmService) {
         if (log.isDebugEnabled()) {
             log.debug("Setting the RealmService");
@@ -337,6 +325,13 @@ public class OAuth2ServiceComponent {
         OAuth2DataHolder.getInstance().setRealmService(null);
     }
 
+    @Reference(
+            name = "registry.service",
+            service = org.wso2.carbon.registry.core.service.RegistryService.class,
+            cardinality = ReferenceCardinality.MANDATORY,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetRegistryService"
+    )
     protected void setRegistryService(RegistryService registryService) {
         if (log.isDebugEnabled()) {
             log.debug("Setting the RegistryService");
@@ -351,6 +346,13 @@ public class OAuth2ServiceComponent {
         OAuth2DataHolder.getInstance().setRegistryService(null);
     }
 
+    @Reference(
+            name = "identityCoreInitializedEventService",
+            service = org.wso2.carbon.identity.core.util.IdentityCoreInitializedEvent.class,
+            cardinality = ReferenceCardinality.MANDATORY,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetIdentityCoreInitializedEventService"
+    )
     protected void setIdentityCoreInitializedEventService(IdentityCoreInitializedEvent identityCoreInitializedEvent) {
         if (log.isDebugEnabled()) {
             log.debug("Setting the IdentityCoreInitializedEventService");
@@ -365,90 +367,13 @@ public class OAuth2ServiceComponent {
         OAuth2DataHolder.getInstance().setIdentityCoreInitializedEvent(null);
     }
 
-    protected void addClientAuthHandler(ClientAuthHandler handler) {
-        if (log.isDebugEnabled()) {
-            log.debug("Adding ClientAuthHandler " + handler.getName());
-        }
-        OAuth2DataHolder.getInstance().getClientAuthHandlers().add(handler);
-    }
-
-    protected void removeClientAuthHandler(ClientAuthHandler handler) {
-        if (log.isDebugEnabled()) {
-            log.debug("Removing ClientAuthHandler " + handler.getName());
-        }
-        OAuth2DataHolder.getInstance().getClientAuthHandlers().remove(handler);
-    }
-
-    protected void addAccessTokenResponseIssuer(AccessTokenResponseIssuer handler) {
-        if (log.isDebugEnabled()) {
-            log.debug("Adding AccessTokenResponseIssuer " + handler.getName());
-        }
-        OAuth2DataHolder.getInstance().getAccessTokenIssuers().add(handler);
-    }
-
-    protected void removeAccessTokenResponseIssuer(AccessTokenResponseIssuer handler) {
-        if (log.isDebugEnabled()) {
-            log.debug("Removing AccessTokenResponseIssuer " + handler.getName());
-        }
-        OAuth2DataHolder.getInstance().getAccessTokenIssuers().remove(handler);
-    }
-
-    protected void addTokenPersistenceProcessor(TokenPersistenceProcessor persistenceProcessor) {
-        if (log.isDebugEnabled()) {
-            log.debug("Adding AccessTokenResponseIssuer " + persistenceProcessor.getName());
-        }
-        OAuth2DataHolder.getInstance().getTokenPersistenceProcessors().add(persistenceProcessor);
-    }
-
-    protected void removeTokenPersistenceProcessor(TokenPersistenceProcessor persistenceProcessor) {
-        if (log.isDebugEnabled()) {
-            log.debug("Removing AccessTokenResponseIssuer " + persistenceProcessor.getName());
-        }
-        OAuth2DataHolder.getInstance().getTokenPersistenceProcessors().remove(persistenceProcessor);
-    }
-
-    protected void addOAuth2DAOHandler(OAuth2DAOHandler handler) {
-        if (log.isDebugEnabled()) {
-            log.debug("Adding AccessTokenResponseIssuer " + handler.getName());
-        }
-        OAuth2DataHolder.getInstance().getOAuth2DAOHandlers().add(handler);
-    }
-
-    protected void removeOAuth2DAOHandler(OAuth2DAOHandler handler) {
-        if (log.isDebugEnabled()) {
-            log.debug("Removing AccessTokenResponseIssuer " + handler.getName());
-        }
-        OAuth2DataHolder.getInstance().getOAuth2DAOHandlers().remove(handler);
-    }
-
-    protected void addAuthorizationGrantHandler(AuthorizationGrantHandler handler) {
-        if (log.isDebugEnabled()) {
-            log.debug("Adding AuthorizationGrantHandler " + handler.getName());
-        }
-        OAuth2DataHolder.getInstance().getGrantHandlers().add(handler);
-    }
-
-    protected void removeAuthorizationGrantHandler(AuthorizationGrantHandler handler) {
-        if (log.isDebugEnabled()) {
-            log.debug("Removing AuthorizationGrantHandler " + handler.getName());
-        }
-        OAuth2DataHolder.getInstance().getGrantHandlers().remove(handler);
-    }
-
-    protected void addIntrospectionHandler(IntrospectionHandler handler) {
-        if (log.isDebugEnabled()) {
-            log.debug("Adding IntrospectionHandler " + handler.getName());
-        }
-        OAuth2DataHolder.getInstance().getIntrospectionHandlers().add(handler);
-    }
-
-    protected void removeIntrospectionHandler(IntrospectionHandler handler) {
-        if (log.isDebugEnabled()) {
-            log.debug("Removing IntrospectionHandler " + handler.getName());
-        }
-        OAuth2DataHolder.getInstance().getIntrospectionHandlers().remove(handler);
-    }
-
+    @Reference(
+            name = "identity.application.management.component",
+            service = org.wso2.carbon.identity.application.mgt.ApplicationManagementService.class,
+            cardinality = ReferenceCardinality.MANDATORY,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetApplicationManagementService"
+    )
     protected void setApplicationManagementService(ApplicationManagementService service) {
         if (log.isDebugEnabled()) {
             log.debug("Adding ApplicationManagementService.");
@@ -463,24 +388,168 @@ public class OAuth2ServiceComponent {
         OAuth2DataHolder.getInstance().setAppMgtService(null);
     }
 
-    protected void setOAuth2EventInterceptor(OAuth2EventInterceptor interceptor) {
-
+    @Reference(
+            name = "oauth2.handler.client.auth",
+            service = org.wso2.carbon.identity.inbound.auth.oauth2new.handler.client.ClientAuthHandler.class,
+            cardinality = ReferenceCardinality.MULTIPLE,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "removeClientAuthHandler"
+    )
+    protected void addClientAuthHandler(ClientAuthHandler handler) {
         if (log.isDebugEnabled()) {
-            log.debug("Setting OAuth2EventInterceptor " + interceptor.getClass().getName());
+            log.debug("Adding ClientAuthHandler " + handler.getName());
         }
-        OAuth2DataHolder.getInstance().getInterceptors().add(interceptor);
+        handler.init(null);
+        OAuth2DataHolder.getInstance().getClientAuthHandlers().add(handler);
     }
 
-    protected void unsetOAuth2EventInterceptor(OAuth2EventInterceptor interceptor) {
-
+    protected void removeClientAuthHandler(ClientAuthHandler handler) {
         if (log.isDebugEnabled()) {
-            log.debug("Un-setting OAuth2EventInterceptor " + interceptor.getClass().getName());
+            log.debug("Removing ClientAuthHandler " + handler.getName());
         }
-        OAuth2DataHolder.getInstance().getInterceptors().remove(interceptor);
+        OAuth2DataHolder.getInstance().getClientAuthHandlers().remove(handler);
     }
 
+    @Reference(
+            name = "oauth2.handler.issuer.token",
+            service = org.wso2.carbon.identity.inbound.auth.oauth2new.handler.issuer.AccessTokenResponseIssuer.class,
+            cardinality = ReferenceCardinality.MULTIPLE,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "removeAccessTokenResponseIssuer"
+    )
+    protected void addAccessTokenResponseIssuer(AccessTokenResponseIssuer handler) {
+        if (log.isDebugEnabled()) {
+            log.debug("Adding AccessTokenResponseIssuer " + handler.getName());
+        }
+        handler.init(null);
+        OAuth2DataHolder.getInstance().getAccessTokenIssuers().add(handler);
+    }
+
+    protected void removeAccessTokenResponseIssuer(AccessTokenResponseIssuer handler) {
+        if (log.isDebugEnabled()) {
+            log.debug("Removing AccessTokenResponseIssuer " + handler.getName());
+        }
+        OAuth2DataHolder.getInstance().getAccessTokenIssuers().remove(handler);
+    }
+
+    @Reference(
+            name = "oauth2.handler.persist.token",
+            service = org.wso2.carbon.identity.inbound.auth.oauth2new.handler.persist.TokenPersistenceProcessor.class,
+            cardinality = ReferenceCardinality.MULTIPLE,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "removeTokenPersistenceProcessor"
+    )
+    protected void addTokenPersistenceProcessor(TokenPersistenceProcessor handler) {
+        if (log.isDebugEnabled()) {
+            log.debug("Adding AccessTokenResponseIssuer " + handler.getName());
+        }
+        handler.init(null);
+        OAuth2DataHolder.getInstance().getTokenPersistenceProcessors().add(handler);
+    }
+
+    protected void removeTokenPersistenceProcessor(TokenPersistenceProcessor persistenceProcessor) {
+        if (log.isDebugEnabled()) {
+            log.debug("Removing AccessTokenResponseIssuer " + persistenceProcessor.getName());
+        }
+        OAuth2DataHolder.getInstance().getTokenPersistenceProcessors().remove(persistenceProcessor);
+    }
+
+    @Reference(
+            name = "oauth2.handler.dao",
+            service = org.wso2.carbon.identity.inbound.auth.oauth2new.dao.OAuth2DAOHandler.class,
+            cardinality = ReferenceCardinality.MULTIPLE,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "removeOAuth2DAOHandler"
+    )
+    protected void addOAuth2DAOHandler(OAuth2DAOHandler handler) {
+        if (log.isDebugEnabled()) {
+            log.debug("Adding AccessTokenResponseIssuer " + handler.getName());
+        }
+        handler.init(null);
+        OAuth2DataHolder.getInstance().getOAuth2DAOHandlers().add(handler);
+    }
+
+    protected void removeOAuth2DAOHandler(OAuth2DAOHandler handler) {
+        if (log.isDebugEnabled()) {
+            log.debug("Removing AccessTokenResponseIssuer " + handler.getName());
+        }
+        OAuth2DataHolder.getInstance().getOAuth2DAOHandlers().remove(handler);
+    }
+
+    @Reference(
+            name = "oauth2.handler.grant",
+            service = org.wso2.carbon.identity.inbound.auth.oauth2new.handler.grant.AuthorizationGrantHandler.class,
+            cardinality = ReferenceCardinality.MULTIPLE,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "removeAuthorizationGrantHandler"
+    )
+    protected void addAuthorizationGrantHandler(AuthorizationGrantHandler handler) {
+        if (log.isDebugEnabled()) {
+            log.debug("Adding AuthorizationGrantHandler " + handler.getName());
+        }
+        handler.init(null);
+        OAuth2DataHolder.getInstance().getGrantHandlers().add(handler);
+    }
+
+    protected void removeAuthorizationGrantHandler(AuthorizationGrantHandler handler) {
+        if (log.isDebugEnabled()) {
+            log.debug("Removing AuthorizationGrantHandler " + handler.getName());
+        }
+        OAuth2DataHolder.getInstance().getGrantHandlers().remove(handler);
+    }
+
+    @Reference(
+            name = "oauth2.handler.introspection",
+            service = org.wso2.carbon.identity.inbound.auth.oauth2new.introspect.IntrospectionHandler.class,
+            cardinality = ReferenceCardinality.MULTIPLE,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "removeIntrospectionHandler"
+    )
+    protected void addIntrospectionHandler(IntrospectionHandler handler) {
+        if (log.isDebugEnabled()) {
+            log.debug("Adding IntrospectionHandler " + handler.getName());
+        }
+        handler.init(null);
+        OAuth2DataHolder.getInstance().getIntrospectionHandlers().add(handler);
+    }
+
+    protected void removeIntrospectionHandler(IntrospectionHandler handler) {
+        if (log.isDebugEnabled()) {
+            log.debug("Removing IntrospectionHandler " + handler.getName());
+        }
+        OAuth2DataHolder.getInstance().getIntrospectionHandlers().remove(handler);
+    }
+
+    @Reference(
+            name = "oauth2.interceptor",
+            service = org.wso2.carbon.identity.inbound.auth.oauth2new.handler.interceptor.OAuth2EventInterceptor.class,
+            cardinality = ReferenceCardinality.MULTIPLE,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "removeOAuth2EventInterceptor"
+    )
+    protected void addOAuth2EventInterceptor(OAuth2EventInterceptor handler) {
+        if (log.isDebugEnabled()) {
+            log.debug("Setting OAuth2EventInterceptor " + handler.getName());
+        }
+        handler.init(null);
+        OAuth2DataHolder.getInstance().getInterceptors().add(handler);
+    }
+
+    protected void removeOAuth2EventInterceptor(OAuth2EventInterceptor handler) {
+        if (log.isDebugEnabled()) {
+            log.debug("Un-setting OAuth2EventInterceptor " + handler.getName());
+        }
+        OAuth2DataHolder.getInstance().getInterceptors().remove(handler);
+    }
+
+    @Reference(
+            name = "org.wso2.carbon.event.stream.core",
+            service = org.wso2.carbon.event.stream.core.EventStreamService.class,
+            cardinality = ReferenceCardinality.OPTIONAL,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetEventStreamService"
+    )
     protected void setEventStreamService(EventStreamService eventStreamService) {
-
         if (log.isDebugEnabled()) {
             log.debug("Setting EventStreamService.");
         }
@@ -488,7 +557,6 @@ public class OAuth2ServiceComponent {
     }
 
     protected void unsetEventStreamService(EventStreamService eventStreamService) {
-
         if (log.isDebugEnabled()) {
             log.debug("Un-setting EventStreamService.");
         }

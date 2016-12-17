@@ -55,11 +55,10 @@ public class AuthzCodeGrantHandler extends AuthorizationGrantHandler {
 
     @Override
     public boolean canHandle(MessageContext messageContext) {
-        if(messageContext instanceof TokenMessageContext) {
-            if(GrantType.AUTHORIZATION_CODE.toString().equals(((TokenMessageContext) messageContext).getRequest()
-                    .getGrantType())) {
-                return true;
-            }
+        TokenMessageContext tokenMessageContext = (TokenMessageContext)messageContext;
+        if(GrantType.AUTHORIZATION_CODE.toString().equals(
+                ((TokenMessageContext) messageContext).getRequest().getGrantType())) {
+            return true;
         }
         return false;
     }
@@ -105,7 +104,7 @@ public class AuthzCodeGrantHandler extends AuthorizationGrantHandler {
         doPKCEValidation(pkceCodeChallenge, pkceCodeVerifier, pkceChallengeMethod,
                          app.isPKCEMandatory(), app.isPKCEPainAllowed());
 
-        messageContext.setAuthzUser(messageContext.getAuthzUser());
+        messageContext.setAuthzUser(authzCode.getAuthzUser());
         messageContext.setApprovedScopes(authzCode.getScopes());
         messageContext.addParameter(OAuth2.AUTHZ_CODE, authzCode);
     }

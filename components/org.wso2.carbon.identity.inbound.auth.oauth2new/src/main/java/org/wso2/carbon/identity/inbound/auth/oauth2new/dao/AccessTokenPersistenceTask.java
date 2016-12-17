@@ -50,7 +50,11 @@ class AccessTokenPersistenceTask implements Runnable {
             try {
                 job = accessTokenJobQueue.take();
                 if (job != null) {
-                    persistentDAO.storeAccessToken(job.newAccessToken, job.oldAccessToken, job.authzCode, job.messageContext);
+                    persistentDAO.storeAccessToken(job.newAccessToken, job.markAccessTokenExpired, job
+                                                           .markAccessTokenInactive, job
+                                                           .oldAccessToken,
+                                                   job.authzCode, job
+                            .messageContext);
                 }
             } catch (InterruptedException | OAuth2RuntimeException e) {
                 log.error("Error occurred while running task for AccessTokenJob", e);
@@ -61,6 +65,8 @@ class AccessTokenPersistenceTask implements Runnable {
     static class AccessTokenJob {
 
         AccessToken newAccessToken;
+        boolean markAccessTokenExpired;
+        boolean markAccessTokenInactive;
         String oldAccessToken;
         String authzCode;
         OAuth2MessageContext messageContext;

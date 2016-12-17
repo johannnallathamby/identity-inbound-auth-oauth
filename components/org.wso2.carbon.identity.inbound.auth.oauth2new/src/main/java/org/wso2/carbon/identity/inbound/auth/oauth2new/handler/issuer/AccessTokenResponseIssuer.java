@@ -18,6 +18,7 @@
 
 package org.wso2.carbon.identity.inbound.auth.oauth2new.handler.issuer;
 
+import org.apache.commons.lang.BooleanUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
@@ -26,11 +27,13 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.AuthzMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2MessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.TokenMessageContext;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.token.refresh.RefreshGrantRequest;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.dao.OAuth2DAO;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2Exception;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2RuntimeException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.HandlerManager;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AccessToken;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AuthzCode;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Util;
 
 import java.util.HashSet;
@@ -46,6 +49,7 @@ public abstract class AccessTokenResponseIssuer extends AbstractIdentityMessageH
     protected static final String IS_ACCESS_TOKEN_VALID = "IsAccessTokenValid";
     protected static final String IS_REFRESH_TOKEN_VALID = "IsRefreshTokenValid";
     protected static final String MARK_ACCESS_TOKEN_EXPIRED = "MarkAccessTokenExpired";
+    protected static final String MARK_ACCESS_TOKEN_INACTIVE = "MarkAccessTokenInactive";
 
     /**
      * Issues the access token response.
@@ -61,9 +65,16 @@ public abstract class AccessTokenResponseIssuer extends AbstractIdentityMessageH
         AccessToken accessToken = validTokenExists(messageContext);
         boolean isAccessTokenValid = (Boolean)messageContext.getParameter(IS_ACCESS_TOKEN_VALID);
         boolean isRefreshTokenValid = (Boolean)messageContext.getParameter(IS_REFRESH_TOKEN_VALID);
-        if(!isAccessTokenValid || !isRefreshTokenValid) {
+        if(!isAccessTokenValid || !isRefreshTokenValid || messageContext.getRequest() instanceof RefreshGrantRequest) {
             accessToken = issueNewAccessToken(messageContext);
-            storeNewAccessToken(accessToken, messageContext);
+            AuthzCode authzCode = (AuthzCode)messageContext.getParameter(OAuth2.AUTHZ_CODE);
+            boolean markAccessTokenExpired = BooleanUtils.isTrue((Boolean) messageContext.getParameter
+                    (MARK_ACCESS_TOKEN_EXPIRED)) ? true : false;
+            boolean markAccessTokenInactive = BooleanUtils.isTrue((Boolean) messageContext.getParameter(
+                    MARK_ACCESS_TOKEN_INACTIVE)) ? true : false;
+            AccessToken previousAccessToken = (AccessToken) messageContext.getParameter(OAuth2.PREV_ACCESS_TOKEN);
+            storeNewAccessToken(accessToken, markAccessTokenExpired, markAccessTokenInactive, previousAccessToken,
+                                authzCode, messageContext);
         }
 
         HandlerManager.getInstance().triggerPostTokenIssuers(messageContext);
@@ -175,8 +186,14 @@ public abstract class AccessTokenResponseIssuer extends AbstractIdentityMessageH
         }
         messageContext.addParameter(IS_ACCESS_TOKEN_VALID, isAccessTokenValid);
         messageContext.addParameter(IS_REFRESH_TOKEN_VALID, isRefreshTokenValid);
-        messageContext.addParameter(MARK_ACCESS_TOKEN_EXPIRED, markAccessTokenExpired);
-        messageContext.addParameter(OAuth2.PREV_ACCESS_TOKEN, accessToken);
+        if(messageContext.getRequest() instanceof RefreshGrantRequest) {
+            messageContext.addParameter(MARK_ACCESS_TOKEN_INACTIVE, true);
+        } else {
+            messageContext.addParameter(MARK_ACCESS_TOKEN_EXPIRED, markAccessTokenExpired);
+        }
+        if(messageContext.getParameter(OAuth2.PREV_ACCESS_TOKEN) == null) {
+            messageContext.addParameter(OAuth2.PREV_ACCESS_TOKEN, accessToken);
+        }
         return accessToken;
     }
 
@@ -194,7 +211,6 @@ public abstract class AccessTokenResponseIssuer extends AbstractIdentityMessageH
     protected AccessToken issueNewAccessToken(AuthzMessageContext messageContext) {
 
         boolean isRefreshTokenValid = (Boolean)messageContext.getParameter(IS_REFRESH_TOKEN_VALID);
-        boolean markAccessTokenExpired = (Boolean)messageContext.getParameter(MARK_ACCESS_TOKEN_EXPIRED);
         AccessToken prevAccessToken = (AccessToken)messageContext.getParameter(OAuth2.PREV_ACCESS_TOKEN);
         String clientId = messageContext.getRequest().getClientId();
         AuthenticatedUser authzUser = messageContext.getAuthzUser();
@@ -202,15 +218,14 @@ public abstract class AccessTokenResponseIssuer extends AbstractIdentityMessageH
         long accessTokenCallbackValidity = messageContext.getAccessTokenValidityPeriod();
         long refreshTokenCallbackValidity = messageContext.getRefreshTokenValidityPeriod();
         String responseType = messageContext.getRequest().getResponseType();
-        return issueNewAccessToken(clientId, authzUser, scopes, isRefreshTokenValid,
-                markAccessTokenExpired, prevAccessToken, accessTokenCallbackValidity, refreshTokenCallbackValidity,
-                responseType, messageContext);
+        return issueNewAccessToken(clientId, authzUser, authzUser.getAuthenticatedSubjectIdentifier(), scopes,
+                                   isRefreshTokenValid, prevAccessToken, accessTokenCallbackValidity,
+                                   refreshTokenCallbackValidity, responseType, messageContext);
     }
 
     protected AccessToken issueNewAccessToken(TokenMessageContext messageContext) {
 
         boolean isRefreshTokenValid = (Boolean)messageContext.getParameter(IS_REFRESH_TOKEN_VALID);
-        boolean markAccessTokenExpired = (Boolean)messageContext.getParameter(MARK_ACCESS_TOKEN_EXPIRED);
         AccessToken prevAccessToken = (AccessToken)messageContext.getParameter(OAuth2.PREV_ACCESS_TOKEN);
         String clientId = messageContext.getApplication().getClientId();
         AuthenticatedUser authzUser = messageContext.getAuthzUser();
@@ -218,18 +233,20 @@ public abstract class AccessTokenResponseIssuer extends AbstractIdentityMessageH
         long accessTokenValidityPeriod = messageContext.getAccessTokenValidityPeriod();
         long refreshTokenValidityPeriod = messageContext.getRefreshTokenValidityPeriod();
         String grantType = messageContext.getRequest().getGrantType();
-        return issueNewAccessToken(clientId, authzUser, scopes, isRefreshTokenValid,
-                markAccessTokenExpired, prevAccessToken, accessTokenValidityPeriod, refreshTokenValidityPeriod,
-                grantType, messageContext);
+        return issueNewAccessToken(clientId, authzUser, authzUser.getAuthenticatedSubjectIdentifier(), scopes,
+                                   isRefreshTokenValid, prevAccessToken, accessTokenValidityPeriod,
+                                   refreshTokenValidityPeriod, grantType, messageContext);
     }
 
-    protected abstract AccessToken issueNewAccessToken(String clientId, AuthenticatedUser authzUser, Set<String> scopes,
-                                              boolean isRefreshTokenValid, boolean markAccessTokenExpired,
-                                              AccessToken prevAccessToken, long accessTokenCallbackValidity,
-                                              long refreshTokenCallbackValidity, String grantOrResponseType,
-                                              OAuth2MessageContext messageContext);
+    protected abstract AccessToken issueNewAccessToken(String clientId, AuthenticatedUser authzUser,
+                                                       String subjectIdentifier, Set<String> scopes,
+                                                       boolean isRefreshTokenValid, AccessToken prevAccessToken,
+                                                       long accessTokenCallbackValidity,
+                                                       long refreshTokenCallbackValidity, String grantOrResponseType,
+                                                       OAuth2MessageContext messageContext);
 
-    protected abstract void storeNewAccessToken(AccessToken accessToken, OAuth2MessageContext messageContext);
-
+    protected abstract void storeNewAccessToken(AccessToken accessToken, boolean markAccessTokenExpired,
+                                                boolean markAccessTokenInactive, AccessToken previousAccessToken,
+                                                AuthzCode authzCode, OAuth2MessageContext messageContext);
 
 }

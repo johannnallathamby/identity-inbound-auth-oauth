@@ -31,14 +31,11 @@ import javax.servlet.http.HttpServletResponse;
 public class IWANTLMGrantFactory extends TokenRequestFactory {
 
     @Override
-    public String getName() {
-        return "IWANTLMGrantFactory";
-    }
-
-    @Override
     public boolean canHandle(HttpServletRequest request, HttpServletResponse response) {
-        if(StringUtils.equals(IWANTLMConstants.IWA_NTLM_GRANT_TYPE, request.getParameter(OAuth.OAUTH_GRANT_TYPE))) {
-            return true;
+        if(super.canHandle(request, response)) {
+            if (StringUtils.equals(IWANTLMConstants.IWA_NTLM_GRANT_TYPE, request.getParameter(OAuth.OAUTH_GRANT_TYPE))) {
+                return true;
+            }
         }
         return false;
     }
@@ -49,9 +46,7 @@ public class IWANTLMGrantFactory extends TokenRequestFactory {
 
         IWANTLMGrantRequest.IWANTLMGrantBuilder builder = new IWANTLMGrantRequest.IWANTLMGrantBuilder
                 (request, response);
-        super.create(builder, request, response);
-        builder.setWindowsToken(request.getParameter(IWANTLMConstants.WINDOWS_TOKEN));
-        builder.setScopes(OAuth2Util.buildScopeSet(request.getParameter(OAuth.OAUTH_SCOPE)));
+        create(builder, request, response);
         return builder;
     }
 
@@ -60,8 +55,9 @@ public class IWANTLMGrantFactory extends TokenRequestFactory {
                        HttpServletResponse response)
             throws OAuth2ClientException {
 
+        super.create(builder, request, response);
+
         IWANTLMGrantRequest.IWANTLMGrantBuilder iwantlmGrantBuilder = (IWANTLMGrantRequest.IWANTLMGrantBuilder)builder;
-        super.create(iwantlmGrantBuilder, request, response);
         iwantlmGrantBuilder.setWindowsToken(request.getParameter(IWANTLMConstants.WINDOWS_TOKEN));
         iwantlmGrantBuilder.setScopes(OAuth2Util.buildScopeSet(request.getParameter(OAuth.OAUTH_SCOPE)));
     }

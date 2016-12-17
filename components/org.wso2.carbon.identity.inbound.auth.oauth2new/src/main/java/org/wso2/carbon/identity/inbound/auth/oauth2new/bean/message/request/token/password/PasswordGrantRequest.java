@@ -31,7 +31,7 @@ public class PasswordGrantRequest extends TokenRequest {
 
     private String username;
     private char[] password;
-    private Set<String> scopes = new HashSet<>();
+    private Set<String> scopes = new HashSet();
 
     protected PasswordGrantRequest(PasswordGrantBuilder builder) {
         super(builder);
@@ -56,7 +56,7 @@ public class PasswordGrantRequest extends TokenRequest {
 
         private String username;
         private char[] password;
-        private Set<String> scopes;
+        private Set<String> scopes = new HashSet();
 
         public PasswordGrantBuilder(HttpServletRequest request, HttpServletResponse response) {
             super(request, response);

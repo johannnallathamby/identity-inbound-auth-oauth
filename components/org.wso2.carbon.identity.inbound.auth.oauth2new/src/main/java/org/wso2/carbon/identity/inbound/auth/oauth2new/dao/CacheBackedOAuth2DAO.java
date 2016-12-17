@@ -56,7 +56,7 @@ public class CacheBackedOAuth2DAO extends OAuth2DAO {
                                                       messageContext);
         if(accessToken != null) {
             AuthorizationGrantCache.getInstance().addToCache(key, accessToken);
-            if(AccessTokenCache.getInstance().getValueFromCache(accessToken.getAccessToken()) != null) {
+            if(AccessTokenCache.getInstance().getValueFromCache(accessToken.getAccessToken()) == null) {
                 AccessTokenCache.getInstance().addToCache(accessToken.getAccessToken(), accessToken);
             }
         }
@@ -64,7 +64,8 @@ public class CacheBackedOAuth2DAO extends OAuth2DAO {
     }
 
     @Override
-    public void storeAccessToken(AccessToken newAccessToken, String oldAccessToken, String authorizationCode,
+    public void storeAccessToken(AccessToken newAccessToken, boolean markAccessTokenExpired,
+                                 boolean markAccessTokenInactive, String oldAccessToken, String authorizationCode,
                                  OAuth2MessageContext messageContext) {
 
         if(authorizationCode != null) {
@@ -77,19 +78,32 @@ public class CacheBackedOAuth2DAO extends OAuth2DAO {
         if(oldAccessToken != null){
             AccessToken accessToken = AccessTokenCache.getInstance().getValueFromCache(oldAccessToken);
             if(accessToken != null){
-                AccessToken accessToken1 = AccessToken.createAccessToken(accessToken, OAuth2.TokenState.EXPIRED);
-                AccessTokenCache.getInstance().addToCache(oldAccessToken, accessToken1);
+                AccessToken accessToken1 = null;
+                if(markAccessTokenExpired) {
+                    AccessTokenCache.getInstance().addToCache(oldAccessToken, AccessToken.createAccessToken(
+                            accessToken, OAuth2.TokenState.EXPIRED));
+                } else if(markAccessTokenInactive) {
+                    AccessTokenCache.getInstance().addToCache(oldAccessToken, AccessToken.createAccessToken(
+                            accessToken, OAuth2.TokenState.INACTIVE));
+                }
             }
         }
         AuthorizationGrantCacheKey key = new AuthorizationGrantCacheKey(newAccessToken.getClientId(),
                 newAccessToken.getAuthzUser(), newAccessToken.getScopes());
         AccessToken accessToken = AuthorizationGrantCache.getInstance().getValueFromCache(key);
         if(accessToken != null) {
-            AuthorizationGrantCache.getInstance().addToCache(key, AccessToken.createAccessToken(accessToken,
-                    OAuth2.TokenState.EXPIRED));
+            if(markAccessTokenExpired) {
+                AuthorizationGrantCache.getInstance().addToCache(key, AccessToken.createAccessToken(
+                        accessToken,OAuth2.TokenState.EXPIRED));
+            } else if(markAccessTokenInactive) {
+                AuthorizationGrantCache.getInstance().addToCache(key, AccessToken.createAccessToken(
+                        accessToken, OAuth2.TokenState.INACTIVE));
+            }
         }
         try {
-            wrappedDAO.storeAccessToken(newAccessToken, oldAccessToken, authorizationCode, messageContext);
+            wrappedDAO.storeAccessToken(newAccessToken, markAccessTokenExpired, markAccessTokenInactive,
+                                        oldAccessToken, authorizationCode,
+                                        messageContext);
         } catch (AccessTokenExistsException e) {
             newAccessToken = e.getAccessToken();
         }

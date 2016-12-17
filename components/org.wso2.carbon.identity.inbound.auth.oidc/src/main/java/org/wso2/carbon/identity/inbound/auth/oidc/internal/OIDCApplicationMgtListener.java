@@ -62,8 +62,8 @@ public class OIDCApplicationMgtListener extends AbstractApplicationMgtListener {
 
     private void removeEntriesFromCache(ServiceProvider serviceProvider) throws IdentityApplicationManagementException {
 
-        Set<AccessToken> accessTokens = new HashSet<>();
-        Set<AuthzCode> authzCodes = new HashSet<>();
+        Set<AccessToken> accessTokens = new HashSet();
+        Set<AuthzCode> authzCodes = new HashSet();
         String clientId = null;
 
         InboundAuthenticationConfig inboundAuthenticationConfig = serviceProvider.getInboundAuthenticationConfig();

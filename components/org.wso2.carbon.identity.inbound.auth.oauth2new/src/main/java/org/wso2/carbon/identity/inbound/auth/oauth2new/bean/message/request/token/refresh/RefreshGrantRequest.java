@@ -30,7 +30,7 @@ public class RefreshGrantRequest extends TokenRequest {
     private static final long serialVersionUID = -4697220553951745165L;
 
     private String refreshToken;
-    private Set<String> scopes = new HashSet<>();
+    private Set<String> scopes = new HashSet();
 
     protected RefreshGrantRequest(RefreshGrantBuilder builder) {
         super(builder);
@@ -49,7 +49,7 @@ public class RefreshGrantRequest extends TokenRequest {
     public static class RefreshGrantBuilder extends TokenRequestBuilder {
 
         private String refreshToken;
-        private Set<String> scopes = new HashSet<>();
+        private Set<String> scopes = new HashSet();
 
         public RefreshGrantBuilder(HttpServletRequest request, HttpServletResponse response) {
             super(request, response);

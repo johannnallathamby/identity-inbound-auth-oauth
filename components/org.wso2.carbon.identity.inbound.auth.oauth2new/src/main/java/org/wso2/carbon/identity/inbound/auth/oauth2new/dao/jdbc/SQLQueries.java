@@ -20,70 +20,82 @@ package org.wso2.carbon.identity.inbound.auth.oauth2new.dao.jdbc;
 
 public class SQLQueries {
 
-    public static final String INSERT_OAUTH2_ACCESS_TOKEN = "INSERT INTO $accessTokenStoreTable (ACCESS_TOKEN, " +
+    public static final String INSERT_OAUTH2_ACCESS_TOKEN = "INSERT INTO IDN_OAUTH2_ACCESS_TOKEN (ACCESS_TOKEN, " +
             "REFRESH_TOKEN, CONSUMER_KEY_ID, AUTHZ_USER, TENANT_ID, USER_DOMAIN, TIME_CREATED, " +
             "REFRESH_TOKEN_TIME_CREATED, VALIDITY_PERIOD, REFRESH_TOKEN_VALIDITY_PERIOD, TOKEN_SCOPE_HASH, " +
-            "TOKEN_STATE, USER_TYPE, TOKEN_ID, GRANT_TYPE, SUBJECT_IDENTIFIER) SELECT ?,?,ID,?,?,?,?,?,?,?,?,?,?,?,?," +
-            "? FROM IDN_OAUTH_CONSUMER_APPS WHERE CONSUMER_KEY=?";
+            "TOKEN_STATE, USER_TYPE, TOKEN_ID, GRANT_TYPE, SUBJECT_IDENTIFIER) " +
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
     public static final String INSERT_OAUTH2_TOKEN_SCOPE = "INSERT INTO IDN_OAUTH2_ACCESS_TOKEN_SCOPE (TOKEN_ID, " +
             "TOKEN_SCOPE, TENANT_ID) VALUES (?,?,?)";
 
-    public static final String RETRIEVE_ACCESS_TOKEN_VALIDATION_DATA_MYSQL = "SELECT TOKEN_ID, ACCESS_TOKEN, " +
+    public static final String RETRIEVE_ACCESS_TOKEN_VALIDATION_DATA_MYSQL = "SELECT IDN_OAUTH2_ACCESS_TOKEN_SELECTED" +
+                                                                             ".TOKEN_ID, ACCESS_TOKEN, " +
             "AUTHZ_USER, IDN_OAUTH2_ACCESS_TOKEN_SELECTED.TENANT_ID, USER_DOMAIN, TOKEN_SCOPE, TOKEN_STATE, " +
             "TIME_CREATED, VALIDITY_PERIOD, REFRESH_TOKEN_TIME_CREATED, " +
-            "REFRESH_TOKEN_VALIDITY_PERIOD, GRANT_TYPE, SUBJECT_IDENTIFIER FROM ( SELECT " +
-            "ACCESS_TOKEN, AUTHZ_USER, TENANT_ID, USER_DOMAIN, TOKEN_STATE, TIME_CREATED, VALIDITY_PERIOD, REFRESH_TOKEN_TIME_CREATED, " +
-            "REFRESH_TOKEN_VALIDITY_PERIOD, TOKEN_ID, GRANT_TYPE, SUBJECT_IDENTIFIER CONSUMER_KEY FROM " +
+            "REFRESH_TOKEN_VALIDITY_PERIOD, GRANT_TYPE, SUBJECT_IDENTIFIER, CONSUMER_KEY_ID FROM (SELECT " +
+            "ACCESS_TOKEN, AUTHZ_USER, TENANT_ID, USER_DOMAIN, TOKEN_STATE, TIME_CREATED, " +
+                                                                             "VALIDITY_PERIOD, REFRESH_TOKEN_TIME_CREATED, " +
+            "REFRESH_TOKEN_VALIDITY_PERIOD, TOKEN_ID, GRANT_TYPE, SUBJECT_IDENTIFIER, CONSUMER_KEY_ID FROM " +
             "IDN_OAUTH2_ACCESS_TOKEN " +
             "WHERE REFRESH_TOKEN = ? ORDER BY TIME_CREATED DESC " +
             "LIMIT 1) IDN_OAUTH2_ACCESS_TOKEN_SELECTED LEFT JOIN IDN_OAUTH2_ACCESS_TOKEN_SCOPE ON " +
             "IDN_OAUTH2_ACCESS_TOKEN_SELECTED.TOKEN_ID = IDN_OAUTH2_ACCESS_TOKEN_SCOPE.TOKEN_ID";
 
-    public static final String RETRIEVE_ACCESS_TOKEN_VALIDATION_DATA_DB2SQL = "SELECT ACCESS_TOKEN, AUTHZ_USER, " +
+    public static final String RETRIEVE_ACCESS_TOKEN_VALIDATION_DATA_DB2SQL = "SELECT " +
+                                                                              "IDN_OAUTH2_ACCESS_TOKEN_SELECTED" +
+                                                                              ".TOKEN_ID, ACCESS_TOKEN, AUTHZ_USER, " +
             "IDN_OAUTH2_ACCESS_TOKEN_SELECTED.TENANT_ID, USER_DOMAIN, TOKEN_SCOPE, TOKEN_STATE, TIME_CREATED, VALIDITY_PERIOD, REFRESH_TOKEN_TIME_CREATED, " +
             "REFRESH_TOKEN_VALIDITY_PERIOD, GRANT_TYPE, SUBJECT_IDENTIFIER FROM ( SELECT " +
             "ACCESS_TOKEN, AUTHZ_USER, TOKEN_STATE, TIME_CREATED, VALIDITY_PERIOD, REFRESH_TOKEN_TIME_CREATED, " +
-            "REFRESH_TOKEN_VALIDITY_PERIOD, TOKEN_ID, GRANT_TYPE, SUBJECT_IDENTIFIER CONSUMER_KEY FROM " +
+            "REFRESH_TOKEN_VALIDITY_PERIOD, TOKEN_ID, GRANT_TYPE, SUBJECT_IDENTIFIER, CONSUMER_KEY FROM " +
             "IDN_OAUTH2_ACCESS_TOKEN " +
             "WHERE REFRESH_TOKEN = ? ORDER BY TIME_CREATED DESC " +
             "FETCH FIRST 1 ROWS ONLY) IDN_OAUTH2_ACCESS_TOKEN_SELECTED LEFT JOIN IDN_OAUTH2_ACCESS_TOKEN_SCOPE ON " +
             "IDN_OAUTH2_ACCESS_TOKEN_SELECTED.TOKEN_ID = IDN_OAUTH2_ACCESS_TOKEN_SCOPE.TOKEN_ID";
 
-    public static final String RETRIEVE_ACCESS_TOKEN_VALIDATION_DATA_ORACLE = "SELECT ACCESS_TOKEN, AUTHZ_USER, " +
+    public static final String RETRIEVE_ACCESS_TOKEN_VALIDATION_DATA_ORACLE = "SELECT " +
+                                                                              "IDN_OAUTH2_ACCESS_TOKEN_SELECTED" +
+                                                                              ".TOKEN_ID, ACCESS_TOKEN, AUTHZ_USER, " +
             "IDN_OAUTH2_ACCESS_TOKEN_SELECTED.TENANT_ID, USER_DOMAIN, TOKEN_SCOPE, TOKEN_STATE, TIME_CREATED, VALIDITY_PERIOD, REFRESH_TOKEN_TIME_CREATED, " +
             "REFRESH_TOKEN_VALIDITY_PERIOD, GRANT_TYPE, SUBJECT_IDENTIFIER FROM ( SELECT * FROM " +
             "(SELECT ACCESS_TOKEN, AUTHZ_USER, TENANT_ID, USER_DOMAIN, TOKEN_STATE, TIME_CREATED, VALIDITY_PERIOD, REFRESH_TOKEN_TIME_CREATED, " +
-            "REFRESH_TOKEN_VALIDITY_PERIOD, TOKEN_ID, GRANT_TYPE, SUBJECT_IDENTIFIER CONSUMER_KEY FROM " +
+            "REFRESH_TOKEN_VALIDITY_PERIOD, TOKEN_ID, GRANT_TYPE, SUBJECT_IDENTIFIER, CONSUMER_KEY FROM " +
             "IDN_OAUTH2_ACCESS_TOKEN WHERE REFRESH_TOKEN = ? ORDER BY TIME_CREATED DESC) " +
             "WHERE ROWNUM < 2 )  IDN_OAUTH2_ACCESS_TOKEN_SELECTED LEFT JOIN IDN_OAUTH2_ACCESS_TOKEN_SCOPE ON " +
             "IDN_OAUTH2_ACCESS_TOKEN_SELECTED.TOKEN_ID = IDN_OAUTH2_ACCESS_TOKEN_SCOPE.TOKEN_ID";
 
-    public static final String RETRIEVE_ACCESS_TOKEN_VALIDATION_DATA_MSSQL = "SELECT ACCESS_TOKEN, AUTHZ_USER, " +
+    public static final String RETRIEVE_ACCESS_TOKEN_VALIDATION_DATA_MSSQL = "SELECT IDN_OAUTH2_ACCESS_TOKEN_SELECTED" +
+                                                                             ".TOKEN_ID, ACCESS_TOKEN, AUTHZ_USER, " +
             "IDN_OAUTH2_ACCESS_TOKEN_SELECTED.TENANT_ID, USER_DOMAIN, TOKEN_SCOPE, TOKEN_STATE, TIME_CREATED, VALIDITY_PERIOD, REFRESH_TOKEN_TIME_CREATED, " +
             "REFRESH_TOKEN_VALIDITY_PERIOD, GRANT_TYPE, SUBJECT_IDENTIFIER FROM (SELECT TOP 1 "
             + "ACCESS_TOKEN, " +
             "AUTHZ_USER, TENANT_ID, USER_DOMAIN, TOKEN_SCOPE, TOKEN_STATE, TIME_CREATED, VALIDITY_PERIOD, REFRESH_TOKEN_TIME_CREATED, TOKEN_ID " +
-            "REFRESH_TOKEN_VALIDITY_PERIOD, TOKEN_ID, GRANT_TYPE, SUBJECT_IDENTIFIER CONSUMER_KEY FROM " +
+            "REFRESH_TOKEN_VALIDITY_PERIOD, TOKEN_ID, GRANT_TYPE, SUBJECT_IDENTIFIER, CONSUMER_KEY FROM " +
             "IDN_OAUTH2_ACCESS_TOKEN WHERE REFRESH_TOKEN = ? ORDER BY TIME_CREATED DESC) " +
             "IDN_OAUTH2_ACCESS_TOKEN_SELECTED LEFT JOIN IDN_OAUTH2_ACCESS_TOKEN_SCOPE ON IDN_OAUTH2_ACCESS_TOKEN_SCOPE" +
             ".TOKEN_ID  = IDN_OAUTH2_ACCESS_TOKEN_SCOPE.TOKEN_ID";
 
-    public static final String RETRIEVE_ACCESS_TOKEN_VALIDATION_DATA_POSTGRESQL = "SELECT ACCESS_TOKEN, AUTHZ_USER, " +
+    public static final String RETRIEVE_ACCESS_TOKEN_VALIDATION_DATA_POSTGRESQL = "SELECT " +
+                                                                                  "IDN_OAUTH2_ACCESS_TOKEN_SELECTED" +
+                                                                                  ".TOKEN_ID, ACCESS_TOKEN, AUTHZ_USER, " +
             "IDN_OAUTH2_ACCESS_TOKEN_SELECTED.TENANT_ID, USER_DOMAIN, TOKEN_SCOPE, TOKEN_STATE, TIME_CREATED, VALIDITY_PERIOD, REFRESH_TOKEN_TIME_CREATED," +
             " REFRESH_TOKEN_VALIDITY_PERIOD, GRANT_TYPE, SUBJECT_IDENTIFIER FROM (SELECT " +
             "ACCESS_TOKEN, AUTHZ_USER, TENANT_ID, USER_DOMAIN, TOKEN_STATE, TIME_CREATED, VALIDITY_PERIOD, REFRESH_TOKEN_TIME_CREATED, " +
-            "REFRESH_TOKEN_VALIDITY_PERIOD, TOKEN_ID, GRANT_TYPE, SUBJECT_IDENTIFIER CONSUMER_KEY FROM " +
+            "REFRESH_TOKEN_VALIDITY_PERIOD, TOKEN_ID, GRANT_TYPE, SUBJECT_IDENTIFIER, CONSUMER_KEY FROM " +
             "IDN_OAUTH2_ACCESS_TOKEN WHERE REFRESH_TOKEN = ? ORDER BY TIME_CREATED DESC " +
             "LIMIT 1) IDN_OAUTH2_ACCESS_TOKEN_SELECTED LEFT JOIN IDN_OAUTH2_ACCESS_TOKEN_SCOPE ON " +
             "IDN_OAUTH2_ACCESS_TOKEN_SELECTED.TOKEN_ID = IDN_OAUTH2_ACCESS_TOKEN_SCOPE.TOKEN_ID";
 
-    public static final String RETRIEVE_ACCESS_TOKEN_VALIDATION_DATA_INFORMIX = "SELECT ACCESS_TOKEN, AUTHZ_USER, " +
+    public static final String RETRIEVE_ACCESS_TOKEN_VALIDATION_DATA_INFORMIX = "SELECT " +
+                                                                                "IDN_OAUTH2_ACCESS_TOKEN_SELECTED" +
+                                                                                ".TOKEN_ID, ACCESS_TOKEN, AUTHZ_USER," +
+                                                                                " " +
             "IDN_OAUTH2_ACCESS_TOKEN_SELECTED.TENANT_ID, USER_DOMAIN, TOKEN_SCOPE, TOKEN_STATE, TIME_CREATED, VALIDITY_PERIOD, REFRESH_TOKEN_TIME_CREATED, " +
             "REFRESH_TOKEN_VALIDITY_PERIOD, GRANT_TYPE, SUBJECT_IDENTIFIER FROM ( SELECT FIRST 1 " +
             "ACCESS_TOKEN, AUTHZ_USER, TENANT_ID, USER_DOMAIN, TOKEN_STATE, TIME_CREATED, VALIDITY_PERIOD, " +
             "REFRESH_TOKEN_TIME_CREATED, REFRESH_TOKEN_VALIDITY_PERIOD, TOKEN_ID, GRANT_TYPE, " +
-            "SUBJECT_IDENTIFIER CONSUMER_KEY FROM IDN_OAUTH2_ACCESS_TOKEN WHERE " +
+            "SUBJECT_IDENTIFIER, CONSUMER_KEY FROM IDN_OAUTH2_ACCESS_TOKEN WHERE " +
             "REFRESH_TOKEN = ? " +
             "ORDER BY TIME_CREATED DESC) IDN_OAUTH2_ACCESS_TOKEN_SELECTED LEFT JOIN IDN_OAUTH2_ACCESS_TOKEN_SCOPE ON " +
             "IDN_OAUTH2_ACCESS_TOKEN_SELECTED.TOKEN_ID = IDN_OAUTH2_ACCESS_TOKEN_SCOPE.TOKEN_ID";
@@ -130,17 +142,20 @@ public class SQLQueries {
             "ID WHERE AUTHZ_USER=? AND IDN_OAUTH2_ACCESS_TOKEN.TENANT_ID=? AND IDN_OAUTH2_ACCESS_TOKEN.USER_DOMAIN=? " +
             "AND (TOKEN_STATE='ACTIVE' OR TOKEN_STATE='EXPIRED')";
 
-    public static final String RETRIEVE_ACTIVE_EXPIRED_ACCESS_TOKEN = "SELECT TOKEN_ID, CONSUMER_KEY, AUTHZ_USER, " +
+    public static final String RETRIEVE_ACTIVE_EXPIRED_ACCESS_TOKEN = "SELECT ACCESS_TOKEN_TABLE.TOKEN_ID, " +
+                                                                      "CONSUMER_KEY_ID, AUTHZ_USER, " +
             "ACCESS_TOKEN_TABLE.TENANT_ID, USER_DOMAIN, TOKEN_SCOPE, TIME_CREATED, REFRESH_TOKEN_TIME_CREATED, " +
             "VALIDITY_PERIOD, REFRESH_TOKEN_VALIDITY_PERIOD, REFRESH_TOKEN, " +
             "GRANT_TYPE, SUBJECT_IDENTIFIER, TOKEN_STATE " +
-            "FROM (SELECT TOKEN_ID, CONSUMER_KEY, AUTHZ_USER, IDN_OAUTH2_ACCESS_TOKEN.TENANT_ID, " +
+            "FROM (SELECT IDN_OAUTH2_ACCESS_TOKEN.TOKEN_ID, CONSUMER_KEY_ID, AUTHZ_USER, IDN_OAUTH2_ACCESS_TOKEN" +
+                                                                      ".TENANT_ID, " +
             "IDN_OAUTH2_ACCESS_TOKEN.USER_DOMAIN, TIME_CREATED, REFRESH_TOKEN_TIME_CREATED, VALIDITY_PERIOD, " +
-            "REFRESH_TOKEN_VALIDITY_PERIOD, REFRESH_TOKEN, IDN_OAUTH2_ACCESS_TOKEN.GRANT_TYPE, " +
+            "REFRESH_TOKEN_VALIDITY_PERIOD, REFRESH_TOKEN, GRANT_TYPE, " +
             "SUBJECT_IDENTIFIER, TOKEN_STATE " +
-            "FROM IDN_OAUTH2_ACCESS_TOKEN JOIN IDN_OAUTH_CONSUMER_APPS ON CONSUMER_KEY_ID = ID " +
+            "FROM IDN_OAUTH2_ACCESS_TOKEN " +
             "WHERE ACCESS_TOKEN=? AND (TOKEN_STATE='ACTIVE' OR TOKEN_STATE='EXPIRED')) ACCESS_TOKEN_TABLE LEFT " +
             "JOIN IDN_OAUTH2_ACCESS_TOKEN_SCOPE ON ACCESS_TOKEN_TABLE.TOKEN_ID = IDN_OAUTH2_ACCESS_TOKEN_SCOPE.TOKEN_ID";
+
 
     public static final String REVOKE_REFRESH_TOKEN = "UPDATE IDN_OAUTH2_ACCESS_TOKEN SET TOKEN_STATE='REVOKED', " +
             "TOKEN_STATE_ID=? WHERE REFRESH_TOKEN=?";
@@ -228,43 +243,45 @@ public class SQLQueries {
 
     public static final String RETRIEVE_LATEST_ACCESS_TOKEN_BY_CLIENT_ID_USER_SCOPE_MYSQL = "SELECT " +
                                                                                             "ACCESS_TOKEN, REFRESH_TOKEN, TIME_CREATED, REFRESH_TOKEN_TIME_CREATED, VALIDITY_PERIOD, " +
-                                                                                            "REFRESH_TOKEN_VALIDITY_PERIOD, USER_TYPE, TOKEN_ID, SUBJECT_IDENTIFIER FROM IDN_OAUTH2_ACCESS_TOKEN " +
-                                                                                            "WHERE CONSUMER_KEY_ID =(SELECT ID FROM IDN_OAUTH_CONSUMER_APPS WHERE CONSUMER_KEY = ?) AND AUTHZ_USER=? " +
-                                                                                            "AND TENANT_ID=? AND USER_DOMAIN=? AND TOKEN_SCOPE_HASH=? ORDER BY TIME_CREATED " +
-                                                                                            "DESC LIMIT 1";
+                                                                                            "REFRESH_TOKEN_VALIDITY_PERIOD, TOKEN_ID, TOKEN_STATE, GRANT_TYPE, SUBJECT_IDENTIFIER FROM IDN_OAUTH2_ACCESS_TOKEN " +
+                                                                                            "WHERE CONSUMER_KEY_ID=? AND AUTHZ_USER=? AND TENANT_ID=? AND USER_DOMAIN=? AND TOKEN_SCOPE_HASH=? ORDER BY TIME_CREATED DESC LIMIT 1";
 
     public static final String RETRIEVE_LATEST_ACCESS_TOKEN_BY_CLIENT_ID_USER_SCOPE_ORACLE = "SELECT * FROM " +
                                                                                              "(SELECT ACCESS_TOKEN, REFRESH_TOKEN, TIME_CREATED, REFRESH_TOKEN_TIME_CREATED, VALIDITY_PERIOD, " +
-                                                                                             "REFRESH_TOKEN_VALIDITY_PERIOD, USER_TYPE, TOKEN_ID, SUBJECT_IDENTIFIER FROM " +
-                                                                                             "IDN_OAUTH2_ACCESS_TOKEN WHERE CONSUMER_KEY_ID=(SELECT ID FROM IDN_OAUTH_CONSUMER_APPS WHERE CONSUMER_KEY" +
-                                                                                             " = ?) AND AUTHZ_USER=? AND TENANT_ID=? AND USER_DOMAIN=? AND TOKEN_SCOPE_HASH=?" +
+                                                                                             "REFRESH_TOKEN_VALIDITY_PERIOD, TOKEN_ID, TOKEN_STATE, GRANT_TYPE, SUBJECT_IDENTIFIER FROM " +
+                                                                                             "IDN_OAUTH2_ACCESS_TOKEN" +
+                                                                                             " WHERE " +
+                                                                                             "CONSUMER_KEY_ID=? AND AUTHZ_USER=? AND TENANT_ID=? AND USER_DOMAIN=? AND TOKEN_SCOPE_HASH=?" +
                                                                                              " ORDER BY TIME_CREATED DESC) WHERE ROWNUM < 2 ";
 
     public static final String RETRIEVE_LATEST_ACCESS_TOKEN_BY_CLIENT_ID_USER_SCOPE_DB2SQL = "SELECT " +
                                                                                              "ACCESS_TOKEN, REFRESH_TOKEN, TIME_CREATED, REFRESH_TOKEN_TIME_CREATED, VALIDITY_PERIOD, " +
-                                                                                             "REFRESH_TOKEN_VALIDITY_PERIOD, USER_TYPE, TOKEN_ID, SUBJECT_IDENTIFIER FROM IDN_OAUTH2_ACCESS_TOKEN " +
-                                                                                             "WHERE CONSUMER_KEY_ID= (SELECT ID FROM IDN_OAUTH_CONSUMER_APPS WHERE CONSUMER_KEY = ?) AND AUTHZ_USER=? " +
+                                                                                             "REFRESH_TOKEN_VALIDITY_PERIOD, TOKEN_ID, TOKEN_STATE, GRANT_TYPE, SUBJECT_IDENTIFIER FROM IDN_OAUTH2_ACCESS_TOKEN " +
+                                                                                             "WHERE CONSUMER_KEY_ID=?" +
+                                                                                             " AND AUTHZ_USER=? " +
                                                                                              "AND TENANT_ID=? AND USER_DOMAIN=? AND TOKEN_SCOPE_HASH=? ORDER BY TIME_CREATED " +
                                                                                              "DESC FETCH FIRST 1 ROWS ONLY";
 
     public static final String RETRIEVE_LATEST_ACCESS_TOKEN_BY_CLIENT_ID_USER_SCOPE_MSSQL = "SELECT TOP 1 " +
                                                                                             "ACCESS_TOKEN, REFRESH_TOKEN, TIME_CREATED, REFRESH_TOKEN_TIME_CREATED, VALIDITY_PERIOD, " +
-                                                                                            "REFRESH_TOKEN_VALIDITY_PERIOD, USER_TYPE, TOKEN_ID, SUBJECT_IDENTIFIER FROM IDN_OAUTH2_ACCESS_TOKEN " +
-                                                                                            "WHERE CONSUMER_KEY_ID = (SELECT ID FROM IDN_OAUTH_CONSUMER_APPS WHERE CONSUMER_KEY = ?) AND AUTHZ_USER=?" +
+                                                                                            "REFRESH_TOKEN_VALIDITY_PERIOD, TOKEN_ID, TOKEN_STATE, GRANT_TYPE, SUBJECT_IDENTIFIER FROM IDN_OAUTH2_ACCESS_TOKEN " +
+                                                                                            "WHERE CONSUMER_KEY_ID = " +
+                                                                                            "?" +
+                                                                                            " AND AUTHZ_USER=?" +
                                                                                             " AND TENANT_ID=? AND USER_DOMAIN=? AND TOKEN_SCOPE_HASH=? AND ORDER BY TIME_CREATED" +
                                                                                             " DESC";
 
     public static final String RETRIEVE_LATEST_ACCESS_TOKEN_BY_CLIENT_ID_USER_SCOPE_POSTGRESQL = "SELECT * " +
                                                                                                  "FROM (SELECT ACCESS_TOKEN, REFRESH_TOKEN, TIME_CREATED, REFRESH_TOKEN_TIME_CREATED, VALIDITY_PERIOD, " +
-                                                                                                 "REFRESH_TOKEN_VALIDITY_PERIOD, USER_TYPE, TOKEN_ID, SUBJECT_IDENTIFIER FROM IDN_OAUTH2_ACCESS_TOKEN " +
-                                                                                                 "WHERE CONSUMER_KEY_ID = (SELECT ID FROM IDN_OAUTH_CONSUMER_APPS WHERE CONSUMER_KEY = ?) AND AUTHZ_USER=?" +
+                                                                                                 "REFRESH_TOKEN_VALIDITY_PERIOD, TOKEN_ID, TOKEN_STATE, GRANT_TYPE, SUBJECT_IDENTIFIER FROM IDN_OAUTH2_ACCESS_TOKEN " +
+                                                                                                 "WHERE " +
+                                                                                                 "CONSUMER_KEY_ID = ? AND AUTHZ_USER=?" +
                                                                                                  " AND TENANT_ID=? AND USER_DOMAIN=? AND TOKEN_SCOPE_HASH=? AND ORDER BY TIME_CREATED" +
-                                                                                                 " DESC) TOKEN LIMIT 1 ";
+                                                                                                 " DESC) TOKEN LIMIT 1";
 
     public static final String RETRIEVE_LATEST_ACCESS_TOKEN_BY_CLIENT_ID_USER_SCOPE_INFORMIX = "SELECT FIRST 1" +
                                                                                                " * FROM (SELECT ACCESS_TOKEN, REFRESH_TOKEN, TIME_CREATED, REFRESH_TOKEN_TIME_CREATED, VALIDITY_PERIOD, " +
-                                                                                               "REFRESH_TOKEN_VALIDITY_PERIOD, USER_TYPE, TOKEN_ID, SUBJECT_IDENTIFIER FROM " +
-                                                                                               "IDN_OAUTH2_ACCESS_TOKEN WHERE CONSUMER_KEY_ID = (SELECT ID FROM IDN_OAUTH_CONSUMER_APPS WHERE " +
-                                                                                               "CONSUMER_KEY = ?) AND AUTHZ_USER=? AND TENANT_ID=? AND USER_DOMAIN=? AND TOKEN_SCOPE_HASH=? AND " +
-                                                                                               "ORDER BY TIME_CREATED DESC) TOKEN ";
+                                                                                               "REFRESH_TOKEN_VALIDITY_PERIOD, TOKEN_ID, TOKEN_STATE, GRANT_TYPE, SUBJECT_IDENTIFIER FROM " +
+                                                                                               "IDN_OAUTH2_ACCESS_TOKEN WHERE CONSUMER_KEY_ID = ? AND AUTHZ_USER=? AND TENANT_ID=? AND USER_DOMAIN=? AND TOKEN_SCOPE_HASH=? AND " +
+                                                                                               "ORDER BY TIME_CREATED DESC) TOKEN";
 }

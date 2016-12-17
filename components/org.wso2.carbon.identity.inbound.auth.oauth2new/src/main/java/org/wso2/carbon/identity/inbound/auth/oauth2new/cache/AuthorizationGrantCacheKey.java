@@ -22,6 +22,7 @@ import org.wso2.carbon.identity.application.authentication.framework.model.Authe
 import org.wso2.carbon.identity.application.common.cache.CacheKey;
 
 import java.io.Serializable;
+import java.util.HashSet;
 import java.util.Set;
 
 public class AuthorizationGrantCacheKey extends CacheKey {
@@ -30,12 +31,14 @@ public class AuthorizationGrantCacheKey extends CacheKey {
     
     private String clientId;
     private AuthenticatedUser authzUser;
-    private Set<String> scopes;
+    private Set<String> scopes = new HashSet();
 
     public AuthorizationGrantCacheKey(String clientId, AuthenticatedUser authzUser, Set<String> scopes) {
         this.clientId = clientId;
         this.authzUser = authzUser;
-        this.scopes = scopes;
+        if(scopes != null) {
+            this.scopes = scopes;
+        }
     }
 
     public String ClientId() {

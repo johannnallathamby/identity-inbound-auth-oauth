@@ -78,13 +78,19 @@ public class AsyncDAO extends OAuth2DAO {
     }
 
     @Override
-    public void storeAccessToken(AccessToken newAccessToken, String oldAccessToken, String authzCode,
+    public void storeAccessToken(AccessToken newAccessToken, boolean markAccessTokenExpired,
+                                 boolean markAccessTokenInactive, String oldAccessToken, String authzCode,
                                  OAuth2MessageContext messageContext) {
-        AccessTokenJob job = new AccessTokenJob(newAccessToken);
-        job.oldAccessToken = oldAccessToken;
-        job.authzCode = authzCode;
-        job.messageContext = messageContext;
-        accessTokenJobs.add(job);
+        if(poolSize > 0) {
+            AccessTokenJob job = new AccessTokenJob(newAccessToken);
+            job.oldAccessToken = oldAccessToken;
+            job.authzCode = authzCode;
+            job.messageContext = messageContext;
+            accessTokenJobs.add(job);
+        } else {
+            persistentDAO.storeAccessToken(newAccessToken, markAccessTokenExpired, markAccessTokenInactive,
+                                           oldAccessToken, authzCode, messageContext);
+        }
     }
 
     @Override
@@ -105,9 +111,13 @@ public class AsyncDAO extends OAuth2DAO {
 
     @Override
     public void storeAuthzCode(AuthzCode authzCode, OAuth2MessageContext messageContext) {
-        AuthzCodeJob job = new AuthzCodeJob(authzCode);
-        job.messageContext = messageContext;
-        authzCodeJobs.add(job);
+        if(poolSize > 0) {
+            AuthzCodeJob job = new AuthzCodeJob(authzCode);
+            job.messageContext = messageContext;
+            authzCodeJobs.add(job);
+        } else {
+            persistentDAO.storeAuthzCode(authzCode, messageContext);
+        }
     }
 
     @Override
@@ -117,9 +127,13 @@ public class AsyncDAO extends OAuth2DAO {
 
     @Override
     public void updateAuthzCodeState(String authzCode, String state, OAuth2MessageContext messageContext) {
-        AuthzCodeJob job = new AuthzCodeJob(authzCode, state);
-        job.messageContext = messageContext;
-        authzCodeJobs.add(job);
+        if(poolSize > 0) {
+            AuthzCodeJob job = new AuthzCodeJob(authzCode, state);
+            job.messageContext = messageContext;
+            authzCodeJobs.add(job);
+        } else {
+            persistentDAO.updateAuthzCodeState(authzCode, state, messageContext);
+        }
     }
 
     @Override
