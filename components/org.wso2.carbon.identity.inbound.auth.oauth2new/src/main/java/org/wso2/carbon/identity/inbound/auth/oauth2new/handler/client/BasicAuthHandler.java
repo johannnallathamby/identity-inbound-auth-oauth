@@ -34,14 +34,10 @@ import java.util.Arrays;
 
 public class BasicAuthHandler extends ClientAuthHandler {
 
-    // TODO: move this implementation to framework, remove it from here and update framework dependency version
-    public String getName() {
-        return this.getClass().getSimpleName();
-    }
-
     @Override
     public boolean canHandle(MessageContext messageContext) {
-        return true;
+        return ((OAuth2MessageContext)messageContext).getRequest().getHeaderMap().get(OAuth.HeaderType.AUTHORIZATION)
+               != null;
     }
 
     @Override
@@ -69,6 +65,7 @@ public class BasicAuthHandler extends ClientAuthHandler {
                         if(app != null) {
                             if(Arrays.equals(clientSecret.toCharArray(), app.getClientSecret())){
                                 messageContext.setApplication(app);
+                                messageContext.setRelyingPartyID(clientId);
                                 return;
                             }
                         }

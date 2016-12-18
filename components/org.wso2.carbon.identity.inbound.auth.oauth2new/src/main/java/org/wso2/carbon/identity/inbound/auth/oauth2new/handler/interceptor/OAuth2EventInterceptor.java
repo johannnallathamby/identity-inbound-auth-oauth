@@ -27,6 +27,11 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.revoke.RevocationMessageC
 
 public abstract class OAuth2EventInterceptor extends AbstractIdentityMessageHandler {
 
+    // TODO: move this implementation to framework, remove it from here and update framework dependency version
+    public String getName() {
+        return this.getClass().getSimpleName();
+    }
+
     public void onPreTokenIssue(OAuth2MessageContext messageContext) {
         // Nothing to implement
     }

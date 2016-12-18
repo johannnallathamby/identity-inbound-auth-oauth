@@ -48,14 +48,8 @@ public class AuthzCodeGrantHandler extends AuthorizationGrantHandler {
     //Precompile PKCE Regex pattern for performance improvement
     private static Pattern pkceCodeVerifierPattern = Pattern.compile("[\\w\\-\\._~]+");
 
-    // TODO: move this implementation to framework, remove it from here and update framework dependency version
-    public String getName() {
-        return this.getClass().getSimpleName();
-    }
-
     @Override
     public boolean canHandle(MessageContext messageContext) {
-        TokenMessageContext tokenMessageContext = (TokenMessageContext)messageContext;
         if(GrantType.AUTHORIZATION_CODE.toString().equals(
                 ((TokenMessageContext) messageContext).getRequest().getGrantType())) {
             return true;
@@ -71,17 +65,18 @@ public class AuthzCodeGrantHandler extends AuthorizationGrantHandler {
         String redirectURI = ((AuthzCodeGrantRequest)messageContext.getRequest()).getRedirectURI();
         OAuth2DAO dao = HandlerManager.getInstance().getOAuth2DAO(messageContext);
         AuthzCode authzCode = dao.getAuthzCode(authorizationCode, messageContext);
-        if (authzCode != null && !OAuth2.TokenState.INACTIVE.equals(authzCode.getCodeState())) {
-            String bearerToken = dao.getAccessTokenByAuthzCode(authorizationCode, messageContext);
-            dao.updateAccessTokenState(bearerToken, OAuth2.TokenState.REVOKED, messageContext);
-        } else if(authzCode == null || !OAuth2.TokenState.ACTIVE.equals(authzCode.getCodeState())) {
-            throw OAuth2ClientException.error("Invalid authorization code");
+        if(authzCode == null || !OAuth2.TokenState.ACTIVE.equals(authzCode.getCodeState())) {
+            if(authzCode != null && OAuth2.TokenState.INACTIVE.equals(authzCode.getCodeState())) {
+                String bearerToken = dao.getAccessTokenByAuthzCode(authorizationCode, messageContext);
+                dao.updateAccessTokenState(bearerToken, OAuth2.TokenState.REVOKED, messageContext);
+            }
+            throw OAuth2ClientException.error("Invalid authorization code.");
         }
 
         // Validate redirect_uri if it was presented in authorization request
         if (StringUtils.isNotBlank(authzCode.getRedirectURI())) {
-            if(StringUtils.equals(authzCode.getRedirectURI(), redirectURI)) {
-                throw OAuth2ClientException.error("Invalid redirect_uri");
+            if(!StringUtils.equals(authzCode.getRedirectURI(), redirectURI)) {
+                throw OAuth2ClientException.error("Invalid redirect_uri: " + redirectURI);
             }
         }
 

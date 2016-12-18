@@ -18,7 +18,7 @@
 
 package org.wso2.carbon.identity.inbound.auth.oidc.handler;
 
-import org.apache.oltu.oauth2.common.message.types.ResponseType;
+import org.wso2.carbon.identity.core.bean.context.MessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.introspect.IntrospectionHandler;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.introspect.IntrospectionMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.introspect.IntrospectionResponse;
@@ -28,17 +28,24 @@ import org.wso2.carbon.identity.inbound.auth.oidc.OIDC;
 
 public class OIDCIntrospectionHandler extends IntrospectionHandler {
 
+    public int getPriority(MessageContext messageContext) {
+        return 2;
+    }
+
+    public boolean canHandle(MessageContext messageContext) {
+        return true;
+    }
+
     protected IntrospectionResponse.IntrospectionResponseBuilder introspectToken(
             AccessToken accessToken, IntrospectionMessageContext messageContext,
             IntrospectionResponse.IntrospectionResponseBuilder builder) {
 
-        super.introspectToken(accessToken, messageContext,builder);
-        if(ResponseType.TOKEN.toString().equals(accessToken.getGrantType()) ||
-           OIDC.ResponseType.ID_TOKEN_TOKEN.equals(accessToken.getGrantType())) {
+        super.introspectToken(accessToken, messageContext, builder);
+
+        if(OIDC.ResponseType.ID_TOKEN_TOKEN.equals(accessToken.getGrantType())) {
             builder.setIss(OAuth2ServerConfig.getInstance().getOAuth2AuthzEPUrl());
-        } else {
-            builder.setIss(OAuth2ServerConfig.getInstance().getOAuth2TokenEPUrl());
         }
+
         return builder;
     }
 }

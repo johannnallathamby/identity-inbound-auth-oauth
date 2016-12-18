@@ -27,6 +27,11 @@ import java.util.List;
 
 public abstract class AuthorizationGrantHandler extends AbstractIdentityMessageHandler {
 
+    // TODO: move this implementation to framework, remove it from here and update framework dependency version
+    public String getName() {
+        return this.getClass().getSimpleName();
+    }
+
     public void validateGrant(TokenMessageContext messageContext) throws OAuth2ClientException, OAuth2Exception {
 
         List<String> grantTypes = messageContext.getApplication().getGrantTypes();

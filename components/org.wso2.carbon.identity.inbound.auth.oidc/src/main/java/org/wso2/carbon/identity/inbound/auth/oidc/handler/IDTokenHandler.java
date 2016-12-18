@@ -29,12 +29,13 @@ import com.nimbusds.openid.connect.sdk.claims.AuthorizedParty;
 import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.wso2.carbon.identity.core.bean.context.MessageContext;
 import org.wso2.carbon.identity.core.handler.AbstractIdentityMessageHandler;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.AuthzMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2MessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.TokenMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AccessToken;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.model.OAuth2App;
 import org.wso2.carbon.identity.inbound.auth.oidc.OIDC;
 import org.wso2.carbon.identity.inbound.auth.oidc.cache.OIDCCache;
 import org.wso2.carbon.identity.inbound.auth.oidc.cache.OIDCCacheAccessTokenKey;
@@ -57,6 +58,10 @@ public class IDTokenHandler extends AbstractIdentityMessageHandler {
         return this.getClass().getSimpleName();
     }
 
+    public boolean canHandle(MessageContext messageContext) {
+        return true;
+    }
+
     public IDTokenClaimsSet buildIDToken(OAuth2MessageContext messageContext) {
 
         if(messageContext instanceof AuthzMessageContext) {
@@ -70,19 +75,15 @@ public class IDTokenHandler extends AbstractIdentityMessageHandler {
 
         String subject = messageContext.getAuthzUser().getAuthenticatedSubjectIdentifier();
         String username = null;
-        OAuth2App app = messageContext.getApplication();
         if(!messageContext.getAuthzUser().isFederatedUser()) {
-            boolean useTenantDomain = app.isUseTenantDomainInLocalSubjectIdentifier();
-            boolean useUserstoreDomain = app.isUseUserstoreDomainInLocalSubjectIdentifier();
-            username = messageContext.getAuthzUser().getUsernameAsSubjectIdentifier(useUserstoreDomain,
-                                                                                    useTenantDomain);
+            username = messageContext.getAuthzUser().toString();
         } else {
             username = messageContext.getAuthzUser().getAuthenticatedSubjectIdentifier();
         }
         String tenantDomain = messageContext.getRequest().getTenantDomain();
         String clientId = messageContext.getRequest().getClientId();
         String atHash = null;
-        AccessToken accessToken = (AccessToken)messageContext.getParameter(OIDC.ACCESS_TOKEN);
+        AccessToken accessToken = (AccessToken)messageContext.getParameter(OAuth2.ACCESS_TOKEN);
         if(accessToken != null) {
             if (!JWSAlgorithm.NONE.equals(OIDCServerConfig.getInstance().getIdTokenSigAlg()) &&
                 !OIDC.ID_TOKEN.equalsIgnoreCase(messageContext.getRequest().getResponseType()) &&
@@ -107,19 +108,15 @@ public class IDTokenHandler extends AbstractIdentityMessageHandler {
 
         String subject = messageContext.getAuthzUser().getAuthenticatedSubjectIdentifier();
         String username = null;
-        OAuth2App app = messageContext.getApplication();
         if(!messageContext.getAuthzUser().isFederatedUser()) {
-            boolean useTenantDomain = app.isUseTenantDomainInLocalSubjectIdentifier();
-            boolean useUserstoreDomain = app.isUseUserstoreDomainInLocalSubjectIdentifier();
-            username = messageContext.getAuthzUser().getUsernameAsSubjectIdentifier(useUserstoreDomain,
-                                                                                    useTenantDomain);
+            username = messageContext.getAuthzUser().toString();
         } else {
             username = messageContext.getAuthzUser().getAuthenticatedSubjectIdentifier();
         }
         String tenantDomain = messageContext.getRequest().getTenantDomain();
         String clientId = messageContext.getApplication().getClientId();
         String atHash = null;
-        AccessToken accessToken = (AccessToken)messageContext.getParameter(OIDC.ACCESS_TOKEN);;
+        AccessToken accessToken = (AccessToken)messageContext.getParameter(OAuth2.ACCESS_TOKEN);;
         if (!JWSAlgorithm.NONE.equals(OIDCServerConfig.getInstance().getIdTokenSigAlg())) {
             atHash = OIDCUtils.calculateAtHash(OIDCServerConfig.getInstance().getIdTokenSigAlg(),
                                                accessToken.getAccessToken());
@@ -128,7 +125,7 @@ public class IDTokenHandler extends AbstractIdentityMessageHandler {
                 .getAccessToken());
         String nonce = null;
         List<String> acrValues = new ArrayList();
-        long authTime = 0;
+        long authTime = -1l;
         if(cacheEntry != null) {
             nonce = cacheEntry.getNonce();
             acrValues = cacheEntry.getAcrValues();

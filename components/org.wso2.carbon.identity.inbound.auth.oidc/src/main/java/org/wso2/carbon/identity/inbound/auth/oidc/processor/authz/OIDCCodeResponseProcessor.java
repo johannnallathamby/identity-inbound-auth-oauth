@@ -20,9 +20,7 @@ package org.wso2.carbon.identity.inbound.auth.oidc.processor.authz;
 
 import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
 import org.apache.commons.lang.StringUtils;
-import org.apache.oltu.oauth2.as.issuer.MD5Generator;
-import org.apache.oltu.oauth2.as.issuer.OAuthIssuerImpl;
-import org.apache.oltu.oauth2.common.OAuth;
+import org.apache.oltu.oauth2.common.message.types.ResponseType;
 import org.wso2.carbon.identity.application.authentication.framework.exception.FrameworkException;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.InboundConstants;
@@ -37,30 +35,32 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2ConsentEx
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AuthzCode;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.OAuth2ServerConfig;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.processor.authz.CodeResponseProcessor;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Util;
 import org.wso2.carbon.identity.inbound.auth.oidc.OIDC;
 import org.wso2.carbon.identity.inbound.auth.oidc.bean.message.request.authz.OIDCAuthzRequest;
 import org.wso2.carbon.identity.inbound.auth.oidc.bean.message.response.authz.OIDCAuthzResponse;
 import org.wso2.carbon.identity.inbound.auth.oidc.cache.OIDCCache;
 import org.wso2.carbon.identity.inbound.auth.oidc.cache.OIDCCacheCodeKey;
 import org.wso2.carbon.identity.inbound.auth.oidc.cache.OIDCCacheEntry;
-import org.wso2.carbon.identity.inbound.auth.oidc.handler.OIDCHandlerManager;
+import org.wso2.carbon.identity.inbound.auth.oidc.handler.HandlerManager;
+import org.wso2.carbon.identity.inbound.auth.oidc.util.OIDCUtils;
 
 import java.util.List;
 import java.util.Set;
 
 /*
- * InboundRequestProcessor for response_type=code
+ * IdentityProcessor for OIDC Authentication Endpoint with response_type=code
  */
 public class OIDCCodeResponseProcessor extends CodeResponseProcessor {
 
-    private OAuthIssuerImpl oltuIssuer = new OAuthIssuerImpl(new MD5Generator());
+    public int getPriority() {
+        return 2;
+    }
 
     public boolean canHandle(IdentityRequest identityRequest) {
         if(super.canHandle(identityRequest)) {
-            Set<String> scopes = OAuth2Util.buildScopeSet(identityRequest.getParameter(OAuth.OAUTH_SCOPE));
-            if (scopes.contains(OIDC.OPENID_SCOPE)) {
-                return true;
+            IdentityRequest originalClientRequest = getContextIfAvailable(identityRequest).getRequest();
+            if(originalClientRequest instanceof OIDCAuthzRequest){
+                return ResponseType.CODE.toString().equals(((OIDCAuthzRequest)originalClientRequest).getResponseType());
             }
         }
         return false;
@@ -93,8 +93,9 @@ public class OIDCCodeResponseProcessor extends CodeResponseProcessor {
 
                 String spName = messageContext.getApplication().getAppName();
                 int applicationId = messageContext.getApplication().getAppId();
+                Set<String> scopes = messageContext.getApprovedScopes();
 
-                if (!hasUserApprovedAppAlways(authenticatedUser, spName, applicationId)) {
+                if (!hasUserApprovedAppAlways(authenticatedUser, spName, applicationId, scopes)) {
                     if(!isPromptNone) {
                         return initiateResourceOwnerConsent(messageContext);
                     } else {
@@ -119,6 +120,8 @@ public class OIDCCodeResponseProcessor extends CodeResponseProcessor {
             processConsent(messageContext);
         }
 
+        AuthzResponse.AuthzResponseBuilder builder = buildAuthzResponse(messageContext);
+
         // This cache is used for later retrieving AuthenticationResult from Token endpoint and Userinfo endpoint
         // The day we can invoke Authentication Framework via Java APIs, we can get rid of this hack
         AuthzCode authzCode = (AuthzCode) messageContext.getParameter(OAuth2.AUTHZ_CODE);
@@ -126,24 +129,23 @@ public class OIDCCodeResponseProcessor extends CodeResponseProcessor {
                                                                                                       .AUTHENTICATION_RESULT);
         String nonce = ((OIDCAuthzRequest)messageContext.getRequest()).getNonce();
         List<String> acrValues = ((OIDCAuthzRequest)messageContext.getRequest()).getAcrValues();
-        long authTime = (Long)authnResult.getProperty("auth_time");
+        long authTime = OIDCUtils.getAuthTime(messageContext);
         Set<OIDCAuthzRequest.Claim> claims = ((OIDCAuthzRequest) messageContext.getRequest()).getClaims();
+
         storeAuthnResultToCache(authzCode.getAuthzCodeId(), authzCode.getAuthzCode(), authnResult, nonce, acrValues,
                                 authTime, authzCode.getScopes(), claims);
 
-        return buildAuthzResponse(messageContext);
+        return builder;
     }
 
     protected AuthzResponse.AuthzResponseBuilder buildAuthzResponse(AuthzMessageContext messageContext) {
 
         AuthzResponse.AuthzResponseBuilder oauth2Builder = super.buildAuthzResponse(messageContext);
 
-        OIDCAuthzResponse.OIDCAuthzResponseBuilder oidcBuilder = new OIDCAuthzResponse.OIDCAuthzResponseBuilder
-                (oauth2Builder, messageContext);
-
-        if(messageContext.getRequest().getResponseType().contains("id_token")) {
-            addIDToken(oidcBuilder, messageContext);
-        }
+        OIDCAuthzResponse.OIDCAuthzResponseBuilder oidcBuilder =
+                new OIDCAuthzResponse.OIDCAuthzResponseBuilder(messageContext);
+        oidcBuilder.setOLTUBuilder(oauth2Builder.getBuilder());
+        oidcBuilder.setFragmentUrl(oauth2Builder.isFragmentUrl());
 
         String responseMode = ((OIDCAuthzRequest)messageContext.getRequest()).getResponseMode();
         if(responseMode != null && OIDC.ResponseMode.FORM_POST.equals(responseMode)) {
@@ -153,15 +155,15 @@ public class OIDCCodeResponseProcessor extends CodeResponseProcessor {
         AuthenticationResult authenticationResult = (AuthenticationResult)messageContext.getParameter(
                 InboundConstants.RequestProcessor.AUTHENTICATION_RESULT);
         if(StringUtils.isNotBlank(authenticationResult.getAuthenticatedIdPs())){
-            oauth2Builder.getBuilder().setParam(InboundConstants.LOGGED_IN_IDPS, authenticationResult.getAuthenticatedIdPs());
+            oidcBuilder.getBuilder().setParam(InboundConstants.LOGGED_IN_IDPS, authenticationResult.getAuthenticatedIdPs());
         }
 
-        return oauth2Builder;
+        return oidcBuilder;
     }
 
     protected void addIDToken(OIDCAuthzResponse.OIDCAuthzResponseBuilder builder, AuthzMessageContext messageContext) {
 
-        IDTokenClaimsSet idTokenClaimsSet = OIDCHandlerManager.getInstance().buildIDToken(messageContext);
+        IDTokenClaimsSet idTokenClaimsSet = HandlerManager.getInstance().buildIDToken(messageContext);
         builder.setIdTokenClaimsSet(idTokenClaimsSet);
     }
 

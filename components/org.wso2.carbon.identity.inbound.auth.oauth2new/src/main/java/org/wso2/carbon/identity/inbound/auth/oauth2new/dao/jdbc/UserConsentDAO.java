@@ -18,16 +18,18 @@
 
 package org.wso2.carbon.identity.inbound.auth.oauth2new.dao.jdbc;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
 import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
 import org.wso2.carbon.identity.core.util.IdentityDatabaseUtil;
 import org.wso2.carbon.identity.core.util.IdentityTenantUtil;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2InternalException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.UserConsent;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Util;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Set;
 
 public class UserConsentDAO {
 
@@ -45,30 +47,34 @@ public class UserConsentDAO {
         if(userConsent == null){
             throw new IllegalArgumentException("UserConsent is NULL");
         }
-        UserConsent existingConsent = this.getUserConsent(userConsent.getAuthzUser(), userConsent.getApplicationId());
+        UserConsent existingConsent = this.getUserConsent(userConsent.getAuthzUser(), userConsent.getApplicationId(),
+                                                          userConsent.getScopes());
         Connection connection = IdentityDatabaseUtil.getDBConnection();
         PreparedStatement prepStmt = null;
         try {
             if(existingConsent != null) {
                 prepStmt = connection.prepareStatement("UPDATE IDN_OAUTH2_USER_CONSENT SET TRUSTED_ALWAYS = ? WHERE " +
                                                        "USER_NAME = ? AND USER_DOMAIN = ? AND TENANT_ID = ? AND " +
-                                                       "APPLICATION_ID = ?");
+                                                       "APPLICATION_ID = ? AND TOKEN_SCOPE_HASH = ?");
                 prepStmt.setString(1, userConsent.isTrustedAlways()?"1":"0");
                 prepStmt.setString(2, userConsent.getAuthzUser().getUserName());
                 prepStmt.setString(3, userConsent.getAuthzUser().getUserStoreDomain());
                 prepStmt.setInt(4, IdentityTenantUtil.getTenantId(userConsent.getAuthzUser().getTenantDomain()));
                 prepStmt.setInt(5, userConsent.getApplicationId());
+                prepStmt.setString(6, OAuth2Util.hashScopes(userConsent.getScopes()));
                 prepStmt.execute();
                 connection.commit();
             } else {
                 prepStmt = connection.prepareStatement("INSERT INTO IDN_OAUTH2_USER_CONSENT (TRUSTED_ALWAYS, " +
-                                                       "USER_NAME, USER_DOMAIN, TENANT_ID, APPLICATION_ID)" +
-                                                       "VALUES (?,?,?,?,?)");
+                                                       "USER_NAME, USER_DOMAIN, TENANT_ID, APPLICATION_ID, " +
+                                                       "TOKEN_SCOPE_HASH)" +
+                                                       "VALUES (?,?,?,?,?,?)");
                 prepStmt.setString(1, userConsent.isTrustedAlways()?"1":"0");
                 prepStmt.setString(2, userConsent.getAuthzUser().getUserName());
                 prepStmt.setString(3, userConsent.getAuthzUser().getUserStoreDomain());
                 prepStmt.setInt(4, IdentityTenantUtil.getTenantId(userConsent.getAuthzUser().getTenantDomain()));
                 prepStmt.setInt(5, userConsent.getApplicationId());
+                prepStmt.setString(6, OAuth2Util.hashScopes(userConsent.getScopes()));
                 prepStmt.execute();
                 connection.commit();
             }
@@ -83,7 +89,8 @@ public class UserConsentDAO {
 
     }
 
-    public UserConsent getUserConsent(AuthenticatedUser authzUser, int applicationId) throws OAuth2InternalException {
+    public UserConsent getUserConsent(AuthenticatedUser authzUser, int applicationId, Set<String> scopes) throws
+                                                                                         OAuth2InternalException {
 
         if(authzUser == null){
             throw new IllegalArgumentException("AuthenticatedUser is NULL");
@@ -92,19 +99,21 @@ public class UserConsentDAO {
         Connection connection = IdentityDatabaseUtil.getDBConnection();
         PreparedStatement prepStmt = null;
         try {
-            prepStmt = connection.prepareStatement("SELECT TRUSTED_ALWAYS, FROM IDN_OAUTH2_USER_CONSENT WHERE " +
-                                                   "USER_NAME = ? AND USER_DOMAIN = ? AND TENANT_ID = ? AND" +
-                                                   "APPLICATION_ID = ?");
+            prepStmt = connection.prepareStatement("SELECT TRUSTED_ALWAYS FROM IDN_OAUTH2_USER_CONSENT WHERE " +
+                                                   "USER_NAME = ? AND USER_DOMAIN = ? AND TENANT_ID = ? AND " +
+                                                   "APPLICATION_ID = ? AND TOKEN_SCOPE_HASH = ?");
             prepStmt.setString(1, authzUser.getUserName());
             prepStmt.setString(2, authzUser.getUserStoreDomain());
             prepStmt.setInt(3, IdentityTenantUtil.getTenantId(authzUser.getTenantDomain()));
             prepStmt.setInt(4, applicationId);
+            prepStmt.setString(5, OAuth2Util.hashScopes(scopes));
             ResultSet rs = prepStmt.executeQuery();
             boolean isTrustedAlways = false;
             if(rs.next()) {
-                isTrustedAlways = "1".equals(rs.getString(1)) ? true : false;
+                isTrustedAlways = "1".equals(rs.getString(1));
             }
             userConsent = new UserConsent(authzUser, applicationId, isTrustedAlways);
+            userConsent.setScopes(scopes);
             connection.commit();
             return userConsent;
         } catch (SQLException e) {

@@ -18,7 +18,6 @@
 
 package org.wso2.carbon.identity.inbound.auth.oauth2new.handler.grant;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.oltu.oauth2.common.message.types.GrantType;
 import org.wso2.carbon.CarbonConstants;
 import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
@@ -41,14 +40,8 @@ import org.wso2.carbon.utils.multitenancy.MultitenantUtils;
 
 public class PasswordGrantHandler extends AuthorizationGrantHandler {
 
-    // TODO: move this implementation to framework, remove it from here and update framework dependency version
-    public String getName() {
-        return this.getClass().getSimpleName();
-    }
-
     @Override
     public boolean canHandle(MessageContext messageContext) {
-        TokenMessageContext tokenMessageContext = (TokenMessageContext)messageContext;
         if(GrantType.PASSWORD.toString().equals(
                 ((TokenMessageContext) messageContext).getRequest().getGrantType())) {
             return true;

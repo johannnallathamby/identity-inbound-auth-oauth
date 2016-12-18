@@ -19,13 +19,31 @@
 package org.wso2.carbon.identity.inbound.auth.oauth2new.processor;
 
 import org.apache.oltu.oauth2.common.message.types.GrantType;
+import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityMessageContext;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityProcessor;
+import org.wso2.carbon.identity.core.util.IdentityUtil;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.AuthzMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2MessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.TokenMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2RuntimeException;
 
 public abstract class OAuth2IdentityRequestProcessor extends IdentityProcessor {
+
+    public int getPriority() {
+        return 1;
+    }
+
+    public String getRelyingPartyId(IdentityMessageContext messageContext) {
+        return messageContext.getRelyingPartyId();
+    }
+
+    public String getRelyingPartyId() {
+        throw new UnsupportedOperationException("Unsupported Operation getRelyingPartyId() in " + getName());
+    }
+
+    public String getCallbackPath(IdentityMessageContext context) {
+        return IdentityUtil.getServerURL("identity", false, false);
+    }
 
     /**
      * Tells if refresh token must be issued or not for this access token request.

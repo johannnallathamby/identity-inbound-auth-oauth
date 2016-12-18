@@ -27,14 +27,20 @@ public class AuthzResponse extends ROApprovalResponse {
     private static final long serialVersionUID = 2602695389647693274L;
 
     protected OAuthASResponse.OAuthAuthorizationResponseBuilder builder;
+    protected boolean isFragmentUrl;
 
     protected AuthzResponse(AuthzResponseBuilder builder) {
         super(builder);
         this.builder = builder.builder;
+        this.isFragmentUrl = builder.isFragmentUrl;
     }
 
     public OAuthASResponse.OAuthAuthorizationResponseBuilder getBuilder() {
         return this.builder;
+    }
+
+    public boolean isFragmentUrl() {
+        return isFragmentUrl;
     }
 
     public static class AuthzResponseBuilder extends ROApprovalResponseBuilder {
@@ -44,14 +50,28 @@ public class AuthzResponse extends ROApprovalResponse {
         }
 
         protected OAuthASResponse.OAuthAuthorizationResponseBuilder builder;
+        protected boolean isFragmentUrl;
+
+        // Unconventional accessor methods in builder because there is the requirement to extend this builder and
+        // build a sub type of this class. When doing that the build() method of OAuthTokenResponseBuilder must be
+        // called only once the sub type builder is fully loaded.
 
         public OAuthASResponse.OAuthAuthorizationResponseBuilder getBuilder() {
             return builder;
         }
 
+        public boolean isFragmentUrl() {
+            return isFragmentUrl;
+        }
+
         public AuthzResponseBuilder setOLTUAuthzResponseBuilder(OAuthASResponse.OAuthAuthorizationResponseBuilder
                                                                         builder) {
             this.builder = builder;
+            return this;
+        }
+
+        public AuthzResponseBuilder setFragmentUrl(boolean isFragmentUrl) {
+            this.isFragmentUrl = isFragmentUrl;
             return this;
         }
 

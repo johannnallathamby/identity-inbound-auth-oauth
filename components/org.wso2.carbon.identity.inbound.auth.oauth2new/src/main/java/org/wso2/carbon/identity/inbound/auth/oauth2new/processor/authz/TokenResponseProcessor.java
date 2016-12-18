@@ -23,19 +23,29 @@ import org.apache.oltu.oauth2.as.response.OAuthASResponse;
 import org.apache.oltu.oauth2.common.OAuth;
 import org.apache.oltu.oauth2.common.message.types.ResponseType;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.AuthzMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.authz.AuthzResponse;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2Exception;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.HandlerManager;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AccessToken;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.util.DummyHttpServletRequest;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Util;
 
 import javax.servlet.http.HttpServletResponse;
 
+/*
+ * IdentityProcessor for OIDC Authentication Endpoint with "response_type=token"
+ */
 public class TokenResponseProcessor extends ROApprovalProcessor {
 
     public boolean canHandle(IdentityRequest identityRequest) {
-        if(StringUtils.equals(ResponseType.CODE.toString(), identityRequest.getParameter(OAuth.OAUTH_RESPONSE_TYPE))) {
-            return true;
+        if(super.canHandle(identityRequest)) {
+            IdentityRequest originalClientRequest = getContextIfAvailable(identityRequest).getRequest();
+            if (StringUtils.equals(ResponseType.TOKEN.toString(),
+                                   originalClientRequest.getParameter(OAuth.OAUTH_RESPONSE_TYPE))) {
+                return true;
+            }
         }
         return false;
     }
@@ -48,7 +58,7 @@ public class TokenResponseProcessor extends ROApprovalProcessor {
      */
     protected AuthzResponse.AuthzResponseBuilder buildAuthzResponse(AuthzMessageContext messageContext) {
 
-        AccessToken accessToken = HandlerManager.getInstance().issueAccessToken(messageContext);
+        AccessToken accessToken = issueAccessToken(messageContext);
 
         long expiry = 0;
         if(accessToken.getAccessTokenValidity() > 0) {
@@ -60,7 +70,7 @@ public class TokenResponseProcessor extends ROApprovalProcessor {
         String state = messageContext.getRequest().getState();
 
         OAuthASResponse.OAuthAuthorizationResponseBuilder oltuRespBuilder = OAuthASResponse
-                .authorizationResponse(null, HttpServletResponse.SC_FOUND)
+                .authorizationResponse(new DummyHttpServletRequest(), HttpServletResponse.SC_FOUND)
                 .location(messageContext.getRequest().getRedirectURI())
                 .setAccessToken(accessToken.getAccessToken())
                 .setExpiresIn(Long.toString(expiry))
@@ -75,7 +85,21 @@ public class TokenResponseProcessor extends ROApprovalProcessor {
         
         AuthzResponse.AuthzResponseBuilder builder = new AuthzResponse.AuthzResponseBuilder(messageContext);
         builder.setOLTUAuthzResponseBuilder(oltuRespBuilder);
+        builder.setFragmentUrl(true);
         return builder;
+    }
+
+    /**
+     * Issues the access token
+     *
+     * @param messageContext The runtime message context
+     * @return OAuth2 access token response
+     * @throws OAuth2Exception
+     */
+    protected AccessToken issueAccessToken(AuthzMessageContext messageContext) {
+        AccessToken accessToken = HandlerManager.getInstance().issueAccessToken(messageContext);
+        messageContext.addParameter(OAuth2.ACCESS_TOKEN, accessToken);
+        return accessToken;
     }
 
     protected boolean issueRefreshToken(AuthzMessageContext messageContext) {

@@ -33,7 +33,7 @@ import org.wso2.carbon.identity.application.authentication.framework.inbound.Htt
 import org.wso2.carbon.identity.application.authentication.framework.inbound.HttpIdentityResponseFactory;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityProcessor;
 import org.wso2.carbon.identity.application.mgt.ApplicationManagementService;
-import org.wso2.carbon.identity.core.handler.InitConfig;
+import org.wso2.carbon.identity.core.handler.MessageHandlerComparator;
 import org.wso2.carbon.identity.core.util.IdentityCoreInitializedEvent;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.analytics.DASDataPublisher;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.authz.AuthzApprovedRequestFactory;
@@ -49,6 +49,7 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.dao.OAuth2DAOHandler;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.dao.jdbc.JDBCOAuth2DAO;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.client.BasicAuthHandler;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.client.ClientAuthHandler;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.client.FormPostHandler;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.grant.AuthorizationGrantHandler;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.grant.AuthzCodeGrantHandler;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.grant.ClientCredentialsGrantHandler;
@@ -57,6 +58,7 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.grant.RefreshGran
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.interceptor.OAuth2EventInterceptor;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.issuer.AccessTokenResponseIssuer;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.issuer.BearerTokenResponseIssuer;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.persist.EncryptionDecryptionPersistenceProcessor;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.persist.PlainTextPersistenceProcessor;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.persist.TokenPersistenceProcessor;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.introspect.IntrospectionHandler;
@@ -76,6 +78,8 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.revoke.RevocationServiceI
 import org.wso2.carbon.registry.core.service.RegistryService;
 import org.wso2.carbon.user.core.service.RealmService;
 
+import java.util.Collections;
+
 @Component(
         name = "identity.oauth2new.component",
         immediate = true
@@ -93,16 +97,38 @@ public class OAuth2ServiceComponent {
             OAuth2ServerConfig.getInstance();
 
             OAuth2DataHolder.getInstance().getOAuth2DAOHandlers().add(new OAuth2DAOHandler(new JDBCOAuth2DAO()));
+            Collections.sort(OAuth2DataHolder.getInstance().getOAuth2DAOHandlers(), new MessageHandlerComparator());
+            Collections.reverse(OAuth2DataHolder.getInstance().getOAuth2DAOHandlers());
+
+            OAuth2DataHolder.getInstance().getTokenPersistenceProcessors().add(
+                    new EncryptionDecryptionPersistenceProcessor());
             OAuth2DataHolder.getInstance().getTokenPersistenceProcessors().add(new PlainTextPersistenceProcessor());
+            Collections.sort( OAuth2DataHolder.getInstance().getTokenPersistenceProcessors(), new MessageHandlerComparator());
+            Collections.reverse( OAuth2DataHolder.getInstance().getTokenPersistenceProcessors());
+
             OAuth2DataHolder.getInstance().getAccessTokenIssuers().add(new BearerTokenResponseIssuer());
+            Collections.sort(OAuth2DataHolder.getInstance().getAccessTokenIssuers(), new MessageHandlerComparator());
+            Collections.reverse(OAuth2DataHolder.getInstance().getAccessTokenIssuers());
+
             OAuth2DataHolder.getInstance().getClientAuthHandlers().add(new BasicAuthHandler());
+            OAuth2DataHolder.getInstance().getClientAuthHandlers().add(new FormPostHandler());
+            Collections.sort(OAuth2DataHolder.getInstance().getClientAuthHandlers(), new MessageHandlerComparator());
+            Collections.reverse(OAuth2DataHolder.getInstance().getClientAuthHandlers());
+
             OAuth2DataHolder.getInstance().getGrantHandlers().add(new AuthzCodeGrantHandler());
             OAuth2DataHolder.getInstance().getGrantHandlers().add(new PasswordGrantHandler());
             OAuth2DataHolder.getInstance().getGrantHandlers().add(new ClientCredentialsGrantHandler());
             OAuth2DataHolder.getInstance().getGrantHandlers().add(new RefreshGrantHandler());
+            Collections.sort(OAuth2DataHolder.getInstance().getGrantHandlers(), new MessageHandlerComparator());
+            Collections.reverse(OAuth2DataHolder.getInstance().getGrantHandlers());
+
             OAuth2DataHolder.getInstance().getIntrospectionHandlers().add(new IntrospectionHandler());
-            OAuth2DataHolder.getInstance().getOAuth2DAOHandlers().add(new OAuth2DAOHandler(new JDBCOAuth2DAO()));
+            Collections.sort(OAuth2DataHolder.getInstance().getIntrospectionHandlers(), new MessageHandlerComparator());
+            Collections.reverse(OAuth2DataHolder.getInstance().getIntrospectionHandlers());
+
             OAuth2DataHolder.getInstance().getInterceptors().add(new DASDataPublisher());
+            Collections.sort(OAuth2DataHolder.getInstance().getInterceptors(), new MessageHandlerComparator());
+            Collections.reverse(OAuth2DataHolder.getInstance().getInterceptors());
 
             ServiceRegistration authzProcessor = context.getBundleContext().registerService(
                     IdentityProcessor.class.getName(), new AuthzProcessor(), null);
@@ -401,6 +427,8 @@ public class OAuth2ServiceComponent {
         }
         handler.init(null);
         OAuth2DataHolder.getInstance().getClientAuthHandlers().add(handler);
+        Collections.sort(OAuth2DataHolder.getInstance().getClientAuthHandlers(), new MessageHandlerComparator());
+        Collections.reverse(OAuth2DataHolder.getInstance().getClientAuthHandlers());
     }
 
     protected void removeClientAuthHandler(ClientAuthHandler handler) {
@@ -423,6 +451,8 @@ public class OAuth2ServiceComponent {
         }
         handler.init(null);
         OAuth2DataHolder.getInstance().getAccessTokenIssuers().add(handler);
+        Collections.sort(OAuth2DataHolder.getInstance().getAccessTokenIssuers(), new MessageHandlerComparator());
+        Collections.reverse(OAuth2DataHolder.getInstance().getAccessTokenIssuers());
     }
 
     protected void removeAccessTokenResponseIssuer(AccessTokenResponseIssuer handler) {
@@ -445,6 +475,8 @@ public class OAuth2ServiceComponent {
         }
         handler.init(null);
         OAuth2DataHolder.getInstance().getTokenPersistenceProcessors().add(handler);
+        Collections.sort(OAuth2DataHolder.getInstance().getTokenPersistenceProcessors(), new MessageHandlerComparator());
+        Collections.reverse(OAuth2DataHolder.getInstance().getTokenPersistenceProcessors());
     }
 
     protected void removeTokenPersistenceProcessor(TokenPersistenceProcessor persistenceProcessor) {
@@ -467,6 +499,8 @@ public class OAuth2ServiceComponent {
         }
         handler.init(null);
         OAuth2DataHolder.getInstance().getOAuth2DAOHandlers().add(handler);
+        Collections.sort(OAuth2DataHolder.getInstance().getOAuth2DAOHandlers(), new MessageHandlerComparator());
+        Collections.reverse(OAuth2DataHolder.getInstance().getOAuth2DAOHandlers());
     }
 
     protected void removeOAuth2DAOHandler(OAuth2DAOHandler handler) {
@@ -489,6 +523,8 @@ public class OAuth2ServiceComponent {
         }
         handler.init(null);
         OAuth2DataHolder.getInstance().getGrantHandlers().add(handler);
+        Collections.sort(OAuth2DataHolder.getInstance().getGrantHandlers(), new MessageHandlerComparator());
+        Collections.reverse(OAuth2DataHolder.getInstance().getGrantHandlers());
     }
 
     protected void removeAuthorizationGrantHandler(AuthorizationGrantHandler handler) {
@@ -511,6 +547,8 @@ public class OAuth2ServiceComponent {
         }
         handler.init(null);
         OAuth2DataHolder.getInstance().getIntrospectionHandlers().add(handler);
+        Collections.sort(OAuth2DataHolder.getInstance().getIntrospectionHandlers(), new MessageHandlerComparator());
+        Collections.reverse(OAuth2DataHolder.getInstance().getIntrospectionHandlers());
     }
 
     protected void removeIntrospectionHandler(IntrospectionHandler handler) {
@@ -533,6 +571,8 @@ public class OAuth2ServiceComponent {
         }
         handler.init(null);
         OAuth2DataHolder.getInstance().getInterceptors().add(handler);
+        Collections.sort(OAuth2DataHolder.getInstance().getInterceptors(), new MessageHandlerComparator());
+        Collections.reverse(OAuth2DataHolder.getInstance().getInterceptors());
     }
 
     protected void removeOAuth2EventInterceptor(OAuth2EventInterceptor handler) {

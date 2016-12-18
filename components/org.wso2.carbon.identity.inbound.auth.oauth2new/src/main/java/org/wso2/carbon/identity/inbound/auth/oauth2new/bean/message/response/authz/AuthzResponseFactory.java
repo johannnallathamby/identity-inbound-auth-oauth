@@ -55,6 +55,7 @@ public class AuthzResponseFactory extends HttpIdentityResponseFactory {
         }
         builder.setStatusCode(response.getResponseStatus());
         builder.setRedirectURL(response.getLocationUri());
+        builder.setFragmentUrl(authzResponse.isFragmentUrl());
         builder.setHeaders(response.getHeaders());
         builder.addHeader(OAuth2.Header.CACHE_CONTROL,
                           OAuth2.HeaderValue.CACHE_CONTROL_NO_STORE);

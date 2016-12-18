@@ -22,10 +22,18 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
 import org.wso2.carbon.base.MultitenantConstants;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.HttpIdentityRequestFactory;
+import org.wso2.carbon.identity.application.authentication.framework.inbound.HttpIdentityResponseFactory;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityProcessor;
 import org.wso2.carbon.identity.application.mgt.ApplicationManagementService;
+import org.wso2.carbon.identity.core.handler.MessageHandlerComparator;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.introspect.IntrospectionHandler;
 import org.wso2.carbon.identity.inbound.auth.oidc.bean.message.request.authz.OIDCAuthzRequestFactory;
 import org.wso2.carbon.identity.inbound.auth.oidc.bean.message.response.authz.OIDCAuthzResponseFactory;
@@ -36,36 +44,32 @@ import org.wso2.carbon.identity.inbound.auth.oidc.handler.IDTokenHandler;
 import org.wso2.carbon.identity.inbound.auth.oidc.handler.OIDCIntrospectionHandler;
 import org.wso2.carbon.identity.inbound.auth.oidc.model.OIDCServerConfig;
 import org.wso2.carbon.identity.inbound.auth.oidc.processor.authz.OIDCAuthzProcessor;
+import org.wso2.carbon.identity.inbound.auth.oidc.processor.authz.OIDCCodeResponseProcessor;
+import org.wso2.carbon.identity.inbound.auth.oidc.processor.authz.OIDCTokenResponseProcessor;
 import org.wso2.carbon.identity.inbound.auth.oidc.processor.token.OIDCTokenProcessor;
 import org.wso2.carbon.identity.inbound.auth.oidc.processor.userinfo.UserInfoProcessor;
 import org.wso2.carbon.registry.core.service.RegistryService;
 import org.wso2.carbon.stratos.common.listeners.TenantMgtListener;
 import org.wso2.carbon.user.core.service.RealmService;
 
-/**
- * @scr.component name="oidc.component" immediate="true"
- * @scr.reference name="registry.service"
- * interface="org.wso2.carbon.registry.core.service.RegistryService"
- * cardinality="1..1" policy="dynamic" bind="setRegistryService"
- * unbind="unsetRegistryService"
- * @scr.reference name="user.realmservice.default"
- * interface="org.wso2.carbon.user.core.service.RealmService" cardinality="1..1"
- * policy="dynamic" bind="setRealmService" unbind="unsetRealmService"
- * @scr.reference name="oidc.handler.idtoken"
- * interface="org.wso2.carbon.identity.inbound.auth.oidc.handler.IDTokenHandler" cardinality="0..n"
- * policy="dynamic" bind="addIDTokenHandler" unbind="removeIDTokenHandler"
- * @scr.reference name="ApplicationManagementService"
- * interface="org.wso2.carbon.identity.application.mgt.ApplicationManagementService" cardinality="1..1"
- * policy="dynamic" bind="setApplicationManagementService" unbind="unsetApplicationManagementService"
- */
+import java.util.Collections;
+
+@Component(
+        name = "identity.oidc.component",
+        immediate = true
+)
 public class OIDCServiceComponent {
 
     private static Log log = LogFactory.getLog(OIDCServiceComponent.class);
 
+    @SuppressWarnings("unchecked")
+    @Activate
     protected void activate(ComponentContext context) {
 
         try {
             OIDCDataHolder.getInstance().getIDTokenHandlers().add(new IDTokenHandler());
+            Collections.sort(OIDCDataHolder.getInstance().getIDTokenHandlers(), new MessageHandlerComparator());
+            Collections.reverse(OIDCDataHolder.getInstance().getIDTokenHandlers());
 
             ServiceRegistration oidcAuthzReqFactory = context.getBundleContext().registerService(
                     HttpIdentityRequestFactory.class.getName(), new OIDCAuthzRequestFactory(), null);
@@ -77,7 +81,7 @@ public class OIDCServiceComponent {
                 log.error("OIDCAuthzRequestFactory could not be registered");
             }
             ServiceRegistration oidcAuthzRespFactory = context.getBundleContext().registerService(
-                    HttpIdentityRequestFactory.class.getName(), new OIDCAuthzResponseFactory(), null);
+                    HttpIdentityResponseFactory.class.getName(), new OIDCAuthzResponseFactory(), null);
             if (oidcAuthzRespFactory != null) {
                 if (log.isDebugEnabled()) {
                     log.debug(" HttpOIDCAuthzResponseFactory is registered");
@@ -86,8 +90,8 @@ public class OIDCServiceComponent {
                 log.error("HttpOIDCAuthzResponseFactory could not be registered");
             }
             ServiceRegistration oidcTokenRespFactory = context.getBundleContext().registerService(
-                    HttpIdentityRequestFactory.class.getName(), new OIDCTokenResponseFactory(), null);
-            if (oidcAuthzRespFactory != null) {
+                    HttpIdentityResponseFactory.class.getName(), new OIDCTokenResponseFactory(), null);
+            if (oidcTokenRespFactory != null) {
                 if (log.isDebugEnabled()) {
                     log.debug(" HttpOIDCTokenResponseFactory is registered");
                 }
@@ -95,7 +99,7 @@ public class OIDCServiceComponent {
                 log.error("HttpOIDCTokenResponseFactory could not be registered");
             }
             ServiceRegistration oidcUserInfoRespFactory = context.getBundleContext().registerService(
-                    HttpIdentityRequestFactory.class.getName(), new UserinfoResponseFactory(), null);
+                    HttpIdentityResponseFactory.class.getName(), new UserinfoResponseFactory(), null);
             if (oidcUserInfoRespFactory != null) {
                 if (log.isDebugEnabled()) {
                     log.debug(" HttpUserinfoResponseFactory is registered");
@@ -112,6 +116,24 @@ public class OIDCServiceComponent {
                 }
             } else {
                 log.error("OIDCAuthzProcessor could not be registered");
+            }
+            ServiceRegistration codeRespProcessor = context.getBundleContext().registerService(
+                    IdentityProcessor.class.getName(), new OIDCCodeResponseProcessor(), null);
+            if (codeRespProcessor != null) {
+                if (log.isDebugEnabled()) {
+                    log.debug(" OIDCCodeResponseProcessor is registered");
+                }
+            } else {
+                log.error("OIDCCodeResponseProcessor could not be registered");
+            }
+            ServiceRegistration tokenRespProcessor = context.getBundleContext().registerService(
+                    IdentityProcessor.class.getName(), new OIDCTokenResponseProcessor(), null);
+            if (tokenRespProcessor != null) {
+                if (log.isDebugEnabled()) {
+                    log.debug(" OIDCTokenResponseProcessor is registered");
+                }
+            } else {
+                log.error("OIDCTokenResponseProcessor could not be registered");
             }
             ServiceRegistration tokenProcessor = context.getBundleContext().registerService(
                     IdentityProcessor.class.getName(), new OIDCTokenProcessor(), null);
@@ -141,11 +163,6 @@ public class OIDCServiceComponent {
             } else {
                 log.error("ScopesInitListener could not be registered");
             }
-            OIDCDAO.storeScopes(OIDCServerConfig.getInstance().getScopes(), MultitenantConstants
-                    .SUPER_TENANT_DOMAIN_NAME, MultitenantConstants.SUPER_TENANT_ID);
-            if (log.isDebugEnabled()) {
-                log.debug("Inbound OIDC Authenticator bundle is activated");
-            }
             ServiceRegistration oidcIntrospectionHandler = context.getBundleContext().registerService(
                     IntrospectionHandler.class.getName(), new OIDCIntrospectionHandler(), null);
             if (oidcIntrospectionHandler != null) {
@@ -155,11 +172,17 @@ public class OIDCServiceComponent {
             } else {
                 log.error("OIDCIntrospectionHandler could not be registered");
             }
+            OIDCDAO.storeScopes(OIDCServerConfig.getInstance().getScopes(), MultitenantConstants
+                    .SUPER_TENANT_DOMAIN_NAME, MultitenantConstants.SUPER_TENANT_ID);
+            if (log.isDebugEnabled()) {
+                log.debug("Inbound OIDC Authenticator bundle is activated");
+            }
         } catch (Throwable e) {
             log.error("Error occurred while activating Inbound OIDC Authenticator bundle");
         }
     }
 
+    @Deactivate
     protected void deactivate(ComponentContext context) {
 
         if (log.isDebugEnabled()) {
@@ -167,6 +190,13 @@ public class OIDCServiceComponent {
         }
     }
 
+    @Reference(
+            name = "user.realmservice.default",
+            service = org.wso2.carbon.user.core.service.RealmService.class,
+            cardinality = ReferenceCardinality.MANDATORY,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetRealmService"
+    )
     protected void setRealmService(RealmService realmService) {
         if (log.isDebugEnabled()) {
             log.debug("Setting the RealmService");
@@ -181,6 +211,13 @@ public class OIDCServiceComponent {
         OIDCDataHolder.getInstance().setRealmService(null);
     }
 
+    @Reference(
+            name = "registry.service",
+            service = org.wso2.carbon.registry.core.service.RegistryService.class,
+            cardinality = ReferenceCardinality.MANDATORY,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetRegistryService"
+    )
     protected void setRegistryService(RegistryService registryService) {
         if (log.isDebugEnabled()) {
             log.debug("Setting the RegistryService");
@@ -195,20 +232,13 @@ public class OIDCServiceComponent {
         OIDCDataHolder.getInstance().setRegistryService(null);
     }
 
-    protected void addIDTokenHandler(IDTokenHandler handler) {
-        if (log.isDebugEnabled()) {
-            log.debug("Adding IDTokenHandler " + handler.getName());
-        }
-        OIDCDataHolder.getInstance().getIDTokenHandlers().add(handler);
-    }
-
-    protected void removeIDTokenHandler(IDTokenHandler handler) {
-        if (log.isDebugEnabled()) {
-            log.debug("Removing IDTokenHandler " + handler.getName());
-        }
-        OIDCDataHolder.getInstance().getIDTokenHandlers().remove(handler);
-    }
-
+    @Reference(
+            name = "identity.application.management.component",
+            service = org.wso2.carbon.identity.application.mgt.ApplicationManagementService.class,
+            cardinality = ReferenceCardinality.MANDATORY,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetApplicationManagementService"
+    )
     protected void setApplicationManagementService(ApplicationManagementService service) {
         if (log.isDebugEnabled()) {
             log.debug("Adding ApplicationManagementService.");
@@ -221,5 +251,28 @@ public class OIDCServiceComponent {
             log.debug("Removing ApplicationManagementService.");
         }
         OIDCDataHolder.getInstance().setAppMgtService(null);
+    }
+
+    @Reference(
+            name = "oidc.handler.idtoken",
+            service = org.wso2.carbon.identity.inbound.auth.oidc.handler.IDTokenHandler.class,
+            cardinality = ReferenceCardinality.MULTIPLE,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "removeIDTokenHandler"
+    )
+    protected void addIDTokenHandler(IDTokenHandler handler) {
+        if (log.isDebugEnabled()) {
+            log.debug("Adding IDTokenHandler " + handler.getName());
+        }
+        OIDCDataHolder.getInstance().getIDTokenHandlers().add(handler);
+        Collections.sort(OIDCDataHolder.getInstance().getIDTokenHandlers(), new MessageHandlerComparator());
+        Collections.reverse(OIDCDataHolder.getInstance().getIDTokenHandlers());
+    }
+
+    protected void removeIDTokenHandler(IDTokenHandler handler) {
+        if (log.isDebugEnabled()) {
+            log.debug("Removing IDTokenHandler " + handler.getName());
+        }
+        OIDCDataHolder.getInstance().getIDTokenHandlers().remove(handler);
     }
 }

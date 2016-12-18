@@ -23,8 +23,8 @@ import org.apache.oltu.oauth2.as.response.OAuthASResponse;
 import org.apache.oltu.oauth2.common.OAuth;
 import org.apache.oltu.oauth2.common.message.types.GrantType;
 import org.wso2.carbon.identity.application.authentication.framework.exception.FrameworkException;
-import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityMessageContext;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2.ClientType;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.TokenMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.token.TokenRequest;
@@ -45,23 +45,8 @@ import java.util.HashMap;
 public class TokenProcessor extends OAuth2IdentityRequestProcessor {
 
     @Override
-    public int getPriority() {
-        return 0;
-    }
-
-    @Override
-    public String getCallbackPath(IdentityMessageContext context) {
-        return null;
-    }
-
-    @Override
-    public String getRelyingPartyId() {
-        return null;
-    }
-
-    @Override
     public boolean canHandle(IdentityRequest identityRequest) {
-        return identityRequest instanceof TokenRequest ? true : false;
+        return identityRequest instanceof TokenRequest;
     }
 
     @Override
@@ -156,6 +141,7 @@ public class TokenProcessor extends OAuth2IdentityRequestProcessor {
      */
     protected AccessToken issueAccessToken(TokenMessageContext messageContext) {
         AccessToken accessToken = HandlerManager.getInstance().issueAccessToken(messageContext);
+        messageContext.addParameter(OAuth2.ACCESS_TOKEN, accessToken);
         return accessToken;
     }
 }

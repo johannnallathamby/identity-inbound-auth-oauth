@@ -41,8 +41,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.nio.file.Paths;
-import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -69,7 +69,7 @@ public class OIDCServerConfig {
     private String idTokenIssuer = null;
     private int idTokenExpiry = 300;
     private Algorithm idTokenSigAlg = JWSAlgorithm.RS256;
-    private Set<String> idTokenAudiences = Collections.EMPTY_SET;
+    private Set<String> idTokenAudiences = new HashSet();
 
     private Map<String,String> scopes = new HashMap();
 

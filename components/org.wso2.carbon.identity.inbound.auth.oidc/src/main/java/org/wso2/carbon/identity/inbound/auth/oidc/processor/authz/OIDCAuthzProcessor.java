@@ -19,7 +19,6 @@
 package org.wso2.carbon.identity.inbound.auth.oidc.processor.authz;
 
 import org.wso2.carbon.identity.application.authentication.framework.inbound.FrameworkLoginResponse;
-import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityMessageContext;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.InboundConstants;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.AuthzMessageContext;
@@ -27,24 +26,16 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.processor.authz.AuthzProc
 import org.wso2.carbon.identity.inbound.auth.oidc.bean.message.request.authz.OIDCAuthzRequest;
 
 /*
- * InboundRequestProcessor for OAuth2 Authorization Endpoint
+ * IdentityProcessor for OIDC Authentication Endpoint
  */
 public class OIDCAuthzProcessor extends AuthzProcessor {
 
     public int getPriority() {
-        return 0;
-    }
-
-    public String getCallbackPath(IdentityMessageContext context) {
-        return null;
-    }
-
-    public String getRelyingPartyId() {
-        return null;
+        return 2;
     }
 
     public boolean canHandle(IdentityRequest identityRequest) {
-        return identityRequest instanceof OIDCAuthzRequest ? true : false;
+        return identityRequest instanceof OIDCAuthzRequest;
     }
 
     /**
@@ -53,14 +44,14 @@ public class OIDCAuthzProcessor extends AuthzProcessor {
      * @param messageContext The runtime message context
      * @return OAuth2 authorization endpoint
      */
-    protected FrameworkLoginResponse.FrameworkLoginResponseBuilder initializeResourceOwnerAuthentication(
+    protected FrameworkLoginResponse.FrameworkLoginResponseBuilder initiateResourceOwnerAuthentication(
             AuthzMessageContext messageContext) {
 
         boolean isLoginRequired = ((OIDCAuthzRequest)messageContext.getRequest()).isLoginRequired();
         messageContext.addParameter(InboundConstants.ForceAuth, isLoginRequired);
         boolean isPromptNone = ((OIDCAuthzRequest)messageContext.getRequest()).isPromptNone();
         messageContext.addParameter(InboundConstants.PassiveAuth, isPromptNone);
-        return super.initializeResourceOwnerAuthentication(messageContext);
+        return super.initiateResourceOwnerAuthentication(messageContext);
     }
 
 }

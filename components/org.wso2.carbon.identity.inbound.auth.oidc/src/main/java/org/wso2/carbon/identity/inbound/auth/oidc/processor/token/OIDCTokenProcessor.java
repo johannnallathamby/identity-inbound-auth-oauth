@@ -22,8 +22,8 @@ package org.wso2.carbon.identity.inbound.auth.oidc.processor.token;
 import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.oltu.oauth2.common.message.types.GrantType;
 import org.wso2.carbon.identity.application.authentication.framework.exception.FrameworkException;
-import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityMessageContext;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2.ClientType;
@@ -32,40 +32,27 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.toke
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.token.TokenResponse;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2ClientException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2Exception;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.HandlerManager;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AccessToken;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AuthzCode;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.processor.token.TokenProcessor;
-import org.wso2.carbon.identity.inbound.auth.oidc.OIDC;
 import org.wso2.carbon.identity.inbound.auth.oidc.bean.message.response.token.OIDCTokenResponse;
 import org.wso2.carbon.identity.inbound.auth.oidc.cache.OIDCCache;
 import org.wso2.carbon.identity.inbound.auth.oidc.cache.OIDCCacheAccessTokenKey;
 import org.wso2.carbon.identity.inbound.auth.oidc.cache.OIDCCacheCodeKey;
 import org.wso2.carbon.identity.inbound.auth.oidc.cache.OIDCCacheEntry;
-import org.wso2.carbon.identity.inbound.auth.oidc.handler.OIDCHandlerManager;
+import org.wso2.carbon.identity.inbound.auth.oidc.handler.HandlerManager;
 
 import java.util.HashMap;
 
 /*
- * InboundRequestProcessor for OAuth2 Token Endpoint
+ * IdentityProcessor for OIDC Token Endpoint
  */
 public class OIDCTokenProcessor extends TokenProcessor {
 
     private static final Log log = LogFactory.getLog(OIDCTokenProcessor.class);
 
-    @Override
     public int getPriority() {
-        return 0;
-    }
-
-    @Override
-    public String getCallbackPath(IdentityMessageContext context) {
-        return null;
-    }
-
-    @Override
-    public String getRelyingPartyId() {
-        return null;
+        return 2;
     }
 
     // need to think about this logic. how to differentiate between oauth2 and oidc token requests
@@ -100,7 +87,7 @@ public class OIDCTokenProcessor extends TokenProcessor {
             replaceEntryWithAccessToken(authzCode.getAuthzCodeId(), authzCode.getAuthzCode(),
                                         accessToken.getAccessTokenId(), accessToken.getAccessToken());
         } else {
-            // need to think how to generate Userinfo response for password grant type
+            //TODO: need to think how to generate Userinfo response for password grant type
         }
 
         return buildTokenResponse(accessToken, messageContext);
@@ -115,7 +102,7 @@ public class OIDCTokenProcessor extends TokenProcessor {
      * @throws OAuth2Exception
      */
     protected ClientType clientType(TokenMessageContext messageContext) {
-        return HandlerManager.getInstance().clientType(messageContext);
+        return org.wso2.carbon.identity.inbound.auth.oauth2new.handler.HandlerManager.getInstance().clientType(messageContext);
     }
 
     /**
@@ -125,7 +112,7 @@ public class OIDCTokenProcessor extends TokenProcessor {
      * @throws OAuth2ClientException if the client was not authenticated successfully
      */
     protected void authenticateClient(TokenMessageContext messageContext) throws OAuth2ClientException {
-        HandlerManager.getInstance().authenticateClient(messageContext);
+        org.wso2.carbon.identity.inbound.auth.oauth2new.handler.HandlerManager.getInstance().authenticateClient(messageContext);
     }
 
     /**
@@ -136,41 +123,7 @@ public class OIDCTokenProcessor extends TokenProcessor {
      * @throws OAuth2ClientException, OAuth2Exception
      */
     protected void validateGrant(TokenMessageContext messageContext) throws OAuth2ClientException, OAuth2Exception {
-        HandlerManager.getInstance().validateGrant(messageContext);
-    }
-
-    protected TokenResponse.TokenResponseBuilder buildTokenResponse(AccessToken accessToken,
-                                                                    TokenMessageContext messageContext) {
-
-        TokenResponse.TokenResponseBuilder oauth2Builder = super.buildTokenResponse(accessToken, messageContext);
-
-        OIDCTokenResponse.OIDCTokenResponseBuilder oidcBuilder = new OIDCTokenResponse.OIDCTokenResponseBuilder
-                (oauth2Builder, messageContext);
-
-        if(accessToken.getScopes().contains(OIDC.OPENID_SCOPE)){
-            addIDToken(oidcBuilder, messageContext);
-        }
-
-        return oauth2Builder;
-    }
-
-    protected void addIDToken(OIDCTokenResponse.OIDCTokenResponseBuilder builder, TokenMessageContext messageContext) {
-
-        IDTokenClaimsSet idTokenClaimsSet = OIDCHandlerManager.getInstance().buildIDToken(messageContext);
-        builder.setIdTokenClaimsSet(idTokenClaimsSet);
-    }
-
-    /**
-     * Issues the access token
-     *
-     * @param messageContext The runtime message context
-     * @return OAuth2 access token response
-     */
-    protected AccessToken issueAccessToken(TokenMessageContext messageContext) {
-
-        AccessToken accessToken = HandlerManager.getInstance().issueAccessToken(messageContext);
-        messageContext.addParameter(OIDC.ACCESS_TOKEN, accessToken);
-        return accessToken;
+        org.wso2.carbon.identity.inbound.auth.oauth2new.handler.HandlerManager.getInstance().validateGrant(messageContext);
     }
 
     protected void replaceEntryWithAccessToken(String codeId, String code, String accessTokenId, String accessToken) {
@@ -185,5 +138,31 @@ public class OIDCTokenProcessor extends TokenProcessor {
 
         OIDCCacheAccessTokenKey tokenKey = new OIDCCacheAccessTokenKey(accessTokenId, accessToken);
         OIDCCache.getInstance().addToCache(tokenKey, entry);
+    }
+
+    protected TokenResponse.TokenResponseBuilder buildTokenResponse(AccessToken accessToken,
+                                                                    TokenMessageContext messageContext) {
+
+        TokenResponse.TokenResponseBuilder oauth2Builder = super.buildTokenResponse(accessToken, messageContext);
+
+        OIDCTokenResponse.OIDCTokenResponseBuilder oidcBuilder =
+                new OIDCTokenResponse.OIDCTokenResponseBuilder(messageContext);
+        oidcBuilder.setOLTUBuilder(oauth2Builder.getBuilder());
+
+        // TODO: need to verify this. We are assuming only for "response_type=code" and "grant_type=password" id_token
+        // TODO: is issued from token endpoint. This may fail when we start supporting other response types like
+        // TODO: "code id_token" or "code token"
+        if(messageContext.getParameter(OAuth2.AUTHZ_CODE) != null || GrantType.PASSWORD.toString().equals(
+                messageContext.getRequest().getGrantType())) {
+            addIDToken(oidcBuilder, messageContext);
+        }
+
+        return oidcBuilder;
+    }
+
+    protected void addIDToken(OIDCTokenResponse.OIDCTokenResponseBuilder builder, TokenMessageContext messageContext) {
+
+        IDTokenClaimsSet idTokenClaimsSet = HandlerManager.getInstance().buildIDToken(messageContext);
+        builder.setIdTokenClaimsSet(idTokenClaimsSet);
     }
 }

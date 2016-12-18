@@ -73,6 +73,7 @@ public class OIDCAuthzResponseFactory extends AuthzResponseFactory {
             redirectUri = redirectUri.replace("?", "#");
         }
         builder.setRedirectURL(redirectUri);
+        builder.setFragmentUrl(authzResponse.isFragmentUrl());
         builder.setHeaders(response.getHeaders());
         builder.addHeader(OAuth2.Header.CACHE_CONTROL,
                           OAuth2.HeaderValue.CACHE_CONTROL_NO_STORE);

@@ -19,6 +19,7 @@
 package org.wso2.carbon.identity.inbound.auth.oidc.bean.message.response.authz;
 
 import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
+import org.apache.oltu.oauth2.as.response.OAuthASResponse;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.AuthzMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.authz.AuthzResponse;
 
@@ -69,13 +70,11 @@ public class OIDCAuthzResponse extends AuthzResponse {
         protected String redirectURI;
         protected String tenantDomain;
 
-        public OIDCAuthzResponseBuilder(AuthzResponseBuilder authzResponseBuilder,
-                                        AuthzMessageContext messageContext) {
+        public OIDCAuthzResponseBuilder(AuthzMessageContext messageContext) {
             super(messageContext);
             this.tenantDomain = messageContext.getRequest().getTenantDomain();
             this.responseType = messageContext.getRequest().getResponseType();
             this.redirectURI = messageContext.getRequest().getRedirectURI();
-            this.builder = authzResponseBuilder.getBuilder();
         }
 
         public OIDCAuthzResponseBuilder setIdTokenClaimsSet(IDTokenClaimsSet idTokenClaimsSet) {
@@ -87,6 +86,17 @@ public class OIDCAuthzResponse extends AuthzResponse {
             this.responseMode = responseMode;
             return this;
         }
+
+        public OIDCAuthzResponseBuilder setOLTUBuilder(OAuthASResponse.OAuthAuthorizationResponseBuilder builder) {
+            this.builder = builder;
+            return this;
+        }
+
+        public OIDCAuthzResponseBuilder setFragmentUrl(boolean isFragmentUrl) {
+            this.isFragmentUrl = isFragmentUrl;
+            return this;
+        }
+
 
         public OIDCAuthzResponse build() {
             return new OIDCAuthzResponse(this);

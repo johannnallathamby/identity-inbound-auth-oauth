@@ -18,22 +18,28 @@
 
 package org.wso2.carbon.identity.inbound.auth.oauth2new.cache;
 
+import org.apache.commons.lang.StringUtils;
 import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
 import org.wso2.carbon.identity.application.common.cache.CacheKey;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2RuntimeException;
 
-import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
 public class AuthorizationGrantCacheKey extends CacheKey {
 
     private static final long serialVersionUID = -2587261479454489617L;
-    
+
     private String clientId;
     private AuthenticatedUser authzUser;
     private Set<String> scopes = new HashSet();
 
     public AuthorizationGrantCacheKey(String clientId, AuthenticatedUser authzUser, Set<String> scopes) {
+        if(StringUtils.isBlank(clientId)) {
+            throw OAuth2RuntimeException.error("Invalid client Id: " + clientId);
+        } else if(authzUser == null) {
+            throw OAuth2RuntimeException.error("Authorizaed user is null.");
+        }
         this.clientId = clientId;
         this.authzUser = authzUser;
         if(scopes != null) {

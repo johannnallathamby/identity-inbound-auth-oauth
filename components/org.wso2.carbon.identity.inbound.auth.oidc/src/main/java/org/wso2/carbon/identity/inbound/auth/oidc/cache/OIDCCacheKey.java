@@ -18,7 +18,9 @@
 
 package org.wso2.carbon.identity.inbound.auth.oidc.cache;
 
+import org.apache.commons.lang.StringUtils;
 import org.wso2.carbon.identity.application.common.cache.CacheKey;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2RuntimeException;
 
 public abstract class OIDCCacheKey extends CacheKey {
 
@@ -28,6 +30,11 @@ public abstract class OIDCCacheKey extends CacheKey {
     private String tokenValue;
 
     public OIDCCacheKey(String tokenId, String tokenValue) {
+        if(StringUtils.isBlank(tokenId)) {
+            throw OAuth2RuntimeException.error("Invalid token Id: " + tokenId);
+        } else if(StringUtils.isBlank(tokenValue)) {
+            throw OAuth2RuntimeException.error("Invalid token value: " + tokenValue);
+        }
         this.tokenId = tokenId;
         this.tokenValue = tokenValue;
     }

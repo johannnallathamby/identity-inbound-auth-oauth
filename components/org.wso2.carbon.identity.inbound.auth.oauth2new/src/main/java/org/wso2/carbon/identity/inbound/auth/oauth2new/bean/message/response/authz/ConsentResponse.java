@@ -20,8 +20,8 @@ package org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.au
 
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityMessageContext;
 
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 public class ConsentResponse extends ROApprovalResponse {
 
@@ -33,9 +33,7 @@ public class ConsentResponse extends ROApprovalResponse {
 
     private String authenticatedSubjectId;
 
-    private Set<String> requestedScopes;
-
-    private Map<String,String[]> parameterMap;
+    private Map<String,String[]> parameterMap = new HashMap();
 
     public String getSessionDataKeyConsent() {
         return sessionDataKeyConsent;
@@ -49,10 +47,6 @@ public class ConsentResponse extends ROApprovalResponse {
         return authenticatedSubjectId;
     }
 
-    public Set<String> getRequestedScopes() {
-        return requestedScopes;
-    }
-
     public Map<String, String[]> getParameterMap() {
         return parameterMap;
     }
@@ -62,7 +56,6 @@ public class ConsentResponse extends ROApprovalResponse {
         this.sessionDataKeyConsent = builder.sessionDataKeyConsent;
         this.applicationName = builder.applicationName;
         this.authenticatedSubjectId = builder.authenticatedSubjectId;
-        this.requestedScopes = builder.requestedScopes;
         this.parameterMap = builder.parameterMap;
     }
 
@@ -74,9 +67,8 @@ public class ConsentResponse extends ROApprovalResponse {
 
         private String authenticatedSubjectId;
 
-        private Set<String> requestedScopes;
 
-        private Map<String,String[]> parameterMap;
+        private Map<String,String[]> parameterMap = new HashMap();
 
         public ConsentResponseBuilder(IdentityMessageContext context) {
             super(context);
@@ -97,13 +89,10 @@ public class ConsentResponse extends ROApprovalResponse {
             return this;
         }
 
-        public ConsentResponseBuilder setRequestedScopes(Set<String> requestedScopes) {
-            this.requestedScopes = requestedScopes;
-            return this;
-        }
-
         public ConsentResponseBuilder setParameterMap(Map<String, String[]> parameterMap) {
-            this.parameterMap = parameterMap;
+            if(parameterMap != null) {
+                this.parameterMap = parameterMap;
+            }
             return this;
         }
 

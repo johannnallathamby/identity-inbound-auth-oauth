@@ -27,7 +27,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.identity.application.authentication.framework.exception.FrameworkException;
-import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityMessageContext;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityProcessCoordinator;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
 import org.wso2.carbon.identity.application.common.model.ClaimMapping;
@@ -57,24 +56,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+/*
+ * IdentityProcessor for OIDC Userinfo Endpoint
+ */
 public class UserInfoProcessor extends OAuth2IdentityRequestProcessor {
 
     private static final Log log = LogFactory.getLog(UserInfoResponse.class);
-
-    @Override
-    public String getCallbackPath(IdentityMessageContext context) {
-        return null;
-    }
-
-    @Override
-    public String getRelyingPartyId() {
-        return null;
-    }
-
-    @Override
-    public int getPriority() {
-        return 0;
-    }
 
     @Override
     public boolean canHandle(IdentityRequest identityRequest) {
@@ -109,6 +96,9 @@ public class UserInfoProcessor extends OAuth2IdentityRequestProcessor {
         builder.setToken(accessToken);
         builder.setTokenTypeHint(tokenTypeHint);
         // TODO: build() methods of all builders must throw client exceptions. Need API change in framework.
+        // TODO: if request URI is null in the builder a null pointer is thrown from framework while iterating to
+        // TODO: find processors because some processor check the request URI
+        builder.setRequestURI("");
         IntrospectionRequest introspectionRequest = builder.build();
         messageContext.setIntrospectionRequest(introspectionRequest);
         IdentityProcessCoordinator coordinator = new IdentityProcessCoordinator();

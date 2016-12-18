@@ -20,7 +20,6 @@ package org.wso2.carbon.identity.inbound.auth.oauth2new.revoke;
 
 import org.apache.oltu.oauth2.common.message.types.GrantType;
 import org.wso2.carbon.identity.application.authentication.framework.exception.FrameworkException;
-import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityMessageContext;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2.ClientType;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.dao.OAuth2DAO;
@@ -33,21 +32,6 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.processor.OAuth2IdentityR
 import java.util.HashMap;
 
 public class RevocationProcessor extends OAuth2IdentityRequestProcessor {
-
-    @Override
-    public String getCallbackPath(IdentityMessageContext context) {
-        return null;
-    }
-
-    @Override
-    public String getRelyingPartyId() {
-        return null;
-    }
-
-    @Override
-    public int getPriority() {
-        return 0;
-    }
 
     @Override
     public boolean canHandle(IdentityRequest identityRequest) {
@@ -71,7 +55,7 @@ public class RevocationProcessor extends OAuth2IdentityRequestProcessor {
         String token = revocationRequest.getToken();
         String tokenTypeHint = revocationRequest.getTokenTypeHint();
         OAuth2DAO dao = HandlerManager.getInstance().getOAuth2DAO(messageContext);
-        boolean refreshTokenFirst = GrantType.REFRESH_TOKEN.toString().equals(tokenTypeHint) ? true : false;
+        boolean refreshTokenFirst = GrantType.REFRESH_TOKEN.toString().equals(tokenTypeHint);
         AccessToken accessToken = null;
         if (refreshTokenFirst) {
             accessToken = dao.getLatestAccessTokenByRefreshToken(token, messageContext);

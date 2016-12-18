@@ -49,18 +49,11 @@ public class IWANTLMGrantHandler extends AuthorizationGrantHandler {
 
     private static Log log = LogFactory.getLog(IWANTLMGrantHandler.class);
 
-    // TODO: move this implementation to framework, remove it from here and update framework dependency version
-    public String getName() {
-        return this.getClass().getSimpleName();
-    }
-
     @Override
     public boolean canHandle(MessageContext messageContext) {
-        if(messageContext instanceof TokenMessageContext) {
-            if(IWANTLMConstants.IWA_NTLM_GRANT_TYPE.equals(((TokenMessageContext)messageContext).getRequest()
-                    .getGrantType())) {
-                return true;
-            }
+        if(IWANTLMConstants.IWA_NTLM_GRANT_TYPE.equals(
+                ((TokenMessageContext)messageContext).getRequest().getGrantType())) {
+            return true;
         }
         return false;
     }

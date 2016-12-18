@@ -45,6 +45,10 @@ public class TokenResponse extends IdentityResponse {
             super(context);
         }
 
+        // Unconventional accessor method in builder because there is the requirement to extend this builder and
+        // build a sub type of this class. When doing that the build() method of OAuthTokenResponseBuilder must be
+        // called only once the sub type builder is fully loaded.
+
         public OAuthASResponse.OAuthTokenResponseBuilder getBuilder() {
             return builder;
         }

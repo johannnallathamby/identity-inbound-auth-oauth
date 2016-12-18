@@ -28,6 +28,11 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2ClientExc
  */
 public abstract class ClientAuthHandler extends AbstractIdentityMessageHandler {
 
+    // TODO: move this implementation to framework, remove it from here and update framework dependency version
+    public String getName() {
+        return this.getClass().getSimpleName();
+    }
+
     /**
      * Tells if the client is confidential or public.
      *

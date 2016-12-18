@@ -20,7 +20,6 @@ package org.wso2.carbon.identity.inbound.auth.oauth2new.processor.authz;
 
 import org.wso2.carbon.identity.application.authentication.framework.exception.FrameworkException;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.FrameworkLoginResponse;
-import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityMessageContext;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.AuthzMessageContext;
@@ -42,20 +41,12 @@ public class AuthzProcessor extends OAuth2IdentityRequestProcessor {
     //Precompile PKCE Regex pattern for performance improvement
     private static Pattern pkceCodeVerifierPattern = Pattern.compile("[\\w\\-\\._~]+");
 
-    public int getPriority() {
-        return 0;
-    }
-
-    public String getCallbackPath(IdentityMessageContext context) {
-        return null;
-    }
-
-    public String getRelyingPartyId() {
-        return null;
+    public String getName() {
+        return "test";
     }
 
     public boolean canHandle(IdentityRequest identityRequest) {
-        return identityRequest instanceof AuthzRequest ? true: false;
+        return identityRequest instanceof AuthzRequest;
     }
 
     public FrameworkLoginResponse.FrameworkLoginResponseBuilder process(IdentityRequest identityRequest)
@@ -66,7 +57,7 @@ public class AuthzProcessor extends OAuth2IdentityRequestProcessor {
 
         validateClient(messageContext);
 
-        return initializeResourceOwnerAuthentication(messageContext);
+        return initiateResourceOwnerAuthentication(messageContext);
     }
 
     protected void validateClient(AuthzMessageContext messageContext) throws OAuth2ClientException {
@@ -76,6 +67,7 @@ public class AuthzProcessor extends OAuth2IdentityRequestProcessor {
         if(app == null) {
             throw OAuth2ClientException.error("Invalid clientId: " + clientId);
         }
+        messageContext.setRelyingPartyID(clientId);
 
         if(!messageContext.getRequest().getRedirectURI().equals(app.getRedirectUri())) {
             throw OAuth2ClientException.error("Invalid Redirect URI: " + app.getRedirectUri());
@@ -93,7 +85,7 @@ public class AuthzProcessor extends OAuth2IdentityRequestProcessor {
         messageContext.setApplication(app);
     }
 
-    protected FrameworkLoginResponse.FrameworkLoginResponseBuilder initializeResourceOwnerAuthentication(
+    protected FrameworkLoginResponse.FrameworkLoginResponseBuilder initiateResourceOwnerAuthentication(
             AuthzMessageContext messageContext) {
 
         return buildResponseForFrameworkLogin(messageContext);

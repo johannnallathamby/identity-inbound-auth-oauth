@@ -18,21 +18,21 @@
 
 package org.wso2.carbon.identity.inbound.auth.oauth2new.processor.authz;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.oltu.oauth2.as.issuer.MD5Generator;
 import org.apache.oltu.oauth2.as.issuer.OAuthIssuerImpl;
 import org.apache.oltu.oauth2.as.response.OAuthASResponse;
 import org.apache.oltu.oauth2.common.OAuth;
 import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
-import org.apache.oltu.oauth2.common.message.types.ResponseType;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.AuthzMessageContext;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.authz.AuthzRequest;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.authz.AuthzResponse;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2RuntimeException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.HandlerManager;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AuthzCode;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.OAuth2ServerConfig;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.util.DummyHttpServletRequest;
 
 import javax.servlet.http.HttpServletResponse;
 import java.sql.Timestamp;
@@ -46,9 +46,9 @@ public class CodeResponseProcessor extends ROApprovalProcessor {
     private OAuthIssuerImpl oltuIssuer = new OAuthIssuerImpl(new MD5Generator());
 
     public boolean canHandle(IdentityRequest identityRequest) {
-        if(StringUtils.equals(ResponseType.CODE.toString(),
-                identityRequest.getParameter(OAuth.OAUTH_RESPONSE_TYPE))) {
-            return true;
+        if(super.canHandle(identityRequest)) {
+            IdentityRequest originalClientRequest = getContextIfAvailable(identityRequest).getRequest();
+            return originalClientRequest instanceof AuthzRequest;
         }
         return false;
     }
@@ -84,10 +84,9 @@ public class CodeResponseProcessor extends ROApprovalProcessor {
         messageContext.addParameter(OAuth2.AUTHZ_CODE, authzCode);
 
         OAuthASResponse.OAuthAuthorizationResponseBuilder oltuRespBuilder = OAuthASResponse
-                .authorizationResponse(null, HttpServletResponse.SC_FOUND)
+                .authorizationResponse(new DummyHttpServletRequest(), HttpServletResponse.SC_FOUND)
                 .location(messageContext.getRequest().getRedirectURI())
                 .setCode(authorizationCode)
-                .setExpiresIn(Long.toString(authzCodeValidity))
                 .setParam(OAuth.OAUTH_STATE, messageContext.getRequest().getState());
 
         AuthzResponse.AuthzResponseBuilder builder = new AuthzResponse.AuthzResponseBuilder(messageContext);

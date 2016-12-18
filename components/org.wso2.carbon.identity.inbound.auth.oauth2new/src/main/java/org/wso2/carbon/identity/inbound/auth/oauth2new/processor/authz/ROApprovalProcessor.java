@@ -41,6 +41,7 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2InternalE
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.OAuth2ServerConfig;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.UserConsent;
 
+import java.util.Set;
 import java.util.UUID;
 
 public abstract class ROApprovalProcessor extends IdentityProcessor {
@@ -54,7 +55,12 @@ public abstract class ROApprovalProcessor extends IdentityProcessor {
 
     @Override
     public String getRelyingPartyId() {
-        return null;
+        throw new UnsupportedOperationException("Unsupported Operation getRelyingPartyId() in " + getName());
+    }
+
+    @Override
+    public String getRelyingPartyId(IdentityMessageContext messageContext) {
+        return messageContext.getRelyingPartyId();
     }
 
     @Override
@@ -96,8 +102,9 @@ public abstract class ROApprovalProcessor extends IdentityProcessor {
 
                 String spName = messageContext.getApplication().getAppName();
                 int applicationId = messageContext.getApplication().getAppId();
+                Set<String> scopes = messageContext.getApprovedScopes();
 
-                if (!hasUserApprovedAppAlways(authenticatedUser, spName, applicationId)) {
+                if (!hasUserApprovedAppAlways(authenticatedUser, spName, applicationId, scopes)) {
                     return initiateResourceOwnerConsent(messageContext);
                 } else {
                     messageContext.addParameter(OAuth2.CONSENT, "ApproveAlways");
@@ -135,7 +142,6 @@ public abstract class ROApprovalProcessor extends IdentityProcessor {
         builder.setSessionDataKeyConsent(sessionDataKeyConsent);
         builder.setApplicationName(messageContext.getApplication().getAppName());
         builder.setAuthenticatedSubjectId(messageContext.getAuthzUser().getAuthenticatedSubjectIdentifier());
-        builder.setRequestedScopes(messageContext.getRequest().getScopes());
         builder.setParameterMap(messageContext.getRequest().getParameterMap());
         return builder;
     }
@@ -148,7 +154,8 @@ public abstract class ROApprovalProcessor extends IdentityProcessor {
      */
     protected void processConsent(AuthzMessageContext messageContext) throws OAuth2Exception {
 
-        String consent = messageContext.getRequest().getParameter(OAuth2.CONSENT);
+        String consent = ((IdentityRequest)messageContext.getParameter(OAuth2.OAUTH2_RESOURCE_OWNER_AUTHZ_REQUEST))
+                .getParameter(OAuth2.CONSENT);
         String spName = messageContext.getApplication().getAppName();
         int applicationId = messageContext.getApplication().getAppId();
         if (StringUtils.isNotBlank(consent)) {
@@ -158,6 +165,7 @@ public abstract class ROApprovalProcessor extends IdentityProcessor {
             } else {
                 // Approve case. Do nothing.
             }
+            messageContext.setApprovedScopes(messageContext.getRequest().getScopes());
         } else if(StringUtils.equals("Deny", consent)) {
             UserConsentDAO.getInstance().approveAppAlways(new UserConsent(messageContext.getAuthzUser(), applicationId,
                                                                           false), spName);
@@ -175,11 +183,12 @@ public abstract class ROApprovalProcessor extends IdentityProcessor {
      */
     protected abstract ROApprovalResponse.ROApprovalResponseBuilder buildAuthzResponse(AuthzMessageContext messageContext);
 
-    protected boolean hasUserApprovedAppAlways(AuthenticatedUser authzUser, String appName, int applicationId) {
+    protected boolean hasUserApprovedAppAlways(AuthenticatedUser authzUser, String appName, int applicationId,
+                                               Set<String> scopes) {
 
         boolean hasApproved = false;
         try {
-            UserConsent userConsent = UserConsentDAO.getInstance().getUserConsent(authzUser, applicationId);
+            UserConsent userConsent = UserConsentDAO.getInstance().getUserConsent(authzUser, applicationId, scopes);
             if(userConsent != null) {
                 hasApproved = userConsent.isTrustedAlways();
             }

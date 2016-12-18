@@ -39,6 +39,10 @@ public class IntrospectionHandler extends AbstractIdentityMessageHandler {
         return this.getClass().getSimpleName();
     }
 
+    public int getPriority(MessageContext messageContext) {
+        return 1;
+    }
+
     public boolean canHandle(MessageContext messageContext) {
         return true;
     }

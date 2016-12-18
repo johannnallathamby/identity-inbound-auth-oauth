@@ -115,17 +115,23 @@ public class CacheBackedOAuth2DAO extends OAuth2DAO {
     public void updateAccessTokenState(String bearerToken, String tokenState, TokenMessageContext messageContext) {
 
         AccessToken accessToken = AccessTokenCache.getInstance().getValueFromCache(bearerToken);
+        AccessToken stateUpdatedToken = AccessToken.createAccessToken(accessToken, tokenState);
         if(accessToken != null){
-            AccessToken accessToken1 = AccessToken.createAccessToken(accessToken, tokenState);
-            AccessTokenCache.getInstance().addToCache(bearerToken, accessToken1);
+            AccessTokenCache.getInstance().addToCache(bearerToken, stateUpdatedToken);
         }
-        AuthorizationGrantCacheKey key = new AuthorizationGrantCacheKey(messageContext.getApplication().getClientId(),
-                messageContext.getAuthzUser(), messageContext.getApprovedScopes());
-        accessToken = AuthorizationGrantCache.getInstance().getValueFromCache(key);
+        if(accessToken == null) {
+            accessToken = getAccessToken(bearerToken, messageContext);
+        }
         if(accessToken != null) {
-            AuthorizationGrantCache.getInstance().addToCache(key, AccessToken.createAccessToken(accessToken,
-                    tokenState));
+            AuthorizationGrantCacheKey key = new AuthorizationGrantCacheKey(messageContext.getApplication().getClientId(),
+                                                                            accessToken.getAuthzUser(),
+                                                                            accessToken.getScopes());
+            accessToken = AuthorizationGrantCache.getInstance().getValueFromCache(key);
+            if(accessToken != null) {
+                AuthorizationGrantCache.getInstance().addToCache(key, stateUpdatedToken);
+            }
         }
+
         wrappedDAO.updateAccessTokenState(bearerToken, tokenState, messageContext);
     }
 
@@ -154,7 +160,9 @@ public class CacheBackedOAuth2DAO extends OAuth2DAO {
         if(authzCode != null){
             return authzCode;
         }
-        return wrappedDAO.getAuthzCode(authorizationCode, messageContext);
+        authzCode = wrappedDAO.getAuthzCode(authorizationCode, messageContext);
+        //TODO: put to cache
+        return authzCode;
     }
 
     @Override

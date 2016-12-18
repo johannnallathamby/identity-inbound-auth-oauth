@@ -19,7 +19,6 @@
 package org.wso2.carbon.identity.inbound.auth.oauth2new.introspect;
 
 import org.wso2.carbon.identity.application.authentication.framework.exception.FrameworkException;
-import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityMessageContext;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2.ClientType;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2ClientException;
@@ -32,23 +31,8 @@ import java.util.HashMap;
 public class IntrospectionProcessor extends OAuth2IdentityRequestProcessor {
 
     @Override
-    public String getCallbackPath(IdentityMessageContext context) {
-        return null;
-    }
-
-    @Override
-    public String getRelyingPartyId() {
-        return null;
-    }
-
-    @Override
-    public int getPriority() {
-        return 0;
-    }
-
-    @Override
     public boolean canHandle(IdentityRequest identityRequest) {
-        return identityRequest instanceof IntrospectionRequest ? true : false;
+        return identityRequest instanceof IntrospectionRequest;
     }
 
     @Override

@@ -21,6 +21,8 @@ package org.wso2.carbon.identity.inbound.auth.oauth2new.model;
 import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
 
 import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
 
 public class UserConsent implements Serializable {
 
@@ -28,6 +30,7 @@ public class UserConsent implements Serializable {
 
     private AuthenticatedUser authzUser;
     private int applicationId;
+    private Set<String> scopes = new HashSet();
     private boolean isTrustedAlways;
 
     public UserConsent(AuthenticatedUser authzUser, int applicationId, boolean isTrustedAlways) {
@@ -46,6 +49,14 @@ public class UserConsent implements Serializable {
 
     public boolean isTrustedAlways() {
         return isTrustedAlways;
+    }
+
+    public Set<String> getScopes() {
+        return scopes;
+    }
+
+    public void setScopes(Set<String> scopes) {
+        this.scopes = scopes;
     }
 
 }

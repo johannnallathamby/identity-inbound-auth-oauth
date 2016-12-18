@@ -19,7 +19,6 @@
 package org.wso2.carbon.identity.inbound.auth.oauth2new.handler;
 
 import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
-import org.wso2.carbon.identity.core.handler.MessageHandlerComparator;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2.ClientType;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2MessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.TokenMessageContext;
@@ -42,7 +41,6 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AccessToken;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.revoke.RORevocationMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.revoke.RevocationMessageContext;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,7 +61,6 @@ public class HandlerManager {
     public ClientType clientType(OAuth2MessageContext messageContext) {
 
         List<ClientAuthHandler> handlers = OAuth2DataHolder.getInstance().getClientAuthHandlers();
-        Collections.sort(handlers, new MessageHandlerComparator(messageContext));
         for(ClientAuthHandler handler:handlers){
             if(handler.isEnabled(messageContext) && handler.canHandle(messageContext)){
                 return handler.clientType(messageContext);
@@ -75,7 +72,6 @@ public class HandlerManager {
     public void authenticateClient(OAuth2MessageContext messageContext) throws OAuth2ClientException {
 
         List<ClientAuthHandler> handlers = OAuth2DataHolder.getInstance().getClientAuthHandlers();
-        Collections.sort(handlers, new MessageHandlerComparator(messageContext));
         for(ClientAuthHandler handler:handlers){
             if(handler.isEnabled(messageContext) && handler.canHandle(messageContext)){
                 handler.authenticate(messageContext);
@@ -88,7 +84,6 @@ public class HandlerManager {
     public AccessToken issueAccessToken(OAuth2MessageContext messageContext) {
 
         List<AccessTokenResponseIssuer> handlers = OAuth2DataHolder.getInstance().getAccessTokenIssuers();
-        Collections.sort(handlers, new MessageHandlerComparator(messageContext));
         for(AccessTokenResponseIssuer handler:handlers){
             if(handler.isEnabled(messageContext) && handler.canHandle(messageContext)){
                 return handler.issue(messageContext);
@@ -101,7 +96,6 @@ public class HandlerManager {
 
         // Call HandlerManager and get the corresponding OAuth2DAOHandler first
         List<OAuth2DAOHandler> handlers = OAuth2DataHolder.getInstance().getOAuth2DAOHandlers();
-        Collections.sort(handlers, new MessageHandlerComparator(messageContext));
         for(OAuth2DAOHandler handler:handlers){
             if(handler.isEnabled(messageContext) && handler.canHandle(messageContext)){
                 //Wrap the OAuth2DAOHandler
@@ -125,7 +119,6 @@ public class HandlerManager {
     public TokenPersistenceProcessor getTokenPersistenceProcessor(OAuth2MessageContext messageContext) {
 
         List<TokenPersistenceProcessor> handlers = OAuth2DataHolder.getInstance().getTokenPersistenceProcessors();
-        Collections.sort(handlers, new MessageHandlerComparator(messageContext));
         for(TokenPersistenceProcessor handler:handlers){
             if(handler.isEnabled(messageContext) && handler.canHandle(messageContext)){
                 return handler;
@@ -137,7 +130,6 @@ public class HandlerManager {
     public void validateGrant(TokenMessageContext messageContext) throws OAuth2ClientException, OAuth2Exception {
 
         List<AuthorizationGrantHandler> handlers = OAuth2DataHolder.getInstance().getGrantHandlers();
-        Collections.sort(handlers, new MessageHandlerComparator(messageContext));
         for(AuthorizationGrantHandler handler:handlers){
             if(handler.isEnabled(messageContext) && handler.canHandle(messageContext)){
                 handler.validateGrant(messageContext);
@@ -150,7 +142,6 @@ public class HandlerManager {
     public IntrospectionHandler getIntrospectionHandler(IntrospectionMessageContext messageContext) {
 
         List<IntrospectionHandler> handlers = OAuth2DataHolder.getInstance().getIntrospectionHandlers();
-        Collections.sort(handlers, new MessageHandlerComparator(messageContext));
         for(IntrospectionHandler handler:handlers){
             if(handler.isEnabled(messageContext) && handler.canHandle(messageContext)){
                 return handler;

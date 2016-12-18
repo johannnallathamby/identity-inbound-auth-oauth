@@ -588,20 +588,26 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
             prepStmt = connection.prepareStatement(SQLQueries.STORE_AUTHORIZATION_CODE);
             prepStmt.setString(1, authzCodeId);
             prepStmt.setString(2, processor.getProcessedAuthzCode(authzCode.getAuthzCode()));
-            prepStmt.setString(3, authzCode.getRedirectURI());
-            prepStmt.setString(4, OAuth2Util.buildScopeString(authzCode.getScopes()));
-            prepStmt.setString(5, authzCode.getAuthzUser().getUserName());
-            prepStmt.setString(6, authzCode.getAuthzUser().getUserStoreDomain());
-            int tenantId = IdentityTenantUtil.getTenantId(authzCode.getAuthzUser().getTenantDomain());
-            prepStmt.setInt(7, tenantId);
-            prepStmt.setTimestamp(8, authzCode.getIssuedTime(),
+            prepStmt.setInt(3, messageContext.getApplication().getAppId());
+            prepStmt.setString(4, authzCode.getRedirectURI());
+            prepStmt.setString(5, OAuth2Util.buildScopeString(authzCode.getScopes()));
+            int tenantId = MultitenantConstants.INVALID_TENANT_ID;
+            if(authzCode.getAuthzUser().isFederatedUser()) {
+                prepStmt.setString(6, null);
+                // hack to store federated IDP name in user store domain column
+                prepStmt.setString(7, authzCode.getAuthzUser().getFederatedIdPName());
+            } else {
+                prepStmt.setString(6, authzCode.getAuthzUser().getUserName());
+                prepStmt.setString(7, authzCode.getAuthzUser().getUserStoreDomain());
+                tenantId = IdentityTenantUtil.getTenantId(authzCode.getAuthzUser().getTenantDomain());
+            }
+            prepStmt.setInt(8, tenantId);
+            prepStmt.setTimestamp(9, authzCode.getIssuedTime(),
                     Calendar.getInstance(TimeZone.getTimeZone("UTC")));
-            prepStmt.setLong(9, authzCode.getValidityPeriod());
-            prepStmt.setString(10, authzCode.getAuthzUser().getAuthenticatedSubjectIdentifier());
-            prepStmt.setString(11, authzCode.getPkceCodeChallenge());
-            prepStmt.setString(12, authzCode.getPkceCodeChallengeMethod());
-            prepStmt.setString(13, processor.getPreprocessedClientId(authzCode.getClientId()));
-
+            prepStmt.setLong(10, authzCode.getValidityPeriod());
+            prepStmt.setString(11, authzCode.getAuthzUser().getAuthenticatedSubjectIdentifier());
+            prepStmt.setString(12, authzCode.getPkceCodeChallenge());
+            prepStmt.setString(13, authzCode.getPkceCodeChallengeMethod());
             prepStmt.execute();
             connection.commit();
         } catch (SQLException e) {

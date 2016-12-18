@@ -32,14 +32,8 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AccessToken;
 
 public class RefreshGrantHandler extends AuthorizationGrantHandler {
 
-    // TODO: move this implementation to framework, remove it from here and update framework dependency version
-    public String getName() {
-        return this.getClass().getSimpleName();
-    }
-
     @Override
     public boolean canHandle(MessageContext messageContext) {
-        TokenMessageContext tokenMessageContext = (TokenMessageContext)messageContext;
         if(GrantType.REFRESH_TOKEN.toString().equals(
                 ((TokenMessageContext) messageContext).getRequest().getGrantType())) {
             return true;

@@ -77,6 +77,7 @@ public class OAuth2 {
     public static final String SESSION_DATA_KEY_CONSENT = "sessionDataKeyConsent";
     public static final String LOGGED_IN_USER = "loggedInUser";
     public static final String CONSENT = "consent";
+    public static final String CALLBACK_PATH = "../identity";
 
     public static class PKCE {
 

@@ -18,19 +18,15 @@
 
 package org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.authz;
 
-import org.apache.oltu.oauth2.common.OAuth;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.HttpIdentityResponse;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.HttpIdentityResponseFactory;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityResponse;
-import org.wso2.carbon.identity.core.util.IdentityUtil;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2RuntimeException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.OAuth2ServerConfig;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Util;
 
 import javax.servlet.http.HttpServletResponse;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ConsentResponseFactory extends HttpIdentityResponseFactory {
 
@@ -54,27 +50,13 @@ public class ConsentResponseFactory extends HttpIdentityResponseFactory {
         ConsentResponse consentResponse = (ConsentResponse)identityResponse;
 
         String consentPageURL = OAuth2ServerConfig.getInstance().getConsentPageURL();
-        String queryString = null;
-        try {
-            queryString = IdentityUtil.buildQueryString(consentResponse.getParameterMap());
-        } catch (UnsupportedEncodingException e) {
-            throw OAuth2RuntimeException.error(e.getMessage(), e);
-        }
-        String applicationName = consentResponse.getApplicationName();
-        String authenticatedSubjectId = consentResponse.getAuthenticatedSubjectId();
-        String requestedScopes =  OAuth2Util.buildScopeString(consentResponse.getRequestedScopes());
-        String sessionDataKeyConsent = consentResponse.getSessionDataKeyConsent();
-        try {
-            consentPageURL += queryString + OAuth2.LOGGED_IN_USER + "=" +
-                              URLEncoder.encode(authenticatedSubjectId, "UTF-8") +
-                              "&application=" + URLEncoder.encode(applicationName, "ISO-8859-1") +
-                              "&" + OAuth.OAUTH_SCOPE + "=" + URLEncoder.encode(requestedScopes, "ISO-8859-1") +
-                              "&" + OAuth2.SESSION_DATA_KEY_CONSENT + "=" + URLEncoder
-                    .encode(sessionDataKeyConsent, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            throw OAuth2RuntimeException.error(e.getMessage(), e);
-        }
 
+        Map<String,String[]> modifiableMap = new HashMap(consentResponse.getParameterMap());
+        modifiableMap.put("application", new String[]{consentResponse.getApplicationName()});
+        modifiableMap.put(OAuth2.LOGGED_IN_USER, new String[]{consentResponse.getAuthenticatedSubjectId()});
+        modifiableMap.put(OAuth2.SESSION_DATA_KEY_CONSENT, new String[]{consentResponse.getSessionDataKeyConsent()});
+
+        builder.setParameters(modifiableMap);
         builder.setStatusCode(HttpServletResponse.SC_FOUND);
         builder.setRedirectURL(consentPageURL);
     }

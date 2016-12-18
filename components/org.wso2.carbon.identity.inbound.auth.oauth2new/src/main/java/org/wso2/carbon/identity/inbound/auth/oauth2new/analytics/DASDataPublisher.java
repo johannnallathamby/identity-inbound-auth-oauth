@@ -47,11 +47,6 @@ public class DASDataPublisher extends OAuth2EventInterceptor {
 
     private static Log log = LogFactory.getLog(DASDataPublisher.class);
 
-    // TODO: move this implementation to framework, remove it from here and update framework dependency version
-    public String getName() {
-        return this.getClass().getSimpleName();
-    }
-
     public void onPostTokenIssue(OAuth2MessageContext messageContext) {
 
         AccessToken accessToken = (AccessToken) messageContext.getParameter(OAuth2.ACCESS_TOKEN);

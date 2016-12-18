@@ -35,11 +35,8 @@ public class AuthzMessageContext<T1 extends Serializable, T2 extends Serializabl
     private static final long serialVersionUID = 7631264521948153017L;
 
     private AuthenticatedUser authzUser;
-
     private Set<String> approvedScopes = new HashSet();
-
     private long accessTokenValidityPeriod = OAuth2.UNASSIGNED_VALIDITY_PERIOD;
-
     private long refreshTokenValidityPeriod = OAuth2.UNASSIGNED_VALIDITY_PERIOD;
 
     public AuthzMessageContext(AuthzRequest request, Map<T1,T2> parameters) {

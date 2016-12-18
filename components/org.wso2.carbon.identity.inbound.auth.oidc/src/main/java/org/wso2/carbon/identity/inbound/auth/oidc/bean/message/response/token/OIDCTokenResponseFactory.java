@@ -26,24 +26,17 @@ import com.nimbusds.jwt.PlainJWT;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
 import org.apache.oltu.oauth2.common.message.OAuthResponse;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.HttpIdentityResponse;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityResponse;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.token.TokenResponseFactory;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.model.OAuth2ServerConfig;
 import org.wso2.carbon.identity.inbound.auth.oidc.exception.OIDCRuntimeException;
 import org.wso2.carbon.identity.inbound.auth.oidc.model.OIDCServerConfig;
 import org.wso2.carbon.identity.inbound.auth.oidc.util.OIDCUtils;
 
 public class OIDCTokenResponseFactory extends TokenResponseFactory {
-
-    private static final Log log = LogFactory.getLog(OIDCTokenResponseFactory.class);
-
-    private OAuth2ServerConfig config = null;
 
     @Override
     public boolean canHandle(IdentityResponse identityResponse) {
@@ -62,9 +55,11 @@ public class OIDCTokenResponseFactory extends TokenResponseFactory {
     public void create(HttpIdentityResponse.HttpIdentityResponseBuilder builder, IdentityResponse identityResponse) {
 
         OIDCTokenResponse tokenResponse = ((OIDCTokenResponse)identityResponse);
-        IDTokenClaimsSet idTokenClaimsSet = tokenResponse.getIdTokenClaimsSet();
-        String idToken = createIDToken(idTokenClaimsSet, tokenResponse).serialize();
-        tokenResponse.getBuilder().setParam("id_token", idToken);
+
+        if(tokenResponse.getIdTokenClaimsSet() != null) {
+            String idToken = createIDToken(tokenResponse.getIdTokenClaimsSet(), tokenResponse).serialize();
+            tokenResponse.getBuilder().setParam("id_token", idToken);
+        }
 
         OAuthResponse oauthResponse = null;
         try {

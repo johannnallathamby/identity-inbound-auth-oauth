@@ -35,6 +35,17 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.wso2.eclipse.osgi</groupId>
+            <artifactId>org.eclipse.osgi.services</artifactId>
+            <version>${equinox.osgi.services.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.scr.ds-annotations</artifactId>
+            <scope>provided</scope>
+            <version>${apache.felix.scr.ds.annotations.version}</version>
+        </dependency>
+        <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>servlet-api</artifactId>
         </dependency>
@@ -44,11 +55,16 @@
         </dependency>
         <dependency>
             <groupId>com.nimbusds</groupId>
+            <artifactId>nimbus-jose-jwt</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.nimbusds</groupId>
             <artifactId>oauth2-oidc-sdk</artifactId>
         </dependency>
         <dependency>
             <groupId>org.wso2.carbon.identity.framework</groupId>
             <artifactId>org.wso2.carbon.identity.application.authentication.framework</artifactId>
+            <version>5.6.60-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.wso2.carbon.identity.inbound.auth.oauth2</groupId>
@@ -77,13 +93,15 @@
                         </Private-Package>
                         <Import-Package>
                             org.apache.oltu.*;version="${oltu.package.import.version.range}",
-                            com.nimbusds.openid.connect.sdk.*;version=${nimbusds.oauth2.oidc.sdk.imp.pkg.version.range},
+                            <!--com.nimbusds.jose.*;version="${nimbusds.jose.jwt.imp.pkg.range}",-->
+                            <!--com.nimbusds.jwt.*;version="${nimbusds.jose.jwt.imp.pkg.range}",-->
+                            <!--com.nimbusds.oauth2.*;version="${nimbusds.oauth2.oidc.sdk.imp.pkg.version.range}",-->
+                            <!--com.nimbusds.openid.*;version="${nimbusds.oauth2.oidc.sdk.imp.pkg.version.range}",-->
                             org.wso2.carbon.identity.inbound.auth.oauth2new.*;version="${identity.inbound.auth.oauth.imp.pkg.version.range}"
                         </Import-Package>
                         <Export-Package>
                             !org.wso2.carbon.identity.inbound.auth.oidc.internal,
-                            org.wso2.carbon.identity.inbound.auth.oidc.*;
-                            version="${identity.inbound.auth.oauth.exp.pkg.version}"
+                            org.wso2.carbon.identity.inbound.auth.oidc.*;version="${identity.inbound.auth.oauth.exp.pkg.version}"
                         </Export-Package>
                         <DynamicImport-Package>*</DynamicImport-Package>
                     </instructions>
@@ -91,6 +109,11 @@
             </plugin>
         </plugins>
     </build>
+
+    <properties>
+        <equinox.osgi.services.version>3.5.100.v20160504-1419</equinox.osgi.services.version>
+        <apache.felix.scr.ds.annotations.version>1.2.4</apache.felix.scr.ds.annotations.version>
+    </properties>
 
 </project>
 

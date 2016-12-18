@@ -44,11 +44,6 @@ public class BearerTokenResponseIssuer extends AccessTokenResponseIssuer {
 
     private OAuthIssuerImpl oltuIssuer = new OAuthIssuerImpl(new MD5Generator());
 
-    // TODO: move this implementation to framework, remove it from here and update framework dependency version
-    public String getName() {
-        return this.getClass().getSimpleName();
-    }
-
     @Override
     public boolean canHandle(MessageContext messageContext) {
         return true;
@@ -119,7 +114,6 @@ public class BearerTokenResponseIssuer extends AccessTokenResponseIssuer {
         newAccessToken.setRefreshTokenIssuedTime(refreshTokenIssuedTime);
         newAccessToken.setRefreshTokenValidity(refreshTokenValidity);
 
-        messageContext.addParameter(OAuth2.ACCESS_TOKEN, newAccessToken);
         return newAccessToken;
     }
 

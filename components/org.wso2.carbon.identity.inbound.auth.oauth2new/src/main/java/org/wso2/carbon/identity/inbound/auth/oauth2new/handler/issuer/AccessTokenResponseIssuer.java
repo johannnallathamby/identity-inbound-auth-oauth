@@ -51,6 +51,11 @@ public abstract class AccessTokenResponseIssuer extends AbstractIdentityMessageH
     protected static final String MARK_ACCESS_TOKEN_EXPIRED = "MarkAccessTokenExpired";
     protected static final String MARK_ACCESS_TOKEN_INACTIVE = "MarkAccessTokenInactive";
 
+    // TODO: move this implementation to framework, remove it from here and update framework dependency version
+    public String getName() {
+        return this.getClass().getSimpleName();
+    }
+
     /**
      * Issues the access token response.
      *
@@ -69,9 +74,9 @@ public abstract class AccessTokenResponseIssuer extends AbstractIdentityMessageH
             accessToken = issueNewAccessToken(messageContext);
             AuthzCode authzCode = (AuthzCode)messageContext.getParameter(OAuth2.AUTHZ_CODE);
             boolean markAccessTokenExpired = BooleanUtils.isTrue((Boolean) messageContext.getParameter
-                    (MARK_ACCESS_TOKEN_EXPIRED)) ? true : false;
+                    (MARK_ACCESS_TOKEN_EXPIRED));
             boolean markAccessTokenInactive = BooleanUtils.isTrue((Boolean) messageContext.getParameter(
-                    MARK_ACCESS_TOKEN_INACTIVE)) ? true : false;
+                    MARK_ACCESS_TOKEN_INACTIVE));
             AccessToken previousAccessToken = (AccessToken) messageContext.getParameter(OAuth2.PREV_ACCESS_TOKEN);
             storeNewAccessToken(accessToken, markAccessTokenExpired, markAccessTokenInactive, previousAccessToken,
                                 authzCode, messageContext);

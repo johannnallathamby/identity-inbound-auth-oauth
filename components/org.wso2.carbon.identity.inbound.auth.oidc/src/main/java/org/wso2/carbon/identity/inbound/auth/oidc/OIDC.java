@@ -51,7 +51,6 @@ public class OIDC {
         public static final String FORM_POST = "form_post";
     }
 
-    public static final String ACCESS_TOKEN = "ACCESS_TOKEN";
     public static final String USERNAME = "username";
     public static final String IDP_ENTITY_ID = "IdPEntityId";
     public static final String NONE = "none";

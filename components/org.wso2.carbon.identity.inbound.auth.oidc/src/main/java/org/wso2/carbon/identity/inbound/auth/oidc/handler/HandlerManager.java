@@ -19,30 +19,27 @@
 package org.wso2.carbon.identity.inbound.auth.oidc.handler;
 
 import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
-import org.wso2.carbon.identity.core.handler.MessageHandlerComparator;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2MessageContext;
 import org.wso2.carbon.identity.inbound.auth.oidc.exception.OIDCRuntimeException;
 import org.wso2.carbon.identity.inbound.auth.oidc.internal.OIDCDataHolder;
 
-import java.util.Collections;
 import java.util.List;
 
-public class OIDCHandlerManager {
+public class HandlerManager {
 
-    private static volatile OIDCHandlerManager instance = new OIDCHandlerManager();
+    private static volatile HandlerManager instance = new HandlerManager();
 
-    private OIDCHandlerManager() {
+    private HandlerManager() {
 
     }
 
-    public static OIDCHandlerManager getInstance() {
+    public static HandlerManager getInstance() {
         return instance;
     }
 
     public IDTokenClaimsSet buildIDToken(OAuth2MessageContext messageContext) {
 
         List<IDTokenHandler> handlers = OIDCDataHolder.getInstance().getIDTokenHandlers();
-        Collections.sort(handlers, new MessageHandlerComparator(messageContext));
         for(IDTokenHandler handler:handlers){
             if(handler.isEnabled(messageContext) && handler.canHandle(messageContext)){
                 return handler.buildIDToken(messageContext);

@@ -26,6 +26,7 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2RuntimeEx
 
 /**
  * Stores encrypted tokens in the database.
+ * TODO: Not working. Need to test.
  */
 public class EncryptionDecryptionPersistenceProcessor extends TokenPersistenceProcessor {
 
