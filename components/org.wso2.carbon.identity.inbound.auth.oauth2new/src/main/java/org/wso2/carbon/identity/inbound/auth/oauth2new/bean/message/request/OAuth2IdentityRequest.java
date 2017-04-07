@@ -18,30 +18,54 @@
 
 package org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request;
 
+import org.wso2.carbon.identity.application.authentication.framework.inbound.FrameworkClientException;
+import org.wso2.carbon.identity.application.authentication.framework.inbound.FrameworkRuntimeException;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.Scanner;
 
 public class OAuth2IdentityRequest extends IdentityRequest {
 
-    private static final long serialVersionUID = 5255384558894431030L;
+    private static final long serialVersionUID = -5749243735558650058L;
 
-    protected OAuth2IdentityRequest(OAuth2IdentityRequestBuilder builder) {
+    protected String body;
+
+    protected OAuth2IdentityRequest(OAuth2IdentityRequestBuilder builder) throws FrameworkClientException {
         super(builder);
+        this.body = builder.body;
+    }
+
+    public String getBody() {
+        return body;
     }
 
     public static class OAuth2IdentityRequestBuilder extends IdentityRequestBuilder {
 
+        protected String body;
+
         public OAuth2IdentityRequestBuilder(HttpServletRequest request, HttpServletResponse response) {
             super(request, response);
+            StringBuilder stringBuilder = new StringBuilder();
+            Scanner scanner = null;
+            try {
+                scanner = new Scanner(request.getInputStream());
+            } catch (IOException e) {
+                throw FrameworkRuntimeException.error("Cannot read the request body.");
+            }
+            while (scanner.hasNextLine()) {
+                stringBuilder.append(scanner.nextLine());
+            }
+            this.body = stringBuilder.toString();
         }
 
         public OAuth2IdentityRequestBuilder() {
 
         }
 
-        public OAuth2IdentityRequest build() {
+        public OAuth2IdentityRequest build() throws FrameworkClientException {
             return new OAuth2IdentityRequest(this);
         }
     }

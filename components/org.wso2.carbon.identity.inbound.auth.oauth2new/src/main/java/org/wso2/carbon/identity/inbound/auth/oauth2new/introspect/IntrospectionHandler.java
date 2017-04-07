@@ -30,7 +30,7 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.HandlerManager;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AccessToken;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.OAuth2App;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.OAuth2ServerConfig;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Util;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Utils;
 
 public class IntrospectionHandler extends AbstractIdentityMessageHandler {
 
@@ -127,13 +127,13 @@ public class IntrospectionHandler extends AbstractIdentityMessageHandler {
             // json string should not contain other attributes, only active=false
             builder.setActive(false);
             return builder;
-        } else if (OAuth2Util.getAccessTokenValidityPeriod(accessToken) == 0) {
+        } else if (OAuth2Utils.getAccessTokenValidityPeriod(accessToken) == 0) {
             // json string should not contain other attributes, only active=false
             builder.setActive(false);
             return builder;
         } else {
             builder.setActive(true);
-            builder.setScope(OAuth2Util.buildScopeString(accessToken.getScopes()));
+            builder.setScope(OAuth2Utils.buildScopeString(accessToken.getScopes()));
             builder.setClientId(accessToken.getClientId());
             OAuth2App app = messageContext.getApplication();
             if(!accessToken.getAuthzUser().isFederatedUser()) {

@@ -25,7 +25,7 @@ import org.wso2.carbon.identity.application.authentication.framework.inbound.Ide
 import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.OAuth2IdentityRequestFactory;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2ClientException;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Util;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Utils;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -60,7 +60,7 @@ public class AuthzRequestFactory extends OAuth2IdentityRequestFactory {
         authzRequestBuilder.setClientId(request.getParameter(OAuth.OAUTH_CLIENT_ID));
         authzRequestBuilder.setRedirectURI(request.getParameter(OAuth.OAUTH_REDIRECT_URI));
         authzRequestBuilder.setState(request.getParameter(OAuth.OAUTH_STATE));
-        authzRequestBuilder.setScopes(OAuth2Util.buildScopeSet(request.getParameter(OAuth.OAUTH_SCOPE)));
+        authzRequestBuilder.setScopes(OAuth2Utils.buildScopeSet(request.getParameter(OAuth.OAUTH_SCOPE)));
         authzRequestBuilder.setPkceCodeChallenge(request.getParameter(OAuth2.PKCE.CODE_CHALLENGE));
         authzRequestBuilder.setPkceCodeChallengeMethod(request.getParameter(OAuth2.PKCE.CODE_CHALLENGE_METHOD));
     }

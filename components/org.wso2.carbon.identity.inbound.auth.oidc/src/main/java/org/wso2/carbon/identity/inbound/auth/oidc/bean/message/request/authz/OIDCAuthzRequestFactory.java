@@ -27,7 +27,7 @@ import org.apache.oltu.oauth2.common.OAuth;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.authz.AuthzRequestFactory;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2ClientException;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Util;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Utils;
 import org.wso2.carbon.identity.inbound.auth.oidc.OIDC;
 
 import javax.servlet.http.HttpServletRequest;
@@ -49,7 +49,7 @@ public class OIDCAuthzRequestFactory extends AuthzRequestFactory {
     @Override
     public boolean canHandle(HttpServletRequest request, HttpServletResponse response) {
         if(super.canHandle(request, response)) {
-            Set<String> scopes = OAuth2Util.buildScopeSet(request.getParameter(OAuth.OAUTH_SCOPE));
+            Set<String> scopes = OAuth2Utils.buildScopeSet(request.getParameter(OAuth.OAUTH_SCOPE));
             if (scopes.contains(OIDC.OPENID_SCOPE)) {
                 return true;
             }
@@ -79,7 +79,7 @@ public class OIDCAuthzRequestFactory extends AuthzRequestFactory {
         oidcAuthzRequestBuilder.setDisplay(request.getParameter(OIDC.DISPLAY));
         oidcAuthzRequestBuilder.setIdTokenHint(request.getParameter(OIDC.ID_TOKEN_HINT));
         oidcAuthzRequestBuilder.setLoginHint(request.getParameter(OIDC.LOGIN_HINT));
-        Set<String> prompts = OAuth2Util.buildScopeSet(request.getParameter(OIDC.PROMPT));
+        Set<String> prompts = OAuth2Utils.buildScopeSet(request.getParameter(OIDC.PROMPT));
         if(prompts.contains(OIDC.Prompt.NONE) && prompts.size() > 1){
             throw OAuth2ClientException.error("Prompt value 'none' cannot be used with other " +
                                               "prompts. Prompt: " + request.getParameter(OIDC.PROMPT));

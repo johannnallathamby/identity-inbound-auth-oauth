@@ -16,9 +16,7 @@
  * under the License.
  */
 
-package org.wso2.carbon.identity.inbound.auth.oidc.exception;
-
-import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2AuthnException;
+package org.wso2.carbon.identity.inbound.auth.oauth2new.exception;
 
 public class AccessTokenValidationException extends OAuth2AuthnException {
 

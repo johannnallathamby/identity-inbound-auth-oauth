@@ -18,6 +18,7 @@
 
 package org.wso2.carbon.identity.inbound.auth.oauth2new.revoke;
 
+import org.wso2.carbon.identity.application.authentication.framework.inbound.FrameworkClientException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.OAuth2IdentityRequest;
 
 import javax.servlet.http.HttpServletRequest;
@@ -31,7 +32,7 @@ public class RevocationRequest extends OAuth2IdentityRequest {
     private String tokenTypeHint;
     private String callback;
 
-    protected RevocationRequest(RevokeRequestBuilder builder) {
+    protected RevocationRequest(RevokeRequestBuilder builder) throws FrameworkClientException  {
         super(builder);
         this.token = builder.token;
         this.tokenTypeHint = builder.tokenTypeHint;
@@ -80,7 +81,7 @@ public class RevocationRequest extends OAuth2IdentityRequest {
         }
 
         @Override
-        public RevocationRequest build() {
+        public RevocationRequest build() throws FrameworkClientException {
             return new RevocationRequest(this);
         }
     }

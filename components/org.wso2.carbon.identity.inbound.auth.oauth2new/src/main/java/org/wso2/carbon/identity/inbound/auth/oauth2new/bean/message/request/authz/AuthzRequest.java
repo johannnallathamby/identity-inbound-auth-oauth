@@ -18,6 +18,7 @@
 
 package org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.authz;
 
+import org.wso2.carbon.identity.application.authentication.framework.inbound.FrameworkClientException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.OAuth2IdentityRequest;
 
 import javax.servlet.http.HttpServletRequest;
@@ -37,7 +38,7 @@ public class AuthzRequest extends OAuth2IdentityRequest {
     protected String pkceCodeChallenge;
     protected String pkceCodeChallengeMethod;
 
-    protected AuthzRequest(AuthzRequestBuilder builder) {
+    protected AuthzRequest(AuthzRequestBuilder builder) throws FrameworkClientException {
         super(builder);
         this.responseType = builder.responseType;
         this.clientId = builder.clientId;
@@ -134,7 +135,7 @@ public class AuthzRequest extends OAuth2IdentityRequest {
             return this;
         }
 
-        public AuthzRequest build() {
+        public AuthzRequest build() throws FrameworkClientException {
             return new AuthzRequest(this);
         }
     }

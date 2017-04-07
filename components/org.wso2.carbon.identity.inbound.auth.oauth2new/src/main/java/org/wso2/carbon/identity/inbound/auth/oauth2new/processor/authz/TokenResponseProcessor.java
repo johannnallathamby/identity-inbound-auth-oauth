@@ -30,7 +30,7 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2Exception
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.HandlerManager;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AccessToken;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.util.DummyHttpServletRequest;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Util;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Utils;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -76,7 +76,7 @@ public class TokenResponseProcessor extends ROApprovalProcessor {
                 .setExpiresIn(Long.toString(expiry))
                 .setParam(OAuth.OAUTH_TOKEN_TYPE, OAuth.OAUTH_HEADER_NAME)
                 .setParam(OAuth.OAUTH_STATE, state)
-                .setParam(OAuth.OAUTH_SCOPE, OAuth2Util.buildScopeString(accessToken.getScopes()));
+                .setParam(OAuth.OAUTH_SCOPE, OAuth2Utils.buildScopeString(accessToken.getScopes()));
 
 
         if(issueRefreshToken(messageContext)) {

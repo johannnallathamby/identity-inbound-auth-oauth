@@ -31,7 +31,7 @@ import org.wso2.carbon.identity.base.IdentityException;
 import org.wso2.carbon.identity.core.util.IdentityUtil;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.token.TokenRequestFactory;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2ClientException;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Util;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Utils;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -85,6 +85,6 @@ public class SAML2AssertionGrantFactory extends TokenRequestFactory {
         }
         saml2AssertionGrantBuilder.setAssertion(assertion);
         saml2AssertionGrantBuilder.setAssertionType(request.getParameter(OAuth.OAUTH_ASSERTION_TYPE));
-        saml2AssertionGrantBuilder.setScopes(OAuth2Util.buildScopeSet(request.getParameter(OAuth.OAUTH_SCOPE)));
+        saml2AssertionGrantBuilder.setScopes(OAuth2Utils.buildScopeSet(request.getParameter(OAuth.OAUTH_SCOPE)));
     }
 }

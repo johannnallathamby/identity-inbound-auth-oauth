@@ -30,6 +30,7 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2.ClientType;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.TokenMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.token.TokenRequest;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.token.TokenResponse;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2AuthnException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2ClientException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2Exception;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AccessToken;
@@ -111,7 +112,7 @@ public class OIDCTokenProcessor extends TokenProcessor {
      * @param messageContext The runtime message context
      * @throws OAuth2ClientException if the client was not authenticated successfully
      */
-    protected void authenticateClient(TokenMessageContext messageContext) throws OAuth2ClientException {
+    protected void authenticateClient(TokenMessageContext messageContext) throws OAuth2AuthnException {
         org.wso2.carbon.identity.inbound.auth.oauth2new.handler.HandlerManager.getInstance().authenticateClient(messageContext);
     }
 

@@ -189,8 +189,8 @@ public class CacheBackedOAuth2DAO extends OAuth2DAO {
                 AccessTokenCache.getInstance().addToCache(bearerToken, accessToken);
                 AuthorizationGrantCacheKey key = new AuthorizationGrantCacheKey(accessToken.getClientId(),
                         accessToken.getAuthzUser(), accessToken.getScopes());
-                accessToken = AuthorizationGrantCache.getInstance().getValueFromCache(key);
-                if(accessToken == null){
+                AccessToken accessToken1 = AuthorizationGrantCache.getInstance().getValueFromCache(key);
+                if(accessToken1 == null){
                     AuthorizationGrantCache.getInstance().addToCache(key, accessToken);
                 }
             }

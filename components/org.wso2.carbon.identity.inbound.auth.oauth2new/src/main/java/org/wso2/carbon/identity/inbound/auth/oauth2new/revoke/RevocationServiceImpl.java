@@ -18,6 +18,7 @@
 
 package org.wso2.carbon.identity.inbound.auth.oauth2new.revoke;
 
+import org.wso2.carbon.identity.application.authentication.framework.inbound.FrameworkClientException;
 import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
 import org.wso2.carbon.identity.core.util.IdentityTenantUtil;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.dao.OAuth2DAO;
@@ -25,7 +26,7 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2RuntimeEx
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.HandlerManager;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AccessToken;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.OAuth2App;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Util;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Utils;
 import org.wso2.carbon.user.api.Tenant;
 import org.wso2.carbon.user.api.UserStoreException;
 
@@ -65,7 +66,7 @@ public class RevocationServiceImpl implements RevocationService {
             // globally unique client IDs and IDN_OAUTH2_ACCESS_TOKEN table doesn't store tenant IDs for service
             // providers
             for(Tenant tenant:allTenants) {
-                OAuth2App app = OAuth2Util.getOAuth2App(accessToken.getClientId(), tenant.getDomain());
+                OAuth2App app = OAuth2Utils.getOAuth2App(accessToken.getClientId(), tenant.getDomain());
                 if(app != null) {
                     apps.add(app);
                     break;
@@ -114,7 +115,12 @@ public class RevocationServiceImpl implements RevocationService {
 
         RORevocationRequest.RORevokeRequestBuilder builder = new RORevocationRequest.RORevokeRequestBuilder(user);
         builder.addClientId(clientId);
-        RORevocationRequest request = builder.build();
+        RORevocationRequest request = null;
+        try {
+            request = builder.build();
+        } catch (FrameworkClientException e) {
+            throw OAuth2RuntimeException.error("Error occurred while creating RORevocationMessageContext.");
+        }
         RORevocationMessageContext messageContext = new RORevocationMessageContext(request, new HashMap<String,String>());
         return messageContext;
     }

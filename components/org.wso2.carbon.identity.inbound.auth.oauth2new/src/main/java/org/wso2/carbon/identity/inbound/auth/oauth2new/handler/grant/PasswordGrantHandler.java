@@ -31,7 +31,7 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2Exception
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2RuntimeException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.internal.OAuth2DataHolder;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.OAuth2App;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Util;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Utils;
 import org.wso2.carbon.user.api.UserStoreException;
 import org.wso2.carbon.user.api.UserStoreManager;
 import org.wso2.carbon.user.core.service.RealmService;
@@ -60,7 +60,7 @@ public class PasswordGrantHandler extends AuthorizationGrantHandler {
         String clientId = messageContext.getApplication().getClientId();
         String tenantDomain = messageContext.getRequest().getTenantDomain();
 
-        OAuth2App app = OAuth2Util.getOAuth2App(clientId, tenantDomain);
+        OAuth2App app = OAuth2Utils.getOAuth2App(clientId, tenantDomain);
 
         if(!app.isSaasApp() && !userTenantDomain.equals(tenantDomain)){
             String message = "Non-SaaS service provider tenant domain is not same as user tenant domain; " +
@@ -88,9 +88,9 @@ public class PasswordGrantHandler extends AuthorizationGrantHandler {
                 username = username.substring(username.indexOf(CarbonConstants.DOMAIN_SEPARATOR),
                                               username.length() - 1);
             }
-            AuthenticatedUser user = OAuth2Util.createLocalAuthenticatedUser(username,
-                                                                             UserCoreUtil.getDomainFromThreadLocal(),
-                                                                             userTenantDomain, messageContext);
+            AuthenticatedUser user = OAuth2Utils.createLocalAuthenticatedUser(username,
+                                                                              UserCoreUtil.getDomainFromThreadLocal(),
+                                                                              userTenantDomain, messageContext);
             messageContext.setAuthzUser(user);
             messageContext.setApprovedScopes(((PasswordGrantRequest) messageContext.getRequest()).getScopes());
         } else {

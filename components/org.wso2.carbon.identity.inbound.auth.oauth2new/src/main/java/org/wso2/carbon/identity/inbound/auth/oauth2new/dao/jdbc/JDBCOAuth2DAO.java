@@ -39,7 +39,7 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.persist.TokenPers
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AccessToken;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AuthzCode;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.OAuth2ServerConfig;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Util;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Utils;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -157,7 +157,7 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
                 }
             }
 
-            String hashedScope = OAuth2Util.hashScopes(scopes);
+            String hashedScope = OAuth2Utils.hashScopes(scopes);
             if (hashedScope == null) {
                 sql = sql.replace("TOKEN_SCOPE_HASH=?", "TOKEN_SCOPE_HASH IS NULL");
             }
@@ -214,7 +214,7 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
             }
             return null;
         } catch (SQLException e) {
-            String errorMsg = "Error occurred while trying to retrieve latest access token for " + OAuth2Util
+            String errorMsg = "Error occurred while trying to retrieve latest access token for " + OAuth2Utils
                     .createUniqueAuthzGrantString(authzUser, clientId, scopes) + " with state either of " + states;
             throw OAuth2RuntimeException.error(errorMsg, e);
         } finally {
@@ -250,7 +250,7 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
             connection.commit();
         } catch (SQLException e) {
             IdentityDatabaseUtil.rollBack(connection);
-            throw OAuth2RuntimeException.error("Error occurred while storing access token for " + OAuth2Util
+            throw OAuth2RuntimeException.error("Error occurred while storing access token for " + OAuth2Utils
                     .createUniqueAuthzGrantString(newAccessToken), e);
         } finally {
             IdentityDatabaseUtil.closeAllConnections(connection, null, null);
@@ -290,7 +290,7 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
                                                                                                               .getTimeZone("UTC")));
             prepStmt.setLong(9, newAccessToken.getAccessTokenValidity());
             prepStmt.setLong(10, newAccessToken.getRefreshTokenValidity());
-            prepStmt.setString(11, OAuth2Util.hashScopes(newAccessToken.getScopes()));
+            prepStmt.setString(11, OAuth2Utils.hashScopes(newAccessToken.getScopes()));
             prepStmt.setString(12, newAccessToken.getAccessTokenState());
             prepStmt.setString(13, GrantType.CLIENT_CREDENTIALS.toString().equals(newAccessToken.getGrantType()) ?
                                    "APPLICATION" : "APPLICATION_USER");
@@ -332,7 +332,7 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
                         if (getPoolSize() == 0) {
                             // In here we can use existing token since we have a synchronised communication
                             log.info("Successfully recovered from 'CON_APP_KEY' constraint violation in " + (5 - retryCount) +
-                                     " attempt(s) for " + OAuth2Util.createUniqueAuthzGrantString(newAccessToken));
+                                     " attempt(s) for " + OAuth2Utils.createUniqueAuthzGrantString(newAccessToken));
                             throw AccessTokenExistsException.error(activeAccessToken, e);
                         } else {
                             // In here we have to use new token since we have asynchronous communication. User already
@@ -367,7 +367,7 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
                 }
                 if (retryCount == 0) {
                     String errorMsg = "Couldn't recover from 'CON_APP_KEY' constraint violation within maximum retry count " +
-                                      OAuth2ServerConfig.getInstance().getTokenPersistenceRetryCount() + " for " + OAuth2Util
+                                      OAuth2ServerConfig.getInstance().getTokenPersistenceRetryCount() + " for " + OAuth2Utils
                                               .createUniqueAuthzGrantString(newAccessToken);
                     throw OAuth2RuntimeException.error(errorMsg, e);
                 }
@@ -396,7 +396,7 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
 
         if (Boolean.TRUE.equals(messageContext.getParameter("RetryingTokenPersistence"))) {
             log.info("Successfully recovered from 'CON_APP_KEY' constraint violation in " + (5 - retryCount) +
-                     " attempt(s) for " + OAuth2Util.createUniqueAuthzGrantString(newAccessToken));
+                     " attempt(s) for " + OAuth2Utils.createUniqueAuthzGrantString(newAccessToken));
         }
     }
 
@@ -523,7 +523,7 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
                     userName = resultSet.getString(3);
                     tenantId = resultSet.getInt(4);
                     userDomain = resultSet.getString(5);
-                    scopeSet = OAuth2Util.buildScopeSet(resultSet.getString(6));
+                    scopeSet = OAuth2Utils.buildScopeSet(resultSet.getString(6));
                     accessTokenState = resultSet.getString(7);
                     accessTokenIssuedTime = resultSet.getTimestamp(8,
                             Calendar.getInstance(TimeZone.getTimeZone("UTC")));
@@ -590,7 +590,7 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
             prepStmt.setString(2, processor.getProcessedAuthzCode(authzCode.getAuthzCode()));
             prepStmt.setInt(3, messageContext.getApplication().getAppId());
             prepStmt.setString(4, authzCode.getRedirectURI());
-            prepStmt.setString(5, OAuth2Util.buildScopeString(authzCode.getScopes()));
+            prepStmt.setString(5, OAuth2Utils.buildScopeString(authzCode.getScopes()));
             int tenantId = MultitenantConstants.INVALID_TENANT_ID;
             if(authzCode.getAuthzUser().isFederatedUser()) {
                 prepStmt.setString(6, null);
@@ -661,7 +661,7 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
                 authorizationCode =  new AuthzCode(authzCode, clientId, redirectUri, authzUser,
                         issuedTime, validityPeriod, codeState);
                 authorizationCode.setAuthzCodeId(authzCodeId);
-                authorizationCode.setScopes(OAuth2Util.buildScopeSet(scopeString));
+                authorizationCode.setScopes(OAuth2Utils.buildScopeSet(scopeString));
                 authorizationCode.setPkceCodeChallenge(pkceCodeChallenge);
                 authorizationCode.setPkceCodeChallengeMethod(pkceCodeChallengeMethod);
             }
@@ -971,7 +971,7 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
                     String clientId = resultSet.getString(4);
                     String username = resultSet.getString(5);
                     String userStoreDomain = resultSet.getString(6);
-                    Set<String> scope = OAuth2Util.buildScopeSet(resultSet.getString(7));
+                    Set<String> scope = OAuth2Utils.buildScopeSet(resultSet.getString(7));
                     String state = resultSet.getString(8);
                     Timestamp issuedTime = resultSet.getTimestamp(9, Calendar.getInstance(TimeZone.getTimeZone(UTC)));
                     Timestamp refreshTokenIssuedTime = resultSet.getTimestamp(10, Calendar.getInstance(TimeZone
@@ -1028,7 +1028,7 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
                 String code = processor.getPreprocessedAuthzCode(rs.getString(2));
                 String clientId = rs.getString(3);
                 String username = rs.getString(4);
-                Set<String> scopes = OAuth2Util.buildScopeSet(rs.getString(5));
+                Set<String> scopes = OAuth2Utils.buildScopeSet(rs.getString(5));
                 Timestamp issuedTime = rs.getTimestamp(6, Calendar.getInstance(TimeZone.getTimeZone(UTC)));
                 long validityPeriodInMillis = rs.getLong(7);
                 String callbackUrl = rs.getString(8);
@@ -1085,7 +1085,7 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
                     String refreshToken = processor.getPreprocessedRefreshToken(resultSet.getString(3));
                     String clientId = resultSet.getString(4);
                     String username = resultSet.getString(5);
-                    Set<String> scope = OAuth2Util.buildScopeSet(resultSet.getString(6));
+                    Set<String> scope = OAuth2Utils.buildScopeSet(resultSet.getString(6));
                     String state = resultSet.getString(7);
                     Timestamp issuedTime = resultSet.getTimestamp(8, Calendar.getInstance(TimeZone.getTimeZone(UTC)));
                     Timestamp refreshTokenIssuedTime = resultSet.getTimestamp(9, Calendar.getInstance(TimeZone
@@ -1144,7 +1144,7 @@ public class JDBCOAuth2DAO extends OAuth2DAO {
                 String code = processor.getPreprocessedAuthzCode(rs.getString(2));
                 String clientId = rs.getString(3);
                 String username = rs.getString(4);
-                Set<String> scopes = OAuth2Util.buildScopeSet(rs.getString(5));
+                Set<String> scopes = OAuth2Utils.buildScopeSet(rs.getString(5));
                 Timestamp issuedTime = rs.getTimestamp(6, Calendar.getInstance(TimeZone.getTimeZone(UTC)));
                 long validityPeriodInMillis = rs.getLong(7);
                 String callbackUrl = rs.getString(8);

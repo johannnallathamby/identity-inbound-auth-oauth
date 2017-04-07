@@ -18,6 +18,7 @@
 
 package org.wso2.carbon.identity.inbound.auth.oauth2new.introspect;
 
+import org.wso2.carbon.identity.application.authentication.framework.inbound.FrameworkClientException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.OAuth2IdentityRequest;
 
 import javax.servlet.http.HttpServletRequest;
@@ -30,7 +31,7 @@ public class IntrospectionRequest extends OAuth2IdentityRequest {
     private String token;
     private String tokenTypeHint;
 
-    protected IntrospectionRequest(IntrospectionRequestBuilder builder) {
+    protected IntrospectionRequest(IntrospectionRequestBuilder builder) throws FrameworkClientException {
         super(builder);
         this.token = builder.token;
         this.tokenTypeHint = builder.tokenTypeHint;
@@ -67,7 +68,7 @@ public class IntrospectionRequest extends OAuth2IdentityRequest {
         }
 
         @Override
-        public IntrospectionRequest build() {
+        public IntrospectionRequest build() throws FrameworkClientException {
             return new IntrospectionRequest(this);
         }
     }

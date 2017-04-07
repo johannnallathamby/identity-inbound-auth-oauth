@@ -18,6 +18,7 @@
 
 package org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.authz;
 
+import org.wso2.carbon.identity.application.authentication.framework.inbound.FrameworkClientException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.OAuth2IdentityRequest;
 
 import javax.servlet.http.HttpServletRequest;
@@ -30,7 +31,7 @@ public class AuthzApprovedRequest extends OAuth2IdentityRequest {
     private String sessionDataKey;
     private String consent;
 
-    protected AuthzApprovedRequest(AuthzApprovedRequestBuilder builder) {
+    protected AuthzApprovedRequest(AuthzApprovedRequestBuilder builder) throws FrameworkClientException {
         super(builder);
         this.sessionDataKey = builder.sessionDataKey;
         this.consent = builder.consent;
@@ -68,7 +69,7 @@ public class AuthzApprovedRequest extends OAuth2IdentityRequest {
         }
 
         @Override
-        public AuthzApprovedRequest build() {
+        public AuthzApprovedRequest build() throws FrameworkClientException {
             return new AuthzApprovedRequest(this);
         }
     }

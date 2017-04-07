@@ -26,25 +26,23 @@ import net.minidev.json.JSONObject;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
-import org.wso2.carbon.identity.application.authentication.framework.exception.FrameworkException;
-import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityProcessCoordinator;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
 import org.wso2.carbon.identity.application.common.model.ClaimMapping;
 import org.wso2.carbon.identity.core.util.IdentityTenantUtil;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2InternalException;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.HandlerManager;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.introspect.IntrospectionRequest;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.introspect.IntrospectionResponse;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.AccessTokenValidationException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AccessToken;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.model.OAuth2App;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.processor.OAuth2IdentityRequestProcessor;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Utils;
 import org.wso2.carbon.identity.inbound.auth.oidc.OIDC;
-import org.wso2.carbon.identity.inbound.auth.oidc.bean.context.UserinfoMessageContext;
+import org.wso2.carbon.identity.inbound.auth.oidc.bean.context.UserInfoMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oidc.bean.message.request.authz.OIDCAuthzRequest;
+import org.wso2.carbon.identity.inbound.auth.oidc.bean.message.request.userinfo.UserInfoRequest;
 import org.wso2.carbon.identity.inbound.auth.oidc.bean.message.response.userinfo.UserInfoResponse;
 import org.wso2.carbon.identity.inbound.auth.oidc.cache.OIDCCache;
 import org.wso2.carbon.identity.inbound.auth.oidc.cache.OIDCCacheAccessTokenKey;
 import org.wso2.carbon.identity.inbound.auth.oidc.cache.OIDCCacheEntry;
-import org.wso2.carbon.identity.inbound.auth.oidc.exception.AccessTokenValidationException;
 import org.wso2.carbon.identity.inbound.auth.oidc.internal.OIDCDataHolder;
 import org.wso2.carbon.registry.api.RegistryException;
 import org.wso2.carbon.registry.api.RegistryService;
@@ -65,19 +63,19 @@ public class UserInfoProcessor extends OAuth2IdentityRequestProcessor {
 
     @Override
     public boolean canHandle(IdentityRequest identityRequest) {
-        // since we don't build a UserinfoRequest specifically we need to rely purely on the endpoint path to
-        // identity userinfo requests
-        return identityRequest.getRequestURI().contains("userinfo");
+        return identityRequest instanceof UserInfoRequest;
     }
 
     @Override
-    public UserInfoResponse.UserInfoResponseBuilder process(IdentityRequest identityRequest) throws FrameworkException {
+    public UserInfoResponse.UserInfoResponseBuilder process(IdentityRequest identityRequest)
+            throws AccessTokenValidationException {
 
-        UserinfoMessageContext messageContext = new UserinfoMessageContext(identityRequest, new HashMap());
+        UserInfoMessageContext messageContext = new UserInfoMessageContext((UserInfoRequest) identityRequest,
+                                                                           new HashMap());
 
-        validateAccessToken(messageContext);
+        AccessToken accessToken = validateAccessToken(messageContext);
 
-        UserInfo userInfo = buildUserInfo(messageContext);
+        UserInfo userInfo = buildUserInfo(accessToken, messageContext);
 
         UserInfoResponse.UserInfoResponseBuilder userInfoResponseBuilder = new UserInfoResponse
                 .UserInfoResponseBuilder(messageContext);
@@ -85,40 +83,23 @@ public class UserInfoProcessor extends OAuth2IdentityRequestProcessor {
         return userInfoResponseBuilder;
     }
 
-    protected void validateAccessToken(UserinfoMessageContext messageContext) throws FrameworkException {
+    protected AccessToken validateAccessToken(UserInfoMessageContext messageContext) throws AccessTokenValidationException {
 
-        // validate Bearer header correctly as in UserInforRequestDefaultValidator
-        String accessToken = null;
-        String tokenTypeHint = null;
-
-        IntrospectionRequest.IntrospectionRequestBuilder builder = new IntrospectionRequest
-                .IntrospectionRequestBuilder();
-        builder.setToken(accessToken);
-        builder.setTokenTypeHint(tokenTypeHint);
-        // TODO: build() methods of all builders must throw client exceptions. Need API change in framework.
-        // TODO: if request URI is null in the builder a null pointer is thrown from framework while iterating to
-        // TODO: find processors because some processor check the request URI
-        builder.setRequestURI("");
-        IntrospectionRequest introspectionRequest = builder.build();
-        messageContext.setIntrospectionRequest(introspectionRequest);
-        IdentityProcessCoordinator coordinator = new IdentityProcessCoordinator();
-
-        IntrospectionResponse response = (IntrospectionResponse) coordinator.process(introspectionRequest);
-        if(!response.isActive()) {
-            throw AccessTokenValidationException.error("Invalid access token.");
-        } else {
-            messageContext.setIntrospectionResponse(response);
-        }
+        String accessTokenId = ((UserInfoRequest)messageContext.getRequest()).getAccessToken();
+        AccessToken accessToken = OAuth2Utils.validateAccessToken(accessTokenId);
+        messageContext.addParameter(OAuth2.ACCESS_TOKEN, accessToken);
+        messageContext.setApplication(OAuth2Utils.getOAuth2App(accessToken.getClientId()));
+        return accessToken;
     }
 
-    protected UserInfo buildUserInfo(UserinfoMessageContext messageContext) throws OAuth2InternalException {
+    protected UserInfo buildUserInfo(AccessToken accessToken, UserInfoMessageContext messageContext) {
 
-        UserInfo userInfo = new UserInfo(new Subject(messageContext.getIntrospectionResponse().getSub()));
-        userInfo.setClaim(OIDC.USERNAME, messageContext.getIntrospectionResponse()
-                .getUsername());
+        OAuth2App app = messageContext.getApplication();
+        UserInfo userInfo = new UserInfo(new Subject(accessToken.getAuthzUser().getAuthenticatedSubjectIdentifier()));
+        userInfo.setClaim(OIDC.USERNAME, accessToken.getAuthzUser().getUsernameAsSubjectIdentifier(
+                app.isUseUserstoreDomainInLocalSubjectIdentifier(),
+                app.isUseTenantDomainInLocalSubjectIdentifier()));
 
-        String bearerToken = messageContext.getIntrospectionRequest().getToken();
-        AccessToken accessToken = HandlerManager.getInstance().getOAuth2DAO(null).getAccessToken(bearerToken, null);
         OIDCCacheAccessTokenKey cacheKey = new OIDCCacheAccessTokenKey(accessToken.getAccessTokenId(),
                                                                        accessToken.getAccessToken());
         Map<String,String> retrievedClaims = new HashMap();
@@ -211,15 +192,15 @@ public class UserInfoProcessor extends OAuth2IdentityRequestProcessor {
         if (retrievedClaims.containsKey(OIDC.PHONE_NUMBER_VERIFIED)) {
             Object phoneNumberVerified = retrievedClaims.get(OIDC.PHONE_NUMBER_VERIFIED);
             if(phoneNumberVerified != null && phoneNumberVerified instanceof String) {
-                userInfo.setClaim(OIDC.PHONE_NUMBER_VERIFIED, Boolean.valueOf((
-                                                                                      retrievedClaims.get(OIDC.PHONE_NUMBER_VERIFIED))));
+                userInfo.setClaim(OIDC.PHONE_NUMBER_VERIFIED, Boolean.valueOf(
+                        (retrievedClaims.get(OIDC.PHONE_NUMBER_VERIFIED))));
             }
         }
         if (retrievedClaims.containsKey(OIDC.EMAIL_VERIFIED)) {
             Object emailVerified = retrievedClaims.get(OIDC.EMAIL_VERIFIED);
             if(emailVerified != null && emailVerified instanceof String) {
-                userInfo.setClaim(OIDC.EMAIL_VERIFIED, Boolean.valueOf((
-                                                                               retrievedClaims.get(OIDC.EMAIL_VERIFIED))));
+                userInfo.setClaim(OIDC.EMAIL_VERIFIED, Boolean.valueOf(
+                        (retrievedClaims.get(OIDC.EMAIL_VERIFIED))));
             }
         }
         for(OIDCAuthzRequest.Claim requestedClaim : requestedClaims) {

@@ -24,7 +24,7 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.TokenMessage
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.token.clientcredentials.ClientCredentialsGrantRequest;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2ClientException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2Exception;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Util;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Utils;
 
 public class ClientCredentialsGrantHandler extends AuthorizationGrantHandler {
 
@@ -45,7 +45,7 @@ public class ClientCredentialsGrantHandler extends AuthorizationGrantHandler {
     public void validateGrant(TokenMessageContext messageContext) throws OAuth2ClientException, OAuth2Exception {
 
         super.validateGrant(messageContext);
-        messageContext.setAuthzUser(OAuth2Util.createLocalAuthenticatedUser(
+        messageContext.setAuthzUser(OAuth2Utils.createLocalAuthenticatedUser(
                 messageContext.getApplication().getServiceProvider().getOwner(), messageContext));
         messageContext.setApprovedScopes(((ClientCredentialsGrantRequest)messageContext.getRequest()).getScopes());
     }

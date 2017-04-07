@@ -22,8 +22,11 @@ import org.apache.oltu.oauth2.common.OAuth;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.HttpIdentityResponse;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.HttpIdentityResponseFactory;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityResponse;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
 
-public class UserinfoResponseFactory extends HttpIdentityResponseFactory {
+import javax.servlet.http.HttpServletResponse;
+
+public class UserInfoResponseFactory extends HttpIdentityResponseFactory {
 
     @Override
     public boolean canHandle(IdentityResponse identityResponse) {
@@ -39,12 +42,16 @@ public class UserinfoResponseFactory extends HttpIdentityResponseFactory {
     }
 
     @Override
-    public void create(HttpIdentityResponse.HttpIdentityResponseBuilder httpIdentityResponseBuilder,
-                       IdentityResponse identityResponse) {
+    public void create(HttpIdentityResponse.HttpIdentityResponseBuilder builder, IdentityResponse identityResponse) {
 
-        httpIdentityResponseBuilder.setContentType(OAuth.ContentType.JSON);
+        builder.setStatusCode(HttpServletResponse.SC_OK);
+        builder.setContentType(OAuth.ContentType.JSON);
         UserInfoResponse userInfoResponse = (UserInfoResponse)identityResponse;
         String body = userInfoResponse.getUserInfo().toJSONObject().toJSONString();
-        httpIdentityResponseBuilder.setBody(body);
+        builder.setBody(body);
+        builder.addHeader(OAuth2.Header.CACHE_CONTROL,
+                          OAuth2.HeaderValue.CACHE_CONTROL_NO_STORE);
+        builder.addHeader(OAuth2.Header.PRAGMA,
+                          OAuth2.HeaderValue.PRAGMA_NO_CACHE);
     }
 }

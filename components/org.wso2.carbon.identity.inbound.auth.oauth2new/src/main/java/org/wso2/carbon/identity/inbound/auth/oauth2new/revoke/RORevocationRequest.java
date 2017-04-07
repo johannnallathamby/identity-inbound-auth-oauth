@@ -21,6 +21,7 @@ package org.wso2.carbon.identity.inbound.auth.oauth2new.revoke;
 import edu.emory.mathcs.backport.java.util.Collections;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.wso2.carbon.identity.application.authentication.framework.inbound.FrameworkClientException;
 import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.OAuth2IdentityRequest;
 
@@ -35,7 +36,7 @@ public class RORevocationRequest extends OAuth2IdentityRequest {
     protected Set<String> clientIds = new HashSet();
     protected Set<String> scopes = new HashSet();
 
-    public RORevocationRequest(RORevokeRequestBuilder builder) {
+    public RORevocationRequest(RORevokeRequestBuilder builder) throws FrameworkClientException {
         super(builder);
         this.user = builder.user;
         this.clientIds = builder.clientIds;
@@ -107,7 +108,7 @@ public class RORevocationRequest extends OAuth2IdentityRequest {
         }
 
         @Override
-        public RORevocationRequest build() {
+        public RORevocationRequest build() throws FrameworkClientException {
             return new RORevocationRequest(this);
         }
     }

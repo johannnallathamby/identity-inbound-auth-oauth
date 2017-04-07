@@ -36,9 +36,10 @@ import org.wso2.carbon.identity.application.mgt.ApplicationManagementService;
 import org.wso2.carbon.identity.core.handler.MessageHandlerComparator;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.introspect.IntrospectionHandler;
 import org.wso2.carbon.identity.inbound.auth.oidc.bean.message.request.authz.OIDCAuthzRequestFactory;
+import org.wso2.carbon.identity.inbound.auth.oidc.bean.message.request.userinfo.UserInfoRequestFactory;
 import org.wso2.carbon.identity.inbound.auth.oidc.bean.message.response.authz.OIDCAuthzResponseFactory;
 import org.wso2.carbon.identity.inbound.auth.oidc.bean.message.response.token.OIDCTokenResponseFactory;
-import org.wso2.carbon.identity.inbound.auth.oidc.bean.message.response.userinfo.UserinfoResponseFactory;
+import org.wso2.carbon.identity.inbound.auth.oidc.bean.message.response.userinfo.UserInfoResponseFactory;
 import org.wso2.carbon.identity.inbound.auth.oidc.dao.OIDCDAO;
 import org.wso2.carbon.identity.inbound.auth.oidc.handler.IDTokenHandler;
 import org.wso2.carbon.identity.inbound.auth.oidc.handler.OIDCIntrospectionHandler;
@@ -84,28 +85,37 @@ public class OIDCServiceComponent {
                     HttpIdentityResponseFactory.class.getName(), new OIDCAuthzResponseFactory(), null);
             if (oidcAuthzRespFactory != null) {
                 if (log.isDebugEnabled()) {
-                    log.debug(" HttpOIDCAuthzResponseFactory is registered");
+                    log.debug(" OIDCAuthzResponseFactory is registered");
                 }
             } else {
-                log.error("HttpOIDCAuthzResponseFactory could not be registered");
+                log.error("OIDCAuthzResponseFactory could not be registered");
             }
             ServiceRegistration oidcTokenRespFactory = context.getBundleContext().registerService(
                     HttpIdentityResponseFactory.class.getName(), new OIDCTokenResponseFactory(), null);
             if (oidcTokenRespFactory != null) {
                 if (log.isDebugEnabled()) {
-                    log.debug(" HttpOIDCTokenResponseFactory is registered");
+                    log.debug(" OIDCTokenResponseFactory is registered");
                 }
             } else {
-                log.error("HttpOIDCTokenResponseFactory could not be registered");
+                log.error("OIDCTokenResponseFactory could not be registered");
+            }
+            ServiceRegistration oidcUserInfoReqFactory = context.getBundleContext().registerService(
+                    HttpIdentityRequestFactory.class.getName(), new UserInfoRequestFactory(), null);
+            if (oidcUserInfoReqFactory != null) {
+                if (log.isDebugEnabled()) {
+                    log.debug(" UserInfoRequestFactory is registered");
+                }
+            } else {
+                log.error("UserInfoRequestFactory could not be registered");
             }
             ServiceRegistration oidcUserInfoRespFactory = context.getBundleContext().registerService(
-                    HttpIdentityResponseFactory.class.getName(), new UserinfoResponseFactory(), null);
+                    HttpIdentityResponseFactory.class.getName(), new UserInfoResponseFactory(), null);
             if (oidcUserInfoRespFactory != null) {
                 if (log.isDebugEnabled()) {
-                    log.debug(" HttpUserinfoResponseFactory is registered");
+                    log.debug(" UserInfoResponseFactory is registered");
                 }
             } else {
-                log.error("HttpUserinfoResponseFactory could not be registered");
+                log.error("UserInfoResponseFactory could not be registered");
             }
 
             ServiceRegistration authzProcessor = context.getBundleContext().registerService(

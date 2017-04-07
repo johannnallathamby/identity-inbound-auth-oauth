@@ -67,8 +67,10 @@ public class FormPostResponseFactory extends AuthzResponseFactory {
 
         OIDCAuthzResponse authzResponse = ((OIDCAuthzResponse) identityResponse);
         IDTokenClaimsSet idTokenClaimsSet = authzResponse.getIdTokenClaimsSet();
-        String idToken = createIDToken(idTokenClaimsSet, authzResponse).serialize();
-        authzResponse.getBuilder().setParam("id_token", idToken);
+        if(idTokenClaimsSet != null) {
+            String idToken = createIDToken(idTokenClaimsSet, authzResponse).serialize();
+            authzResponse.getBuilder().setParam("id_token", idToken);
+        }
 
         OAuthResponse response = null;
         try {

@@ -23,7 +23,7 @@ import org.apache.oltu.oauth2.common.OAuth;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.token.TokenRequestFactory;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2ClientException;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Util;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Utils;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -59,6 +59,6 @@ public class IWANTLMGrantFactory extends TokenRequestFactory {
 
         IWANTLMGrantRequest.IWANTLMGrantBuilder iwantlmGrantBuilder = (IWANTLMGrantRequest.IWANTLMGrantBuilder)builder;
         iwantlmGrantBuilder.setWindowsToken(request.getParameter(IWANTLMConstants.WINDOWS_TOKEN));
-        iwantlmGrantBuilder.setScopes(OAuth2Util.buildScopeSet(request.getParameter(OAuth.OAUTH_SCOPE)));
+        iwantlmGrantBuilder.setScopes(OAuth2Utils.buildScopeSet(request.getParameter(OAuth.OAUTH_SCOPE)));
     }
 }

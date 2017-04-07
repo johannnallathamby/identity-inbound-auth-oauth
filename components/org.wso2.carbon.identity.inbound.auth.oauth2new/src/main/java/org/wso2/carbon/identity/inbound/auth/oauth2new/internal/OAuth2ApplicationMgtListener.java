@@ -26,7 +26,7 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.HandlerManager;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AccessToken;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AuthzCode;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.OAuth2App;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Util;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Utils;
 
 import java.util.Set;
 
@@ -57,7 +57,7 @@ public class OAuth2ApplicationMgtListener extends AbstractApplicationMgtListener
 
     private void inactiveTokens(ServiceProvider serviceProvider) throws IdentityApplicationManagementException {
 
-        OAuth2App app = OAuth2Util.getOAuth2App(serviceProvider);
+        OAuth2App app = OAuth2Utils.getOAuth2App(serviceProvider);
         if(app != null) {
             Set<AccessToken> accessTokens = HandlerManager.getInstance().getOAuth2DAO(null)
                     .getAccessTokensByClientId(app.getClientId(), false);

@@ -23,7 +23,7 @@ import org.wso2.carbon.identity.core.util.IdentityDatabaseUtil;
 import org.wso2.carbon.identity.core.util.IdentityTenantUtil;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2InternalException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.UserConsent;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Util;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Utils;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -61,7 +61,7 @@ public class UserConsentDAO {
                 prepStmt.setString(3, userConsent.getAuthzUser().getUserStoreDomain());
                 prepStmt.setInt(4, IdentityTenantUtil.getTenantId(userConsent.getAuthzUser().getTenantDomain()));
                 prepStmt.setInt(5, userConsent.getApplicationId());
-                prepStmt.setString(6, OAuth2Util.hashScopes(userConsent.getScopes()));
+                prepStmt.setString(6, OAuth2Utils.hashScopes(userConsent.getScopes()));
                 prepStmt.execute();
                 connection.commit();
             } else {
@@ -74,7 +74,7 @@ public class UserConsentDAO {
                 prepStmt.setString(3, userConsent.getAuthzUser().getUserStoreDomain());
                 prepStmt.setInt(4, IdentityTenantUtil.getTenantId(userConsent.getAuthzUser().getTenantDomain()));
                 prepStmt.setInt(5, userConsent.getApplicationId());
-                prepStmt.setString(6, OAuth2Util.hashScopes(userConsent.getScopes()));
+                prepStmt.setString(6, OAuth2Utils.hashScopes(userConsent.getScopes()));
                 prepStmt.execute();
                 connection.commit();
             }
@@ -106,7 +106,7 @@ public class UserConsentDAO {
             prepStmt.setString(2, authzUser.getUserStoreDomain());
             prepStmt.setInt(3, IdentityTenantUtil.getTenantId(authzUser.getTenantDomain()));
             prepStmt.setInt(4, applicationId);
-            prepStmt.setString(5, OAuth2Util.hashScopes(scopes));
+            prepStmt.setString(5, OAuth2Utils.hashScopes(scopes));
             ResultSet rs = prepStmt.executeQuery();
             boolean isTrustedAlways = false;
             if(rs.next()) {

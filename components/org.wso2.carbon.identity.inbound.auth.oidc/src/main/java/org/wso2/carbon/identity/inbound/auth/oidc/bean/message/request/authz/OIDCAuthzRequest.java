@@ -20,6 +20,7 @@ package org.wso2.carbon.identity.inbound.auth.oidc.bean.message.request.authz;
 
 import com.nimbusds.openid.connect.sdk.claims.ClaimRequirement;
 import com.nimbusds.openid.connect.sdk.claims.ClaimsTransport;
+import org.wso2.carbon.identity.application.authentication.framework.inbound.FrameworkClientException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.authz.AuthzRequest;
 
 import javax.servlet.http.HttpServletRequest;
@@ -45,7 +46,7 @@ public class OIDCAuthzRequest extends AuthzRequest {
     protected Set<Claim> claims = new HashSet();
     protected String response_mode;
 
-    protected OIDCAuthzRequest(OIDCAuthzRequestBuilder builder) {
+    protected OIDCAuthzRequest(OIDCAuthzRequestBuilder builder) throws FrameworkClientException {
         super(builder);
         this.nonce = builder.nonce;
         this.display = builder.display;
@@ -241,7 +242,7 @@ public class OIDCAuthzRequest extends AuthzRequest {
             return this;
         }
 
-        public OIDCAuthzRequest build() {
+        public OIDCAuthzRequest build() throws FrameworkClientException {
             return new OIDCAuthzRequest(this);
         }
 

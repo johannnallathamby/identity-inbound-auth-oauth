@@ -21,7 +21,7 @@ package org.wso2.carbon.identity.inbound.auth.oauth2new.handler.client;
 import org.wso2.carbon.identity.core.handler.AbstractIdentityMessageHandler;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2.ClientType;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2MessageContext;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2ClientException;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2AuthnException;
 
 /*
  * To authenticate OAuth2 clients
@@ -44,8 +44,8 @@ public abstract class ClientAuthHandler extends AbstractIdentityMessageHandler {
      * Authenticates the OAuth 2.0 client
      *
      * @param messageContext The runtime message context
-     * @throws OAuth2ClientException Client authentication failed
+     * @throws OAuth2AuthnException Client authentication failed
      */
-    public abstract void authenticate(OAuth2MessageContext messageContext) throws OAuth2ClientException;
+    public abstract void authenticate(OAuth2MessageContext messageContext) throws OAuth2AuthnException;
 
 }

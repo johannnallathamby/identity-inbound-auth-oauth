@@ -27,7 +27,7 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.auth
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2ClientException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.OAuth2App;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.processor.OAuth2IdentityRequestProcessor;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Util;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Utils;
 
 import java.util.HashMap;
 import java.util.regex.Matcher;
@@ -63,7 +63,7 @@ public class AuthzProcessor extends OAuth2IdentityRequestProcessor {
     protected void validateClient(AuthzMessageContext messageContext) throws OAuth2ClientException {
 
         String clientId = messageContext.getRequest().getClientId();
-        OAuth2App app = OAuth2Util.getOAuth2App(clientId, messageContext.getRequest().getTenantDomain());
+        OAuth2App app = OAuth2Utils.getOAuth2App(clientId, messageContext.getRequest().getTenantDomain());
         if(app == null) {
             throw OAuth2ClientException.error("Invalid clientId: " + clientId);
         }

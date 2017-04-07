@@ -37,7 +37,7 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.introspect.IntrospectionM
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AccessToken;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.revoke.RORevocationMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.revoke.RevocationMessageContext;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Util;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Utils;
 import org.wso2.carbon.utils.multitenancy.MultitenantConstants;
 
 import java.util.HashSet;
@@ -61,7 +61,7 @@ public class DASDataPublisher extends OAuth2EventInterceptor {
         tokenData.setAccessTokenValidityMillis(accessToken.getAccessTokenValidity());
         tokenData.setRefreshTokenValidityMillis(accessToken.getRefreshTokenValidity());
         tokenData.setIssuedTime(accessToken.getAccessTokenIssuedTime().getTime());
-        tokenData.setAuthzScopes(OAuth2Util.buildScopeString(accessToken.getScopes()));
+        tokenData.setAuthzScopes(OAuth2Utils.buildScopeString(accessToken.getScopes()));
         String[] publishingTenantDomains = DataPublisherUtils.getTenantDomains(
                 messageContext.getRequest().getTenantDomain(), accessToken.getAuthzUser().getTenantDomain());
         tokenData.addParameter(DataPublisherConstants.TENANT_ID, publishingTenantDomains);
@@ -70,7 +70,7 @@ public class DASDataPublisher extends OAuth2EventInterceptor {
             Set<String> requestedScopes = ((AuthzMessageContext)messageContext).getRequest().getScopes();
             Set<String> unauthzScopes = new HashSet(requestedScopes);
             unauthzScopes.removeAll(approvedScopes);
-            tokenData.setUnAuthzScopes(OAuth2Util.buildScopeString(unauthzScopes));
+            tokenData.setUnAuthzScopes(OAuth2Utils.buildScopeString(unauthzScopes));
         } else if(messageContext instanceof TokenMessageContext) {
             Set<String> approvedScopes = accessToken.getScopes();
             Set<String> requestedScopes = null;
@@ -87,7 +87,7 @@ public class DASDataPublisher extends OAuth2EventInterceptor {
             }
             Set<String> unauthzScopes = new HashSet(requestedScopes);
             unauthzScopes.removeAll(approvedScopes);
-            tokenData.setUnAuthzScopes(OAuth2Util.buildScopeString(unauthzScopes));
+            tokenData.setUnAuthzScopes(OAuth2Utils.buildScopeString(unauthzScopes));
         }
         this.publishTokenIssueEvent(tokenData);
     }
@@ -105,7 +105,7 @@ public class DASDataPublisher extends OAuth2EventInterceptor {
             tokenData.setUserStoreDomain(accessToken.getAuthzUser().getUserStoreDomain());
             tokenData.setIssuedTime(accessToken.getAccessTokenIssuedTime().getTime());
             tokenData.setGrantType(accessToken.getGrantType());
-            tokenData.setAuthzScopes(OAuth2Util.buildScopeString(accessToken.getScopes()));
+            tokenData.setAuthzScopes(OAuth2Utils.buildScopeString(accessToken.getScopes()));
             String spTenantDomain = null;
             // get SP tenant domain from application.mgt service
             tokenData.setRevokedTime(System.currentTimeMillis());
@@ -145,7 +145,7 @@ public class DASDataPublisher extends OAuth2EventInterceptor {
         tokenData.setClientId(accessToken.getClientId());
         tokenData.setTokenId(accessToken.getAccessTokenId());
         tokenData.setGrantType(accessToken.getGrantType());
-        tokenData.setAuthzScopes(OAuth2Util.buildScopeString(accessToken.getScopes()));
+        tokenData.setAuthzScopes(OAuth2Utils.buildScopeString(accessToken.getScopes()));
         tokenData.setIssuedTime(accessToken.getAccessTokenIssuedTime().getTime());
         tokenData.setUser(accessToken.getAuthzUser().getUserName());
         tokenData.setTenantDomain(accessToken.getAuthzUser().getTenantDomain());
@@ -173,14 +173,14 @@ public class DASDataPublisher extends OAuth2EventInterceptor {
                                                                                    accessToken.getAuthzUser()
                                                                                                 .getTenantDomain());
             tokenData.addParameter(DataPublisherConstants.TENANT_ID, publishingTenantDomains);
-            tokenData.setAuthzScopes(OAuth2Util.buildScopeString(accessToken.getScopes()));
+            tokenData.setAuthzScopes(OAuth2Utils.buildScopeString(accessToken.getScopes()));
             tokenData.setIssuedTime(accessToken.getAccessTokenIssuedTime().getTime());
             tokenData.setAccessTokenValidityMillis(accessToken.getAccessTokenValidity());
-            boolean isActive = !OAuth2.TokenState.ACTIVE.equals(accessToken.getAccessTokenState()) && OAuth2Util
+            boolean isActive = !OAuth2.TokenState.ACTIVE.equals(accessToken.getAccessTokenState()) && OAuth2Utils
                                                                                                               .getAccessTokenValidityPeriod(accessToken) == 0 ? false : true;
             tokenData.setIsActive(isActive);
-            if (isActive && OAuth2Util.getAccessTokenValidityPeriod(accessToken) > 0) {
-                tokenData.setAccessTokenValidityMillis(OAuth2Util.getAccessTokenValidityPeriod(accessToken));
+            if (isActive && OAuth2Utils.getAccessTokenValidityPeriod(accessToken) > 0) {
+                tokenData.setAccessTokenValidityMillis(OAuth2Utils.getAccessTokenValidityPeriod(accessToken));
             }
             doPublishOauthTokenValidation(tokenData);
         }

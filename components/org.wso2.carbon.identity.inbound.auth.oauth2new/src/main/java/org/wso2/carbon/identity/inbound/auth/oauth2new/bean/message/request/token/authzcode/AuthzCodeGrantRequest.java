@@ -18,6 +18,7 @@
 
 package org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.token.authzcode;
 
+import org.wso2.carbon.identity.application.authentication.framework.inbound.FrameworkClientException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.token.TokenRequest;
 
 import javax.servlet.http.HttpServletRequest;
@@ -31,7 +32,7 @@ public class AuthzCodeGrantRequest extends TokenRequest {
     private String redirectURI;
     private String pkceCodeVerifier;
 
-    protected AuthzCodeGrantRequest(AuthzCodeGrantBuilder builder) {
+    protected AuthzCodeGrantRequest(AuthzCodeGrantBuilder builder) throws FrameworkClientException {
         super(builder);
         this.code = builder.code;
         this.redirectURI = builder.redirectURI;
@@ -79,7 +80,7 @@ public class AuthzCodeGrantRequest extends TokenRequest {
         }
 
         @Override
-        public AuthzCodeGrantRequest build() {
+        public AuthzCodeGrantRequest build() throws FrameworkClientException {
             return new AuthzCodeGrantRequest(this);
         }
     }

@@ -34,7 +34,7 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2RuntimeEx
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.HandlerManager;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AccessToken;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AuthzCode;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Util;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Utils;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -132,33 +132,33 @@ public abstract class AccessTokenResponseIssuer extends AbstractIdentityMessageH
 
         if (accessToken != null) {
             if (OAuth2.TokenState.ACTIVE.equals(accessToken.getAccessTokenState())) {
-                long expireTime = OAuth2Util.getTokenValidityPeriod(accessToken);
+                long expireTime = OAuth2Utils.getTokenValidityPeriod(accessToken);
                 if (expireTime > 0 || expireTime < 0) {
                     if (log.isDebugEnabled()) {
                         if (expireTime > 0) {
                             if(log.isDebugEnabled()) {
-                                log.debug("ACTIVE access token found for " + OAuth2Util.createUniqueAuthzGrantString
+                                log.debug("ACTIVE access token found for " + OAuth2Utils.createUniqueAuthzGrantString
                                         (authzUser, clientId, scopes));
                             }
                         } else if (expireTime < 0) {
                             if (log.isDebugEnabled()) {
-                                log.debug("Infinite lifetime access token found for " + OAuth2Util
+                                log.debug("Infinite lifetime access token found for " + OAuth2Utils
                                         .createUniqueAuthzGrantString(authzUser, clientId, scopes));
                             }
                         }
                     }
                     isAccessTokenValid = true;
-                    long refreshTokenExpiryTime = OAuth2Util.getRefreshTokenValidityPeriod(accessToken);
+                    long refreshTokenExpiryTime = OAuth2Utils.getRefreshTokenValidityPeriod(accessToken);
                     if (refreshTokenExpiryTime < 0 || refreshTokenExpiryTime > 0) {
                         if (log.isDebugEnabled()) {
                             if (refreshTokenExpiryTime < 0) {
                                 if(log.isDebugEnabled()) {
-                                    log.debug("Infinite lifetime refresh token found for " + OAuth2Util
+                                    log.debug("Infinite lifetime refresh token found for " + OAuth2Utils
                                             .createUniqueAuthzGrantString(authzUser, clientId, scopes));
                                 }
                             } else if (refreshTokenExpiryTime > 0) {
                                 if(log.isDebugEnabled()) {
-                                    log.debug("ACTIVE refresh token found for " + OAuth2Util.createUniqueAuthzGrantString
+                                    log.debug("ACTIVE refresh token found for " + OAuth2Utils.createUniqueAuthzGrantString
                                             (authzUser, clientId, scopes));
                                 }
                             }
@@ -169,17 +169,17 @@ public abstract class AccessTokenResponseIssuer extends AbstractIdentityMessageH
                     markAccessTokenExpired = true;
                 }
             } else {
-                long refreshTokenExpiryTime = OAuth2Util.getRefreshTokenValidityPeriod(accessToken);
+                long refreshTokenExpiryTime = OAuth2Utils.getRefreshTokenValidityPeriod(accessToken);
                 if (refreshTokenExpiryTime < 0 || refreshTokenExpiryTime > 0) {
                     if (log.isDebugEnabled()) {
                         if (refreshTokenExpiryTime < 0) {
                             if(log.isDebugEnabled()) {
-                                log.debug("Infinite lifetime refresh token found for " + OAuth2Util
+                                log.debug("Infinite lifetime refresh token found for " + OAuth2Utils
                                         .createUniqueAuthzGrantString(authzUser, clientId, scopes));
                             }
                         } else if (refreshTokenExpiryTime > 0) {
                             if(log.isDebugEnabled()) {
-                                log.debug("ACTIVE refresh token found for " + OAuth2Util.createUniqueAuthzGrantString
+                                log.debug("ACTIVE refresh token found for " + OAuth2Utils.createUniqueAuthzGrantString
                                         (authzUser, clientId, scopes));
                             }
                         }

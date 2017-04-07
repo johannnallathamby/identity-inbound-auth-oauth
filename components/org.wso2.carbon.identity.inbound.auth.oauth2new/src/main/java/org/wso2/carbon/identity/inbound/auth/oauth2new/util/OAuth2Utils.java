@@ -29,19 +29,27 @@ import org.wso2.carbon.identity.application.common.model.ServiceProvider;
 import org.wso2.carbon.identity.application.common.model.User;
 import org.wso2.carbon.identity.application.common.util.IdentityApplicationConstants;
 import org.wso2.carbon.identity.application.common.util.IdentityApplicationManagementUtil;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.TokenMessageContext;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.AccessTokenValidationException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2RuntimeException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.internal.OAuth2DataHolder;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AccessToken;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.OAuth2App;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.OAuth2ServerConfig;
 
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class OAuth2Util {
+public class OAuth2Utils {
 
     public static Set<String> buildScopeSet(String scopes) {
         Set<String> scopeSet = new HashSet();
@@ -157,7 +165,7 @@ public class OAuth2Util {
         StringBuilder builder = new StringBuilder("");
         builder.append(authzUser.toString()).append(":").append(clientId);
         if(!scopes.isEmpty()){
-            builder.append(":").append(OAuth2Util.buildScopeString(scopes));
+            builder.append(":").append(OAuth2Utils.buildScopeString(scopes));
         }
         return builder.toString();
     }
@@ -187,9 +195,9 @@ public class OAuth2Util {
                         properties, IdentityApplicationConstants.OAuth2.CLIENT_SECRET).toCharArray();
                 String redirectUri = IdentityApplicationManagementUtil.getPropertyValue(
                         properties, IdentityApplicationConstants.OAuth2.CALLBACK_URL);
-                List<String> responseTypes = OAuth2Util.getPropertyValuesOfPropertyNameStartsWith(
+                List<String> responseTypes = OAuth2Utils.getPropertyValuesOfPropertyNameStartsWith(
                         properties, "supported_response_type");
-                List<String> grantTypes = OAuth2Util.getPropertyValuesOfPropertyNameStartsWith(
+                List<String> grantTypes = OAuth2Utils.getPropertyValuesOfPropertyNameStartsWith(
                         properties, "supported_grant_type");
                 boolean isPkceMandatory = Boolean.parseBoolean(IdentityApplicationManagementUtil.getPropertyValue
                         (properties, "pkce_mandatory"));
@@ -246,5 +254,46 @@ public class OAuth2Util {
         String subjectId = authenticatedUser.getUsernameAsSubjectIdentifier(useUserStoreDomain, useTenantDomain);
         authenticatedUser.setAuthenticatedSubjectIdentifier(subjectId);
         return authenticatedUser;
+    }
+
+    public static AccessToken validateAccessToken(String accessTokenId) throws AccessTokenValidationException {
+
+        // Should we use introspection here? Seems like it would be an unnecessary performance hit
+        AccessToken accessToken = org.wso2.carbon.identity.inbound.auth.oauth2new.handler.HandlerManager
+                .getInstance().getOAuth2DAO(null).getAccessToken(accessTokenId, null);
+        if(accessToken != null && OAuth2.TokenState.ACTIVE.equals(accessToken.getAccessTokenState()) &&
+           OAuth2Utils.getAccessTokenValidityPeriod(accessToken) != 0) {
+            return accessToken;
+        }
+        throw AccessTokenValidationException.error("Invalid access token.");
+    }
+
+    public static boolean isPureAscii(String requestBody) {
+
+        byte bytearray[] = requestBody.getBytes();
+        CharsetDecoder charsetDecoder = Charset.forName(StandardCharsets.US_ASCII.name()).newDecoder();
+        try {
+            CharBuffer charBuffer = charsetDecoder.decode(ByteBuffer.wrap(bytearray));
+            charBuffer.toString();
+        } catch (CharacterCodingException e) {
+            return false;
+        }
+        return true;
+    }
+
+    public static OAuth2App getOAuth2App(String clientId) {
+
+        ServiceProvider serviceProvider = null;
+        try {
+            serviceProvider = OAuth2DataHolder.getInstance().getAppMgtService()
+                    .getServiceProvider(Integer.parseInt(clientId));
+            if(serviceProvider != null) {
+                return OAuth2Utils.getOAuth2App(serviceProvider);
+            }
+            return null;
+        } catch (IdentityApplicationManagementException e) {
+            throw OAuth2RuntimeException.error("Error occurred while retrieving application " +
+                                               "for access token Id: " + clientId);
+        }
     }
 }

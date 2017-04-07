@@ -33,6 +33,7 @@ import org.apache.commons.lang.StringUtils;
 import org.wso2.carbon.base.MultitenantConstants;
 import org.wso2.carbon.core.util.KeyStoreManager;
 import org.wso2.carbon.identity.application.authentication.framework.context.SessionContext;
+import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
 import org.wso2.carbon.identity.application.authentication.framework.util.FrameworkConstants;
 import org.wso2.carbon.identity.application.authentication.framework.util.FrameworkUtils;
 import org.wso2.carbon.identity.application.common.model.FederatedAuthenticatorConfig;
@@ -41,6 +42,7 @@ import org.wso2.carbon.identity.application.common.util.IdentityApplicationConst
 import org.wso2.carbon.identity.application.common.util.IdentityApplicationManagementUtil;
 import org.wso2.carbon.identity.base.IdentityException;
 import org.wso2.carbon.identity.core.util.IdentityTenantUtil;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.AuthzMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oidc.OIDC;
 import org.wso2.carbon.identity.inbound.auth.oidc.exception.OIDCRuntimeException;
@@ -281,14 +283,23 @@ public class OIDCUtils {
 
     public static long getAuthTime(AuthzMessageContext messageContext) {
 
-        Cookie cookie = messageContext.getRequest().getCookieMap().get("commonAuthId");
-        String sessionContextKey = DigestUtils.sha256Hex(cookie.getValue());
-        SessionContext sessionContext = FrameworkUtils.getSessionContextFromCache(sessionContextKey);
         long authTime;
-        if (sessionContext.getProperty(FrameworkConstants.UPDATED_TIMESTAMP) != null) {
-            authTime = Long.parseLong(sessionContext.getProperty(FrameworkConstants.UPDATED_TIMESTAMP).toString());
-        } else {
+        boolean isFirstLogin = false;
+        Cookie commonAuthId = messageContext.getRequest().getCookieMap().get("commonAuthId");
+        if(commonAuthId == null) {
+            commonAuthId = ((IdentityRequest)messageContext.getParameter(OAuth2.OAUTH2_RESOURCE_OWNER_AUTHN_REQUEST))
+                    .getCookieMap().get("commonAuthId");
+            if(commonAuthId == null) {
+                throw OIDCRuntimeException.error("Error occurred while trying to read last authenticated time of user.");
+            }
+            isFirstLogin = true;
+        }
+        String sessionContextKey = DigestUtils.sha256Hex(commonAuthId.getValue());
+        SessionContext sessionContext = FrameworkUtils.getSessionContextFromCache(sessionContextKey);
+        if(isFirstLogin) {
             authTime = Long.parseLong(sessionContext.getProperty(FrameworkConstants.CREATED_TIMESTAMP).toString());
+        } else {
+            authTime = Long.parseLong(sessionContext.getProperty(FrameworkConstants.UPDATED_TIMESTAMP).toString());
         }
         return authTime;
     }

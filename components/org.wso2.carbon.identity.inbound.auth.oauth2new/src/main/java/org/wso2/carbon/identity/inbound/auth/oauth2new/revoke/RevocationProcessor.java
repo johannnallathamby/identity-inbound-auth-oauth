@@ -23,7 +23,7 @@ import org.wso2.carbon.identity.application.authentication.framework.exception.F
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2.ClientType;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.dao.OAuth2DAO;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2ClientException;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2AuthnException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2Exception;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.HandlerManager;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AccessToken;
@@ -35,7 +35,7 @@ public class RevocationProcessor extends OAuth2IdentityRequestProcessor {
 
     @Override
     public boolean canHandle(IdentityRequest identityRequest) {
-        return identityRequest instanceof RevocationRequest ? true: false;
+        return identityRequest instanceof RevocationRequest;
     }
 
     @Override
@@ -110,7 +110,7 @@ public class RevocationProcessor extends OAuth2IdentityRequestProcessor {
      * @return {@code true} only if the client was confidential and was authenticated successfully
      * @throws org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2ClientException
      */
-    protected void authenticateClient(RevocationMessageContext messageContext) throws OAuth2ClientException {
+    protected void authenticateClient(RevocationMessageContext messageContext) throws OAuth2AuthnException {
         HandlerManager.getInstance().authenticateClient(messageContext);
     }
 }

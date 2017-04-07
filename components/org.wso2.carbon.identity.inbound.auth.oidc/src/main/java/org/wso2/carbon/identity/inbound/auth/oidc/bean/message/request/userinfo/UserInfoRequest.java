@@ -16,7 +16,7 @@
  * under the License.
  */
 
-package org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.token;
+package org.wso2.carbon.identity.inbound.auth.oidc.bean.message.request.userinfo;
 
 import org.wso2.carbon.identity.application.authentication.framework.inbound.FrameworkClientException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.OAuth2IdentityRequest;
@@ -24,42 +24,37 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.OAut
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-public class TokenRequest extends OAuth2IdentityRequest {
+public class UserInfoRequest extends OAuth2IdentityRequest {
 
-    private static final long serialVersionUID = 2113773120127290578L;
+    private static final long serialVersionUID = -1555222725037366929L;
 
-    private String grantType;
+    protected String accessToken;
 
-    protected TokenRequest(TokenRequestBuilder builder) throws FrameworkClientException {
+    protected UserInfoRequest(UserInfoRequestBuilder builder) throws FrameworkClientException {
         super(builder);
-        this.grantType = builder.grantType;
+        this.accessToken = builder.accessToken;
     }
 
-    public String getGrantType() {
-        return grantType;
+    public String getAccessToken() {
+        return this.accessToken;
     }
 
-    public static class TokenRequestBuilder extends OAuth2IdentityRequestBuilder {
+    public static class UserInfoRequestBuilder extends OAuth2IdentityRequestBuilder {
 
-        private String grantType;
+        protected String accessToken;
 
-        public TokenRequestBuilder(HttpServletRequest request, HttpServletResponse response) {
+        protected UserInfoRequestBuilder(HttpServletRequest request, HttpServletResponse response) throws
+                                                                                           FrameworkClientException {
             super(request, response);
         }
 
-        public TokenRequestBuilder() {
-
-        }
-
-        public TokenRequestBuilder setGrantType(String grantType) {
-            this.grantType = grantType;
+        public UserInfoRequestBuilder setAccessToken(String accessToken) {
+            this.accessToken = accessToken;
             return this;
         }
 
-        public TokenRequest build() throws FrameworkClientException {
-
-            return new TokenRequest(this);
+        public UserInfoRequest build() throws FrameworkClientException {
+            return new UserInfoRequest(this);
         }
-
     }
 }

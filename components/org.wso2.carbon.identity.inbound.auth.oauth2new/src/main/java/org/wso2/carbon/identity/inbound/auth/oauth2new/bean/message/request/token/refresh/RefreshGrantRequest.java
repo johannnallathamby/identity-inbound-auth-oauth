@@ -18,6 +18,7 @@
 
 package org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.token.refresh;
 
+import org.wso2.carbon.identity.application.authentication.framework.inbound.FrameworkClientException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.token.TokenRequest;
 
 import javax.servlet.http.HttpServletRequest;
@@ -32,7 +33,7 @@ public class RefreshGrantRequest extends TokenRequest {
     private String refreshToken;
     private Set<String> scopes = new HashSet();
 
-    protected RefreshGrantRequest(RefreshGrantBuilder builder) {
+    protected RefreshGrantRequest(RefreshGrantBuilder builder) throws FrameworkClientException {
         super(builder);
         this.refreshToken = builder.refreshToken;
         this.scopes = builder.scopes;
@@ -69,7 +70,7 @@ public class RefreshGrantRequest extends TokenRequest {
         }
 
         @Override
-        public RefreshGrantRequest build() {
+        public RefreshGrantRequest build() throws FrameworkClientException {
             return new RefreshGrantRequest(this);
         }
     }

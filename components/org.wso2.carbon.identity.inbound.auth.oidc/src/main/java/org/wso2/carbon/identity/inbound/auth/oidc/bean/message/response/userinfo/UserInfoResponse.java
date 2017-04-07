@@ -20,7 +20,7 @@ package org.wso2.carbon.identity.inbound.auth.oidc.bean.message.response.userinf
 
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityResponse;
-import org.wso2.carbon.identity.inbound.auth.oidc.bean.context.UserinfoMessageContext;
+import org.wso2.carbon.identity.inbound.auth.oidc.bean.context.UserInfoMessageContext;
 
 public class UserInfoResponse extends IdentityResponse {
 
@@ -41,7 +41,7 @@ public class UserInfoResponse extends IdentityResponse {
 
         protected UserInfo userInfo;
 
-        public UserInfoResponseBuilder(UserinfoMessageContext messageContext) {
+        public UserInfoResponseBuilder(UserInfoMessageContext messageContext) {
             super(messageContext);
         }
 

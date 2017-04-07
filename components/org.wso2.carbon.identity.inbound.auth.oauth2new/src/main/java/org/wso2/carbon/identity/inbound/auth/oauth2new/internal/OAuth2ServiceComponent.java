@@ -48,6 +48,8 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.tok
 import org.wso2.carbon.identity.inbound.auth.oauth2new.dao.OAuth2DAOHandler;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.dao.jdbc.JDBCOAuth2DAO;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.client.BasicAuthHandler;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.client.BearerTokenAuthzHandler;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.client.BearerTokenFormPostHandler;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.client.ClientAuthHandler;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.client.FormPostHandler;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.grant.AuthorizationGrantHandler;
@@ -112,6 +114,8 @@ public class OAuth2ServiceComponent {
 
             OAuth2DataHolder.getInstance().getClientAuthHandlers().add(new BasicAuthHandler());
             OAuth2DataHolder.getInstance().getClientAuthHandlers().add(new FormPostHandler());
+            OAuth2DataHolder.getInstance().getClientAuthHandlers().add(new BearerTokenAuthzHandler());
+            OAuth2DataHolder.getInstance().getClientAuthHandlers().add(new BearerTokenFormPostHandler());
             Collections.sort(OAuth2DataHolder.getInstance().getClientAuthHandlers(), new MessageHandlerComparator());
             Collections.reverse(OAuth2DataHolder.getInstance().getClientAuthHandlers());
 

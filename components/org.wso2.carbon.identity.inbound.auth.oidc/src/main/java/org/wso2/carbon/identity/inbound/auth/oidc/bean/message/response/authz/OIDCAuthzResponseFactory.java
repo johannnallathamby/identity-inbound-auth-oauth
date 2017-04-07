@@ -33,6 +33,7 @@ import org.wso2.carbon.identity.application.authentication.framework.inbound.Htt
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityResponse;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.authz.AuthzResponseFactory;
+import org.wso2.carbon.identity.inbound.auth.oidc.OIDC;
 import org.wso2.carbon.identity.inbound.auth.oidc.exception.OIDCRuntimeException;
 import org.wso2.carbon.identity.inbound.auth.oidc.model.OIDCServerConfig;
 import org.wso2.carbon.identity.inbound.auth.oidc.util.OIDCUtils;
@@ -57,8 +58,10 @@ public class OIDCAuthzResponseFactory extends AuthzResponseFactory {
 
         OIDCAuthzResponse authzResponse = ((OIDCAuthzResponse)identityResponse);
         IDTokenClaimsSet idTokenClaimsSet = authzResponse.getIdTokenClaimsSet();
-        String idToken = createIDToken(idTokenClaimsSet, authzResponse).serialize();
-        authzResponse.getBuilder().setParam("id_token", idToken);
+        if(idTokenClaimsSet != null) {
+            String idToken = createIDToken(idTokenClaimsSet, authzResponse).serialize();
+            authzResponse.getBuilder().setParam(OIDC.ID_TOKEN, idToken);
+        }
 
         OAuthResponse response = null;
         try {

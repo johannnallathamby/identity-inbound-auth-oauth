@@ -29,12 +29,13 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2.ClientType;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.TokenMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.token.TokenRequest;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.token.TokenResponse;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2AuthnException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2ClientException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2Exception;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.HandlerManager;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AccessToken;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.processor.OAuth2IdentityRequestProcessor;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Util;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Utils;
 
 import javax.servlet.http.HttpServletResponse;
 import java.util.HashMap;
@@ -85,7 +86,7 @@ public class TokenProcessor extends OAuth2IdentityRequestProcessor {
      * @return {@code true} only if the client was confidential and was authenticated successfully
      * @throws OAuth2ClientException
      */
-    protected void authenticateClient(TokenMessageContext messageContext) throws OAuth2ClientException {
+    protected void authenticateClient(TokenMessageContext messageContext) throws OAuth2AuthnException {
         HandlerManager.getInstance().authenticateClient(messageContext);
     }
 
@@ -125,7 +126,7 @@ public class TokenProcessor extends OAuth2IdentityRequestProcessor {
         if(refreshToken != null) {
             oltuRespBuilder.setRefreshToken(new String(refreshToken));
         }
-        oltuRespBuilder.setScope(OAuth2Util.buildScopeString(accessToken.getScopes()));
+        oltuRespBuilder.setScope(OAuth2Utils.buildScopeString(accessToken.getScopes()));
 
         TokenResponse.TokenResponseBuilder builder = new TokenResponse.TokenResponseBuilder(messageContext);
         builder.setBuilder(oltuRespBuilder);

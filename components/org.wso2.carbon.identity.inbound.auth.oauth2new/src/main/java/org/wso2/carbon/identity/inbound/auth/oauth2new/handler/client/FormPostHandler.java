@@ -23,9 +23,9 @@ import org.apache.oltu.oauth2.common.OAuth;
 import org.wso2.carbon.identity.core.bean.context.MessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2MessageContext;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2ClientException;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2AuthnException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.OAuth2App;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Util;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Utils;
 
 import java.util.Arrays;
 
@@ -45,11 +45,11 @@ public class FormPostHandler extends ClientAuthHandler {
     }
 
     @Override
-    public void authenticate(OAuth2MessageContext messageContext) throws OAuth2ClientException {
+    public void authenticate(OAuth2MessageContext messageContext) throws OAuth2AuthnException {
 
         String clientId = messageContext.getRequest().getParameter(OAuth.OAUTH_CLIENT_ID);
         String clientSecret = messageContext.getRequest().getParameter(OAuth.OAUTH_CLIENT_SECRET);
-        OAuth2App app = OAuth2Util.getOAuth2App(clientId, messageContext.getRequest().getTenantDomain());
+        OAuth2App app = OAuth2Utils.getOAuth2App(clientId, messageContext.getRequest().getTenantDomain());
         if(app != null) {
             if(Arrays.equals(clientSecret.toCharArray(), app.getClientSecret())){
                 messageContext.setApplication(app);
@@ -61,6 +61,6 @@ public class FormPostHandler extends ClientAuthHandler {
         if(StringUtils.isNotBlank(clientId)){
             message.append(" ").append(clientId);
         }
-        throw OAuth2ClientException.error(message.toString());
+        throw OAuth2AuthnException.error(message.toString());
     }
 }

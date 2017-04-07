@@ -19,6 +19,8 @@
 package org.wso2.carbon.identity.inbound.auth.oidc.handler;
 
 import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.OAuth2MessageContext;
 import org.wso2.carbon.identity.inbound.auth.oidc.exception.OIDCRuntimeException;
 import org.wso2.carbon.identity.inbound.auth.oidc.internal.OIDCDataHolder;
@@ -26,6 +28,8 @@ import org.wso2.carbon.identity.inbound.auth.oidc.internal.OIDCDataHolder;
 import java.util.List;
 
 public class HandlerManager {
+
+    private static final Log log = LogFactory.getLog(HandlerManager.class);
 
     private static volatile HandlerManager instance = new HandlerManager();
 
@@ -41,10 +45,15 @@ public class HandlerManager {
 
         List<IDTokenHandler> handlers = OIDCDataHolder.getInstance().getIDTokenHandlers();
         for(IDTokenHandler handler:handlers){
-            if(handler.isEnabled(messageContext) && handler.canHandle(messageContext)){
-                return handler.buildIDToken(messageContext);
+            try {
+                if (handler.isEnabled(messageContext) && handler.canHandle(messageContext)) {
+                    return handler.buildIDToken(messageContext);
+                }
+            } catch (Exception e) {
+                log.error("Error occurred while checking if " + handler.getName() + " can handle " +
+                          messageContext.toString());
             }
         }
-        throw OIDCRuntimeException.error("Cannot find IDTokenHandler to handle this request");
+        throw OIDCRuntimeException.error("Cannot find IDTokenHandler to handle this request.");
     }
 }

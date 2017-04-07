@@ -21,6 +21,7 @@ package org.wso2.carbon.identity.inbound.auth.oauth2new.introspect;
 import org.wso2.carbon.identity.application.authentication.framework.exception.FrameworkException;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.OAuth2.ClientType;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2AuthnException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2ClientException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2Exception;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.HandlerManager;
@@ -79,7 +80,7 @@ public class IntrospectionProcessor extends OAuth2IdentityRequestProcessor {
      * @param messageContext The runtime message context
      * @throws OAuth2ClientException if the client was not authenticated successfully
      */
-    protected void authenticateClient(IntrospectionMessageContext messageContext) throws OAuth2ClientException {
+    protected void authenticateClient(IntrospectionMessageContext messageContext) throws OAuth2AuthnException {
         HandlerManager.getInstance().authenticateClient(messageContext);
     }
 }

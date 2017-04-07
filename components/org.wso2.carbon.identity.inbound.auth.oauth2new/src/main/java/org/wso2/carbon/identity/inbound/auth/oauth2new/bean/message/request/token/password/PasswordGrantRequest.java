@@ -18,6 +18,7 @@
 
 package org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.token.password;
 
+import org.wso2.carbon.identity.application.authentication.framework.inbound.FrameworkClientException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.token.TokenRequest;
 
 import javax.servlet.http.HttpServletRequest;
@@ -33,7 +34,7 @@ public class PasswordGrantRequest extends TokenRequest {
     private char[] password;
     private Set<String> scopes = new HashSet();
 
-    protected PasswordGrantRequest(PasswordGrantBuilder builder) {
+    protected PasswordGrantRequest(PasswordGrantBuilder builder) throws FrameworkClientException {
         super(builder);
         this.username = builder.username;
         this.password = builder.password;
@@ -81,7 +82,7 @@ public class PasswordGrantRequest extends TokenRequest {
         }
 
         @Override
-        public PasswordGrantRequest build() {
+        public PasswordGrantRequest build() throws FrameworkClientException {
             return new PasswordGrantRequest(this);
         }
     }
