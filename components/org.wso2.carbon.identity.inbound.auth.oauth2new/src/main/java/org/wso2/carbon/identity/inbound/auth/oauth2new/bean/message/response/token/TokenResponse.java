@@ -26,35 +26,27 @@ public class TokenResponse extends IdentityResponse {
 
     private static final long serialVersionUID = -5294873717285750996L;
 
-    protected OAuthASResponse.OAuthTokenResponseBuilder builder;
+    protected OAuthASResponse.OAuthTokenResponseBuilder oltuTokenBuilder;
 
-    public OAuthASResponse.OAuthTokenResponseBuilder getBuilder() {
-        return builder;
+    public OAuthASResponse.OAuthTokenResponseBuilder getOltuTokenBuilder() {
+        return oltuTokenBuilder;
     }
 
-    protected TokenResponse(IdentityResponseBuilder builder) {
-        super(builder);
-        this.builder = ((TokenResponseBuilder)builder).builder;
+    protected TokenResponse(TokenResponseBuilder oltuTokenBuilder) {
+        super(oltuTokenBuilder);
+        this.oltuTokenBuilder = oltuTokenBuilder.oltuTokenBuilder;
     }
 
     public static class TokenResponseBuilder extends IdentityResponseBuilder {
 
-        protected OAuthASResponse.OAuthTokenResponseBuilder builder;
+        protected OAuthASResponse.OAuthTokenResponseBuilder oltuTokenBuilder;
 
         public TokenResponseBuilder(IdentityMessageContext context) {
             super(context);
         }
 
-        // Unconventional accessor method in builder because there is the requirement to extend this builder and
-        // build a sub type of this class. When doing that the build() method of OAuthTokenResponseBuilder must be
-        // called only once the sub type builder is fully loaded.
-
-        public OAuthASResponse.OAuthTokenResponseBuilder getBuilder() {
-            return builder;
-        }
-
-        public TokenResponseBuilder setBuilder(OAuthASResponse.OAuthTokenResponseBuilder builder) {
-            this.builder = builder;
+        public TokenResponseBuilder setOltuTokenBuilder(OAuthASResponse.OAuthTokenResponseBuilder oltuTokenBuilder) {
+            this.oltuTokenBuilder = oltuTokenBuilder;
             return this;
         }
 

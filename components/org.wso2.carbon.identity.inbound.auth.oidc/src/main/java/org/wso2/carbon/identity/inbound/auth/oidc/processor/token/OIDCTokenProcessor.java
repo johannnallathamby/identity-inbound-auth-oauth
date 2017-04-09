@@ -141,14 +141,11 @@ public class OIDCTokenProcessor extends TokenProcessor {
         OIDCCache.getInstance().addToCache(tokenKey, entry);
     }
 
-    protected TokenResponse.TokenResponseBuilder buildTokenResponse(AccessToken accessToken,
-                                                                    TokenMessageContext messageContext) {
-
-        TokenResponse.TokenResponseBuilder oauth2Builder = super.buildTokenResponse(accessToken, messageContext);
+    protected OIDCTokenResponse.OIDCTokenResponseBuilder buildTokenResponse(AccessToken accessToken, TokenMessageContext messageContext) {
 
         OIDCTokenResponse.OIDCTokenResponseBuilder oidcBuilder =
                 new OIDCTokenResponse.OIDCTokenResponseBuilder(messageContext);
-        oidcBuilder.setOLTUBuilder(oauth2Builder.getBuilder());
+        super.buildTokenResponse(oidcBuilder, accessToken, messageContext);
 
         // TODO: need to verify this. We are assuming only for "response_type=code" and "grant_type=password" id_token
         // TODO: is issued from token endpoint. This may fail when we start supporting other response types like

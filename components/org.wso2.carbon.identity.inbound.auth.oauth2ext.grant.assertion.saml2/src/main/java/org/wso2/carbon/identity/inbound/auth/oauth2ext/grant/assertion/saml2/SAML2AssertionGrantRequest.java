@@ -19,7 +19,7 @@
 package org.wso2.carbon.identity.inbound.auth.oauth2ext.grant.assertion.saml2;
 
 import org.opensaml.saml2.core.Assertion;
-import org.wso2.carbon.identity.application.authentication.framework.inbound.FrameworkRuntimeException;
+import org.wso2.carbon.identity.application.authentication.framework.inbound.FrameworkClientException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.token.TokenRequest;
 
 import javax.servlet.http.HttpServletRequest;
@@ -35,7 +35,7 @@ public class SAML2AssertionGrantRequest extends TokenRequest {
     private String assertionType;
     private Set<String> scopes = new HashSet();
 
-    protected SAML2AssertionGrantRequest(SAML2AssertionGrantBuilder builder) {
+    protected SAML2AssertionGrantRequest(SAML2AssertionGrantBuilder builder) throws FrameworkClientException {
         super(builder);
         this.assertion = builder.assertion;
         this.assertionType = builder.assertionType;
@@ -80,7 +80,7 @@ public class SAML2AssertionGrantRequest extends TokenRequest {
         }
 
         @Override
-        public SAML2AssertionGrantRequest build() throws FrameworkRuntimeException {
+        public SAML2AssertionGrantRequest build() throws FrameworkClientException {
             return new SAML2AssertionGrantRequest(this);
         }
     }

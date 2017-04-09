@@ -47,7 +47,7 @@ public class TokenResponseFactory extends HttpIdentityResponseFactory {
         TokenResponse tokenResponse = ((TokenResponse)identityResponse);
         OAuthResponse oauthResponse = null;
         try {
-            oauthResponse = tokenResponse.getBuilder().buildJSONMessage();
+            oauthResponse = tokenResponse.getOltuTokenBuilder().buildJSONMessage();
         } catch (OAuthSystemException e) {
             throw OAuth2RuntimeException.error("Error occurred while building JSON message fo token endpoint response");
         }

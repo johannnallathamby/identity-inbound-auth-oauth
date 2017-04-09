@@ -95,25 +95,24 @@ public class IntrospectionResponse extends IdentityResponse {
      */
     private long iat;
 
-    protected IntrospectionResponse(IdentityResponseBuilder builder) {
+    protected IntrospectionResponse(IntrospectionResponseBuilder builder) {
         super(builder);
         // TODO:
         // setting context to null, otherwise the context also gets serialized and comes back in IntrospectionResponse
         // instead of doing this try to customize the json building in the IntrospectionResponseFactory
         context = null;
-        IntrospectionResponseBuilder introspectionResponseBuilder = (IntrospectionResponseBuilder)builder;
-        this.active = introspectionResponseBuilder.active;
-        this.aud = introspectionResponseBuilder.aud;
-        this.clientId = introspectionResponseBuilder.clientId;
-        this.exp = introspectionResponseBuilder.exp;
-        this.iat = introspectionResponseBuilder.iat;
-        this.iss = introspectionResponseBuilder.iss;
-        this.jti = introspectionResponseBuilder.jti;
-        this.nbf = introspectionResponseBuilder.nbf;
-        this.scope = introspectionResponseBuilder.scope;
-        this.sub = introspectionResponseBuilder.sub;
-        this.tokenType = introspectionResponseBuilder.tokenType;
-        this.username = introspectionResponseBuilder.username;
+        this.active = builder.active;
+        this.aud = builder.aud;
+        this.clientId = builder.clientId;
+        this.exp = builder.exp;
+        this.iat = builder.iat;
+        this.iss = builder.iss;
+        this.jti = builder.jti;
+        this.nbf = builder.nbf;
+        this.scope = builder.scope;
+        this.sub = builder.sub;
+        this.tokenType = builder.tokenType;
+        this.username = builder.username;
     }
 
     public boolean isActive() {

@@ -27,8 +27,8 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>org.wso2.carbon.identity.inbound.auth.oidc.ui</artifactId>
     <packaging>bundle</packaging>
-    <name>WSO2 Carbon - OAuth OpenId Connect Discovery</name>
-    <description>OpenId Connect Discovery Bundle</description>
+    <name>WSO2 Carbon - OAuth OpenId Connect UI</name>
+    <description>OpenId Connect UI Bundle</description>
     <url>http://wso2.org</url>
     <dependencies>
         <dependency>

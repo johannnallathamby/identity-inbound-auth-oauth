@@ -18,6 +18,7 @@
 
 package org.wso2.carbon.identity.inbound.auth.oauth2ext.grant.iwa.ntlm;
 
+import org.wso2.carbon.identity.application.authentication.framework.inbound.FrameworkClientException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.token.TokenRequest;
 
 import javax.servlet.http.HttpServletRequest;
@@ -32,7 +33,7 @@ public class IWANTLMGrantRequest extends TokenRequest {
     protected String windowsToken;
     protected Set<String> scopes = new HashSet<>();
 
-    protected IWANTLMGrantRequest(IWANTLMGrantBuilder builder) {
+    protected IWANTLMGrantRequest(IWANTLMGrantBuilder builder) throws FrameworkClientException {
         super(builder);
         this.windowsToken = builder.windowsToken;
         this.scopes = builder.scopes;
@@ -66,7 +67,7 @@ public class IWANTLMGrantRequest extends TokenRequest {
         }
 
         @Override
-        public IWANTLMGrantRequest build() {
+        public IWANTLMGrantRequest build() throws FrameworkClientException {
             return new IWANTLMGrantRequest(this);
         }
     }

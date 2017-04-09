@@ -59,11 +59,6 @@ public class OIDCTokenResponse extends TokenResponse {
             return this;
         }
 
-        public OIDCTokenResponseBuilder setOLTUBuilder(OAuthASResponse.OAuthTokenResponseBuilder builder) {
-            this.builder = builder;
-            return this;
-        }
-
         public OIDCTokenResponse build() {
             return new OIDCTokenResponse(this);
         }

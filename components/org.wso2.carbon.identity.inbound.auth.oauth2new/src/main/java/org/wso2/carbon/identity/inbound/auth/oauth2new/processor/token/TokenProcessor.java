@@ -102,7 +102,15 @@ public class TokenProcessor extends OAuth2IdentityRequestProcessor {
     }
 
     protected TokenResponse.TokenResponseBuilder buildTokenResponse(AccessToken accessToken,
-                                                                        TokenMessageContext messageContext) {
+                                                                    TokenMessageContext messageContext) {
+
+        TokenResponse.TokenResponseBuilder builder = new TokenResponse.TokenResponseBuilder(messageContext);
+        buildTokenResponse(builder, accessToken, messageContext);
+        return builder;
+    }
+
+    protected void buildTokenResponse(TokenResponse.TokenResponseBuilder builder, AccessToken accessToken,
+                                      TokenMessageContext messageContext) {
 
         long expiry = 0;
         if(accessToken.getAccessTokenValidity() > 0) {
@@ -127,10 +135,7 @@ public class TokenProcessor extends OAuth2IdentityRequestProcessor {
             oltuRespBuilder.setRefreshToken(new String(refreshToken));
         }
         oltuRespBuilder.setScope(OAuth2Utils.buildScopeString(accessToken.getScopes()));
-
-        TokenResponse.TokenResponseBuilder builder = new TokenResponse.TokenResponseBuilder(messageContext);
-        builder.setBuilder(oltuRespBuilder);
-        return builder;
+        builder.setOltuTokenBuilder(oltuRespBuilder);
     }
 
     /**

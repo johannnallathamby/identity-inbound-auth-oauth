@@ -58,12 +58,12 @@ public class OIDCTokenResponseFactory extends TokenResponseFactory {
 
         if(tokenResponse.getIdTokenClaimsSet() != null) {
             String idToken = createIDToken(tokenResponse.getIdTokenClaimsSet(), tokenResponse).serialize();
-            tokenResponse.getBuilder().setParam("id_token", idToken);
+            tokenResponse.getOltuTokenBuilder().setParam("id_token", idToken);
         }
 
         OAuthResponse oauthResponse = null;
         try {
-            oauthResponse = tokenResponse.getBuilder().buildJSONMessage();
+            oauthResponse = tokenResponse.getOltuTokenBuilder().buildJSONMessage();
         } catch (OAuthSystemException e1) {
             throw OIDCRuntimeException.error("Error occurred while building JSON message fo token endpoint response");
         }
