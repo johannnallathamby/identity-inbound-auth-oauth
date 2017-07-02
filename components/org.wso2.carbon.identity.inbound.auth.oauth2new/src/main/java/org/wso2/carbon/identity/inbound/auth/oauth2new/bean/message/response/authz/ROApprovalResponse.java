@@ -18,7 +18,6 @@
 
 package org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.authz;
 
-import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityMessageContext;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityResponse;
 
 public abstract class ROApprovalResponse extends IdentityResponse {
@@ -31,8 +30,5 @@ public abstract class ROApprovalResponse extends IdentityResponse {
 
     public static class ROApprovalResponseBuilder extends IdentityResponseBuilder {
 
-        public ROApprovalResponseBuilder(IdentityMessageContext context) {
-            super(context);
-        }
     }
 }

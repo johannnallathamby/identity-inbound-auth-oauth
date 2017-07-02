@@ -19,7 +19,6 @@
 package org.wso2.carbon.identity.inbound.auth.oauth2ext.grant.iwa.ntlm;
 
 import com.sun.jna.platform.win32.Sspi;
-import org.apache.catalina.Realm;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
@@ -31,7 +30,6 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2ClientExc
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2Exception;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2RuntimeException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.handler.grant.AuthorizationGrantHandler;
-import waffle.apache.NegotiateAuthenticator;
 import waffle.servlet.NegotiateSecurityFilter;
 import waffle.util.Base64;
 import waffle.windows.auth.IWindowsCredentialsHandle;
@@ -40,10 +38,10 @@ import waffle.windows.auth.impl.WindowsAuthProviderImpl;
 import waffle.windows.auth.impl.WindowsCredentialsHandleImpl;
 import waffle.windows.auth.impl.WindowsSecurityContextImpl;
 
-import javax.security.auth.Subject;
-import javax.servlet.ServletException;
 import java.io.IOException;
 import java.util.Set;
+import javax.security.auth.Subject;
+import javax.servlet.ServletException;
 
 public class IWANTLMGrantHandler extends AuthorizationGrantHandler {
 

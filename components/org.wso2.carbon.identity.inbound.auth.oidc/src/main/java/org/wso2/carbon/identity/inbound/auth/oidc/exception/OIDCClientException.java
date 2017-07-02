@@ -18,9 +18,9 @@
 
 package org.wso2.carbon.identity.inbound.auth.oidc.exception;
 
-import org.wso2.carbon.identity.application.authentication.framework.inbound.FrameworkClientException;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2ClientException;
 
-public class OIDCClientException extends FrameworkClientException {
+public class OIDCClientException extends OAuth2ClientException {
 
     public OIDCClientException(String message) {
         super(message);

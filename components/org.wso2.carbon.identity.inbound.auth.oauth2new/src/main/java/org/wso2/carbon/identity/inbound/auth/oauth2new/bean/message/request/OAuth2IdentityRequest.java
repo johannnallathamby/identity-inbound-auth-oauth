@@ -19,13 +19,7 @@
 package org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request;
 
 import org.wso2.carbon.identity.application.authentication.framework.inbound.FrameworkClientException;
-import org.wso2.carbon.identity.application.authentication.framework.inbound.FrameworkRuntimeException;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.Scanner;
 
 public class OAuth2IdentityRequest extends IdentityRequest {
 
@@ -45,14 +39,6 @@ public class OAuth2IdentityRequest extends IdentityRequest {
     public static class OAuth2IdentityRequestBuilder extends IdentityRequestBuilder {
 
         protected String body;
-
-        public OAuth2IdentityRequestBuilder(HttpServletRequest request, HttpServletResponse response) {
-            super(request, response);
-        }
-
-        public OAuth2IdentityRequestBuilder() {
-
-        }
 
         public OAuth2IdentityRequestBuilder setBody(String body) {
             this.body = body;

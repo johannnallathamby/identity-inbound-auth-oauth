@@ -19,8 +19,6 @@
 package org.wso2.carbon.identity.inbound.auth.oidc.bean.message.response.token;
 
 import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
-import org.apache.oltu.oauth2.as.response.OAuthASResponse;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.TokenMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.token.TokenResponse;
 
 public class OIDCTokenResponse extends TokenResponse {
@@ -49,13 +47,13 @@ public class OIDCTokenResponse extends TokenResponse {
         protected IDTokenClaimsSet idTokenClaimsSet;
         protected String tenantDomain;
 
-        public OIDCTokenResponseBuilder(TokenMessageContext messageContext) {
-            super(messageContext);
-            this.tenantDomain = messageContext.getRequest().getTenantDomain();
-        }
-
         public OIDCTokenResponseBuilder setIdTokenClaimsSet(IDTokenClaimsSet idTokenClaimsSet) {
             this.idTokenClaimsSet = idTokenClaimsSet;
+            return this;
+        }
+
+        public OIDCTokenResponseBuilder setTenantDomain(String tenantDomain) {
+            this.tenantDomain = tenantDomain;
             return this;
         }
 

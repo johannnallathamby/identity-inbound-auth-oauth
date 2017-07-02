@@ -23,8 +23,6 @@ import com.nimbusds.openid.connect.sdk.claims.ClaimsTransport;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.FrameworkClientException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.authz.AuthzRequest;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -156,14 +154,6 @@ public class OIDCAuthzRequest extends AuthzRequest {
         protected boolean isPromptNone = false;
         protected Set<Claim> claims = new HashSet();
         protected String responseMode;
-
-        public OIDCAuthzRequestBuilder(HttpServletRequest request, HttpServletResponse response) {
-            super(request, response);
-        }
-
-        public OIDCAuthzRequestBuilder() {
-
-        }
 
         public OIDCAuthzRequestBuilder setNonce(String nonce) {
             this.nonce = nonce;

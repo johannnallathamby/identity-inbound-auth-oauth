@@ -21,9 +21,6 @@ package org.wso2.carbon.identity.inbound.auth.oidc.bean.message.request.userinfo
 import org.wso2.carbon.identity.application.authentication.framework.inbound.FrameworkClientException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.OAuth2IdentityRequest;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 public class UserInfoRequest extends OAuth2IdentityRequest {
 
     private static final long serialVersionUID = -1555222725037366929L;
@@ -42,11 +39,6 @@ public class UserInfoRequest extends OAuth2IdentityRequest {
     public static class UserInfoRequestBuilder extends OAuth2IdentityRequestBuilder {
 
         protected String accessToken;
-
-        protected UserInfoRequestBuilder(HttpServletRequest request, HttpServletResponse response) throws
-                                                                                           FrameworkClientException {
-            super(request, response);
-        }
 
         public UserInfoRequestBuilder setAccessToken(String accessToken) {
             this.accessToken = accessToken;

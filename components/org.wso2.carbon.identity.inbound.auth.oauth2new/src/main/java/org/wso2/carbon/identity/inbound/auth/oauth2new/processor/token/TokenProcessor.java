@@ -37,8 +37,8 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AccessToken;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.processor.OAuth2IdentityRequestProcessor;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Utils;
 
-import javax.servlet.http.HttpServletResponse;
 import java.util.HashMap;
+import javax.servlet.http.HttpServletResponse;
 
 /*
  * InboundRequestProcessor for OAuth2 Token Endpoint
@@ -104,7 +104,7 @@ public class TokenProcessor extends OAuth2IdentityRequestProcessor {
     protected TokenResponse.TokenResponseBuilder buildTokenResponse(AccessToken accessToken,
                                                                     TokenMessageContext messageContext) {
 
-        TokenResponse.TokenResponseBuilder builder = new TokenResponse.TokenResponseBuilder(messageContext);
+        TokenResponse.TokenResponseBuilder builder = new TokenResponse.TokenResponseBuilder();
         buildTokenResponse(builder, accessToken, messageContext);
         return builder;
     }

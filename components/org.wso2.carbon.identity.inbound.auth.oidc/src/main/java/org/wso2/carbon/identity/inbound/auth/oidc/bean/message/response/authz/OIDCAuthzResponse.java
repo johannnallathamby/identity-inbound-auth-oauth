@@ -19,8 +19,6 @@
 package org.wso2.carbon.identity.inbound.auth.oidc.bean.message.response.authz;
 
 import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
-import org.apache.oltu.oauth2.as.response.OAuthASResponse;
-import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.context.AuthzMessageContext;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.authz.AuthzResponse;
 
 public class OIDCAuthzResponse extends AuthzResponse {
@@ -70,13 +68,20 @@ public class OIDCAuthzResponse extends AuthzResponse {
         protected String redirectURI;
         protected String tenantDomain;
 
-        public OIDCAuthzResponseBuilder(AuthzMessageContext messageContext) {
-            super(messageContext);
-            this.tenantDomain = messageContext.getRequest().getTenantDomain();
-            this.responseType = messageContext.getRequest().getResponseType();
-            this.redirectURI = messageContext.getRequest().getRedirectURI();
+        public OIDCAuthzResponseBuilder setTenantDomain(String tenantDomain) {
+            this.tenantDomain = tenantDomain;
+            return this;
         }
 
+        public OIDCAuthzResponseBuilder setResponseType(String responseType) {
+            this.responseType = responseType;
+            return this;
+        }
+
+        public OIDCAuthzResponseBuilder setRedirectURI(String redirectURI) {
+            this.redirectURI = redirectURI;
+            return this;
+        }
         public OIDCAuthzResponseBuilder setIdTokenClaimsSet(IDTokenClaimsSet idTokenClaimsSet) {
             this.idTokenClaimsSet = idTokenClaimsSet;
             return this;
@@ -84,16 +89,6 @@ public class OIDCAuthzResponse extends AuthzResponse {
 
         public OIDCAuthzResponseBuilder setResponseMode(String responseMode) {
             this.responseMode = responseMode;
-            return this;
-        }
-
-        public OIDCAuthzResponseBuilder setOLTUBuilder(OAuthASResponse.OAuthAuthorizationResponseBuilder builder) {
-            this.builder = builder;
-            return this;
-        }
-
-        public OIDCAuthzResponseBuilder setFragmentUrl(boolean isFragmentUrl) {
-            this.isFragmentUrl = isFragmentUrl;
             return this;
         }
 

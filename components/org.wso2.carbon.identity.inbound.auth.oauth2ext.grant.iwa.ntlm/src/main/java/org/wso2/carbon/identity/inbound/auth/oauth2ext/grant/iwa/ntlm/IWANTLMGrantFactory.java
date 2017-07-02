@@ -44,8 +44,7 @@ public class IWANTLMGrantFactory extends TokenRequestFactory {
     public IWANTLMGrantRequest.IWANTLMGrantBuilder create(HttpServletRequest request,
                                                           HttpServletResponse response) throws OAuth2ClientException {
 
-        IWANTLMGrantRequest.IWANTLMGrantBuilder builder = new IWANTLMGrantRequest.IWANTLMGrantBuilder
-                (request, response);
+        IWANTLMGrantRequest.IWANTLMGrantBuilder builder = new IWANTLMGrantRequest.IWANTLMGrantBuilder();
         create(builder, request, response);
         return builder;
     }

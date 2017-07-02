@@ -45,8 +45,7 @@ public class PasswordGrantFactory extends TokenRequestFactory {
     public PasswordGrantRequest.PasswordGrantBuilder create(HttpServletRequest request, HttpServletResponse response)
             throws OAuth2ClientException {
 
-        PasswordGrantRequest.PasswordGrantBuilder builder = new PasswordGrantRequest.PasswordGrantBuilder
-                (request, response);
+        PasswordGrantRequest.PasswordGrantBuilder builder = new PasswordGrantRequest.PasswordGrantBuilder();
         create(builder, request, response);
         return builder;
     }

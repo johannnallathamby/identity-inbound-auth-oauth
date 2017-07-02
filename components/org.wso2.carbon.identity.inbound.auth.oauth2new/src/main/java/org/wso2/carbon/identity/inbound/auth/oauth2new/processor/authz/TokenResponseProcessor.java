@@ -58,6 +58,13 @@ public class TokenResponseProcessor extends ROApprovalProcessor {
      */
     protected AuthzResponse.AuthzResponseBuilder buildAuthzResponse(AuthzMessageContext messageContext) {
 
+        AuthzResponse.AuthzResponseBuilder builder = new AuthzResponse.AuthzResponseBuilder();
+        buildAuthzResponse(builder, messageContext);
+        return builder;
+    }
+
+    protected void buildAuthzResponse(AuthzResponse.AuthzResponseBuilder builder, AuthzMessageContext messageContext) {
+
         AccessToken accessToken = issueAccessToken(messageContext);
 
         long expiry = 0;
@@ -78,15 +85,12 @@ public class TokenResponseProcessor extends ROApprovalProcessor {
                 .setParam(OAuth.OAUTH_STATE, state)
                 .setParam(OAuth.OAUTH_SCOPE, OAuth2Utils.buildScopeString(accessToken.getScopes()));
 
-
         if(issueRefreshToken(messageContext)) {
             oltuRespBuilder.setParam(OAuth.OAUTH_REFRESH_TOKEN, new String(accessToken.getRefreshToken()));
         }
-        
-        AuthzResponse.AuthzResponseBuilder builder = new AuthzResponse.AuthzResponseBuilder(messageContext);
-        builder.setOLTUAuthzResponseBuilder(oltuRespBuilder);
+
+        builder.setOLTUBuilder(oltuRespBuilder);
         builder.setFragmentUrl(true);
-        return builder;
     }
 
     /**

@@ -55,8 +55,8 @@ public class SAML2AssertionGrantFactory extends TokenRequestFactory {
                                                                         HttpServletResponse response)
             throws OAuth2ClientException {
 
-        SAML2AssertionGrantRequest.SAML2AssertionGrantBuilder builder = new SAML2AssertionGrantRequest.SAML2AssertionGrantBuilder
-                (request, response);
+        SAML2AssertionGrantRequest.SAML2AssertionGrantBuilder builder =
+                new SAML2AssertionGrantRequest.SAML2AssertionGrantBuilder();
         create(builder, request, response);
         return builder;
     }

@@ -42,7 +42,7 @@ public class AuthzApprovedRequestFactory extends OAuth2IdentityRequestFactory {
                                                                    HttpServletResponse response) throws OAuth2ClientException {
 
         AuthzApprovedRequest.AuthzApprovedRequestBuilder builder = new AuthzApprovedRequest.AuthzApprovedRequestBuilder
-                (request, response);
+                ();
         create(builder, request, response);
         return builder;
     }

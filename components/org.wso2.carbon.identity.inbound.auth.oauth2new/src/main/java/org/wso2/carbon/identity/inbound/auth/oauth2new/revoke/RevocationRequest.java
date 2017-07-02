@@ -21,9 +21,6 @@ package org.wso2.carbon.identity.inbound.auth.oauth2new.revoke;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.FrameworkClientException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.OAuth2IdentityRequest;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 public class RevocationRequest extends OAuth2IdentityRequest {
 
     private static final long serialVersionUID = -4037377885923719845L;
@@ -56,14 +53,6 @@ public class RevocationRequest extends OAuth2IdentityRequest {
         private String token;
         private String tokenTypeHint;
         private String callback;
-
-        public RevokeRequestBuilder(HttpServletRequest request, HttpServletResponse response) {
-            super(request, response);
-        }
-
-        public RevokeRequestBuilder() {
-
-        }
 
         public RevokeRequestBuilder setToken(String token) {
             this.token = token;

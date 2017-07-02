@@ -140,12 +140,13 @@ public class OIDCCodeResponseProcessor extends CodeResponseProcessor {
 
     protected AuthzResponse.AuthzResponseBuilder buildAuthzResponse(AuthzMessageContext messageContext) {
 
-        AuthzResponse.AuthzResponseBuilder oauth2Builder = super.buildAuthzResponse(messageContext);
-
         OIDCAuthzResponse.OIDCAuthzResponseBuilder oidcBuilder =
-                new OIDCAuthzResponse.OIDCAuthzResponseBuilder(messageContext);
-        oidcBuilder.setOLTUBuilder(oauth2Builder.getBuilder());
-        oidcBuilder.setFragmentUrl(oauth2Builder.isFragmentUrl());
+                new OIDCAuthzResponse.OIDCAuthzResponseBuilder();
+        super.buildAuthzResponse(oidcBuilder, messageContext);
+
+        oidcBuilder.setTenantDomain(messageContext.getRequest().getTenantDomain());
+        oidcBuilder.setResponseType(messageContext.getRequest().getResponseType());
+        oidcBuilder.setRedirectURI(messageContext.getRequest().getRedirectURI());
 
         String responseMode = ((OIDCAuthzRequest)messageContext.getRequest()).getResponseMode();
         if(responseMode != null && OIDC.ResponseMode.FORM_POST.equals(responseMode)) {
@@ -155,7 +156,7 @@ public class OIDCCodeResponseProcessor extends CodeResponseProcessor {
         AuthenticationResult authenticationResult = (AuthenticationResult)messageContext.getParameter(
                 InboundConstants.RequestProcessor.AUTHENTICATION_RESULT);
         if(StringUtils.isNotBlank(authenticationResult.getAuthenticatedIdPs())){
-            oidcBuilder.getBuilder().setParam(InboundConstants.LOGGED_IN_IDPS, authenticationResult.getAuthenticatedIdPs());
+            oidcBuilder.setParam(InboundConstants.LOGGED_IN_IDPS, authenticationResult.getAuthenticatedIdPs());
         }
 
         return oidcBuilder;

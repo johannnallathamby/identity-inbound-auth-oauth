@@ -20,10 +20,10 @@ package org.wso2.carbon.identity.inbound.auth.oauth2ext.grant.iwa.ntlm;
 
 import org.apache.catalina.connector.Request;
 
-import javax.servlet.http.HttpSession;
 import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
+import javax.servlet.http.HttpSession;
 
 
 public class SimpleHttpRequest extends Request {

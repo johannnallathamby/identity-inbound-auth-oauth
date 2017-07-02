@@ -41,7 +41,7 @@ public abstract class OAuth2IdentityRequestFactory extends HttpIdentityRequestFa
                                                                                                  OAuth2ClientException {
 
         OAuth2IdentityRequest.OAuth2IdentityRequestBuilder builder =
-                new OAuth2IdentityRequest.OAuth2IdentityRequestBuilder(request, response);
+                new OAuth2IdentityRequest.OAuth2IdentityRequestBuilder();
         create(builder, request, response);
         return builder;
     }

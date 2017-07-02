@@ -18,7 +18,6 @@
 
 package org.wso2.carbon.identity.inbound.auth.oauth2ext.grant.assertion.saml2.internal;
 
-import org.wso2.carbon.identity.inbound.auth.oauth2new.internal.OAuth2DataHolder;
 import org.wso2.carbon.idp.mgt.IdpManager;
 import org.wso2.carbon.registry.api.RegistryService;
 import org.wso2.carbon.user.core.service.RealmService;

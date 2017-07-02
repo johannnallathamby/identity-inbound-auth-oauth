@@ -47,7 +47,7 @@ public class ClientCredentialsGrantFactory extends TokenRequestFactory {
             throws OAuth2ClientException {
 
         ClientCredentialsGrantRequest.ClientCredentialsGrantBuilder builder = new ClientCredentialsGrantRequest
-                .ClientCredentialsGrantBuilder(request, response);
+                .ClientCredentialsGrantBuilder();
         create(builder, request, response);
         return builder;
     }

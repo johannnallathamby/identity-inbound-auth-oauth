@@ -144,8 +144,9 @@ public class OIDCTokenProcessor extends TokenProcessor {
     protected OIDCTokenResponse.OIDCTokenResponseBuilder buildTokenResponse(AccessToken accessToken, TokenMessageContext messageContext) {
 
         OIDCTokenResponse.OIDCTokenResponseBuilder oidcBuilder =
-                new OIDCTokenResponse.OIDCTokenResponseBuilder(messageContext);
+                new OIDCTokenResponse.OIDCTokenResponseBuilder();
         super.buildTokenResponse(oidcBuilder, accessToken, messageContext);
+        oidcBuilder.setTenantDomain(messageContext.getRequest().getTenantDomain());
 
         // TODO: need to verify this. We are assuming only for "response_type=code" and "grant_type=password" id_token
         // TODO: is issued from token endpoint. This may fail when we start supporting other response types like

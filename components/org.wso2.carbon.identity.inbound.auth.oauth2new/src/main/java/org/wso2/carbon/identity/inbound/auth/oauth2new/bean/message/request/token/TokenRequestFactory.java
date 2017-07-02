@@ -38,7 +38,7 @@ public abstract class TokenRequestFactory extends OAuth2IdentityRequestFactory {
     public TokenRequest.TokenRequestBuilder create(HttpServletRequest request,
                                                    HttpServletResponse response) throws OAuth2ClientException {
 
-        TokenRequest.TokenRequestBuilder builder = new TokenRequest.TokenRequestBuilder(request, response);
+        TokenRequest.TokenRequestBuilder builder = new TokenRequest.TokenRequestBuilder();
         create(builder, request, response);
         return builder;
     }

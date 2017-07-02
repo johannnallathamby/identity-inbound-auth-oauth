@@ -97,10 +97,6 @@ public class IntrospectionResponse extends IdentityResponse {
 
     protected IntrospectionResponse(IntrospectionResponseBuilder builder) {
         super(builder);
-        // TODO:
-        // setting context to null, otherwise the context also gets serialized and comes back in IntrospectionResponse
-        // instead of doing this try to customize the json building in the IntrospectionResponseFactory
-        context = null;
         this.active = builder.active;
         this.aud = builder.aud;
         this.clientId = builder.clientId;
@@ -164,13 +160,6 @@ public class IntrospectionResponse extends IdentityResponse {
     }
 
     public static class IntrospectionResponseBuilder extends IdentityResponseBuilder {
-
-        protected IntrospectionMessageContext messageContext;
-
-        public IntrospectionResponseBuilder(IntrospectionMessageContext messageContext) {
-            super(messageContext);
-            this.messageContext = messageContext;
-        }
 
         boolean active;
         private String scope;

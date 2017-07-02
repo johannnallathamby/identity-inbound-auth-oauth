@@ -19,7 +19,6 @@
 package org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.token;
 
 import org.apache.oltu.oauth2.as.response.OAuthASResponse;
-import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityMessageContext;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityResponse;
 
 public class TokenResponse extends IdentityResponse {
@@ -40,10 +39,6 @@ public class TokenResponse extends IdentityResponse {
     public static class TokenResponseBuilder extends IdentityResponseBuilder {
 
         protected OAuthASResponse.OAuthTokenResponseBuilder oltuTokenBuilder;
-
-        public TokenResponseBuilder(IdentityMessageContext context) {
-            super(context);
-        }
 
         public TokenResponseBuilder setOltuTokenBuilder(OAuthASResponse.OAuthTokenResponseBuilder oltuTokenBuilder) {
             this.oltuTokenBuilder = oltuTokenBuilder;

@@ -45,8 +45,7 @@ public class RefreshGrantFactory extends TokenRequestFactory {
     public RefreshGrantRequest.RefreshGrantBuilder create(HttpServletRequest request,
                                                           HttpServletResponse response) throws OAuth2ClientException {
 
-        RefreshGrantRequest.RefreshGrantBuilder builder = new RefreshGrantRequest.RefreshGrantBuilder
-                (request, response);
+        RefreshGrantRequest.RefreshGrantBuilder builder = new RefreshGrantRequest.RefreshGrantBuilder();
         create(builder, request, response);
         return builder;
     }

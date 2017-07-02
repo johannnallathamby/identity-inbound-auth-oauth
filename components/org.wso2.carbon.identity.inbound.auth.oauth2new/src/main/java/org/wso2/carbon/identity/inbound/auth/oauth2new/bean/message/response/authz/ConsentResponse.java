@@ -18,8 +18,6 @@
 
 package org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.authz;
 
-import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityMessageContext;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -67,12 +65,7 @@ public class ConsentResponse extends ROApprovalResponse {
 
         private String authenticatedSubjectId;
 
-
         private Map<String,String[]> parameterMap = new HashMap();
-
-        public ConsentResponseBuilder(IdentityMessageContext context) {
-            super(context);
-        }
 
         public ConsentResponseBuilder setSessionDataKeyConsent(String sessionDataKeyConsent) {
             this.sessionDataKeyConsent = sessionDataKeyConsent;

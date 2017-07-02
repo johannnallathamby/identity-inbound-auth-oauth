@@ -21,9 +21,6 @@ package org.wso2.carbon.identity.inbound.auth.oauth2new.introspect;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.FrameworkClientException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.OAuth2IdentityRequest;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 public class IntrospectionRequest extends OAuth2IdentityRequest {
 
     private static final long serialVersionUID = -4849897972055646565L;
@@ -49,13 +46,6 @@ public class IntrospectionRequest extends OAuth2IdentityRequest {
 
         private String token;
         private String tokenTypeHint;
-
-        public IntrospectionRequestBuilder(HttpServletRequest request, HttpServletResponse response) {
-            super(request, response);
-        }
-
-        public IntrospectionRequestBuilder() {
-        }
 
         public IntrospectionRequestBuilder setToken(String token) {
             this.token = token;

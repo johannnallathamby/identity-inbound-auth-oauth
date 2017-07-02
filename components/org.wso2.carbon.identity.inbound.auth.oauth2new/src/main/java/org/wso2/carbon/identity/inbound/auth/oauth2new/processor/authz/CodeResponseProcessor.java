@@ -34,9 +34,9 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.model.AuthzCode;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.model.OAuth2ServerConfig;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.util.DummyHttpServletRequest;
 
-import javax.servlet.http.HttpServletResponse;
 import java.sql.Timestamp;
 import java.util.Date;
+import javax.servlet.http.HttpServletResponse;
 
 /*
  * InboundRequestProcessor for response_type=code
@@ -54,6 +54,13 @@ public class CodeResponseProcessor extends ROApprovalProcessor {
     }
 
     protected AuthzResponse.AuthzResponseBuilder buildAuthzResponse(AuthzMessageContext messageContext) {
+
+        AuthzResponse.AuthzResponseBuilder builder = new AuthzResponse.AuthzResponseBuilder();
+        buildAuthzResponse(builder, messageContext);
+        return builder;
+    }
+
+    protected void buildAuthzResponse(AuthzResponse.AuthzResponseBuilder builder, AuthzMessageContext messageContext) {
 
         Timestamp timestamp = new Timestamp(new Date().getTime());
 
@@ -88,9 +95,6 @@ public class CodeResponseProcessor extends ROApprovalProcessor {
                 .location(messageContext.getRequest().getRedirectURI())
                 .setCode(authorizationCode)
                 .setParam(OAuth.OAUTH_STATE, messageContext.getRequest().getState());
-
-        AuthzResponse.AuthzResponseBuilder builder = new AuthzResponse.AuthzResponseBuilder(messageContext);
-        builder.setOLTUAuthzResponseBuilder(oltuRespBuilder);
-        return builder;
+        builder.setOLTUBuilder(oltuRespBuilder);
     }
 }

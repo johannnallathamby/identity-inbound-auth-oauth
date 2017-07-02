@@ -46,7 +46,7 @@ public class AuthzCodeGrantFactory extends TokenRequestFactory {
             throws OAuth2ClientException {
 
         AuthzCodeGrantRequest.AuthzCodeGrantBuilder builder = new AuthzCodeGrantRequest.AuthzCodeGrantBuilder
-                (request, response);
+                ();
         create(builder, request, response);
         return builder;
     }

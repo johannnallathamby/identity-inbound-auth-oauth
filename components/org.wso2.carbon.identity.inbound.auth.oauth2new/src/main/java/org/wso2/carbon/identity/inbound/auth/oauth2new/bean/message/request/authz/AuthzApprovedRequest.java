@@ -21,9 +21,6 @@ package org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.aut
 import org.wso2.carbon.identity.application.authentication.framework.inbound.FrameworkClientException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.OAuth2IdentityRequest;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 public class AuthzApprovedRequest extends OAuth2IdentityRequest {
 
     private static final long serialVersionUID = -1776762325249922753L;
@@ -49,14 +46,6 @@ public class AuthzApprovedRequest extends OAuth2IdentityRequest {
 
         private String sessionDataKey;
         private String consent;
-
-        public AuthzApprovedRequestBuilder(HttpServletRequest request, HttpServletResponse response) {
-            super(request, response);
-        }
-
-        public AuthzApprovedRequestBuilder() {
-
-        }
 
         public AuthzApprovedRequestBuilder setSessionDataKey(String sessionDataKey) {
             this.sessionDataKey = sessionDataKey;

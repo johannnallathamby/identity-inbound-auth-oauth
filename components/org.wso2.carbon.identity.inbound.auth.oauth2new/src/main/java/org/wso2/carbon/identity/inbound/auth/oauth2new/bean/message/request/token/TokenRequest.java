@@ -21,9 +21,6 @@ package org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.tok
 import org.wso2.carbon.identity.application.authentication.framework.inbound.FrameworkClientException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.OAuth2IdentityRequest;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 public class TokenRequest extends OAuth2IdentityRequest {
 
     private static final long serialVersionUID = 2113773120127290578L;
@@ -43,23 +40,13 @@ public class TokenRequest extends OAuth2IdentityRequest {
 
         private String grantType;
 
-        public TokenRequestBuilder(HttpServletRequest request, HttpServletResponse response) {
-            super(request, response);
-        }
-
-        public TokenRequestBuilder() {
-
-        }
-
         public TokenRequestBuilder setGrantType(String grantType) {
             this.grantType = grantType;
             return this;
         }
 
         public TokenRequest build() throws FrameworkClientException {
-
             return new TokenRequest(this);
         }
-
     }
 }

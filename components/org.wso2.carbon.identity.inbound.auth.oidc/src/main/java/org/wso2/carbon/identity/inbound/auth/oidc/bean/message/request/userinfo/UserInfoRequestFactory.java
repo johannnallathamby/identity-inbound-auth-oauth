@@ -21,18 +21,18 @@ package org.wso2.carbon.identity.inbound.auth.oidc.bean.message.request.userinfo
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.oltu.oauth2.common.OAuth;
-import org.wso2.carbon.identity.application.authentication.framework.inbound.FrameworkClientException;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.FrameworkRuntimeException;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.OAuth2IdentityRequestFactory;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2ClientException;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Utils;
 import org.wso2.carbon.identity.inbound.auth.oidc.exception.OIDCClientException;
 
+import java.io.IOException;
+import java.util.Scanner;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.HttpHeaders;
-import java.io.IOException;
-import java.util.Scanner;
 
 public class UserInfoRequestFactory extends OAuth2IdentityRequestFactory {
 
@@ -47,17 +47,16 @@ public class UserInfoRequestFactory extends OAuth2IdentityRequestFactory {
     @Override
     public UserInfoRequest.UserInfoRequestBuilder create(HttpServletRequest request,
                                                            HttpServletResponse response) throws
-                                                                                         FrameworkClientException {
+                                                                                         OAuth2ClientException {
 
-        UserInfoRequest.UserInfoRequestBuilder builder = new UserInfoRequest.UserInfoRequestBuilder
-                (request, response);
+        UserInfoRequest.UserInfoRequestBuilder builder = new UserInfoRequest.UserInfoRequestBuilder();
         create(builder, request, response);
         return builder;
     }
 
     @Override
     public void create(IdentityRequest.IdentityRequestBuilder builder, HttpServletRequest request,
-                       HttpServletResponse response) throws FrameworkClientException {
+                       HttpServletResponse response) throws OAuth2ClientException {
 
         UserInfoRequest.UserInfoRequestBuilder userInfoRequestBuilder =
                 (UserInfoRequest.UserInfoRequestBuilder)builder;

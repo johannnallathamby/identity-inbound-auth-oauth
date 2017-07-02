@@ -138,7 +138,7 @@ public abstract class ROApprovalProcessor extends IdentityProcessor {
         String sessionDataKeyConsent = UUID.randomUUID().toString();
         InboundUtil.addContextToCache(sessionDataKeyConsent, messageContext);
 
-        ConsentResponse.ConsentResponseBuilder builder = new ConsentResponse.ConsentResponseBuilder(messageContext);
+        ConsentResponse.ConsentResponseBuilder builder = new ConsentResponse.ConsentResponseBuilder();
         builder.setSessionDataKeyConsent(sessionDataKeyConsent);
         builder.setApplicationName(messageContext.getApplication().getAppName());
         builder.setAuthenticatedSubjectId(messageContext.getAuthzUser().getAuthenticatedSubjectIdentifier());

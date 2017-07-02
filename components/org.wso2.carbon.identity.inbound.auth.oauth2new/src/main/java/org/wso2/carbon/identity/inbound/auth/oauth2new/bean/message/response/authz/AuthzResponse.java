@@ -19,7 +19,6 @@
 package org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.response.authz;
 
 import org.apache.oltu.oauth2.as.response.OAuthASResponse;
-import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityMessageContext;
 
 
 public class AuthzResponse extends ROApprovalResponse {
@@ -45,26 +44,10 @@ public class AuthzResponse extends ROApprovalResponse {
 
     public static class AuthzResponseBuilder extends ROApprovalResponseBuilder {
 
-        public AuthzResponseBuilder(IdentityMessageContext context) {
-            super(context);
-        }
-
         protected OAuthASResponse.OAuthAuthorizationResponseBuilder builder;
         protected boolean isFragmentUrl;
 
-        // Unconventional accessor methods in builder because there is the requirement to extend this builder and
-        // build a sub type of this class. When doing that the build() method of OAuthTokenResponseBuilder must be
-        // called only once the sub type builder is fully loaded.
-
-        public OAuthASResponse.OAuthAuthorizationResponseBuilder getBuilder() {
-            return builder;
-        }
-
-        public boolean isFragmentUrl() {
-            return isFragmentUrl;
-        }
-
-        public AuthzResponseBuilder setOLTUAuthzResponseBuilder(OAuthASResponse.OAuthAuthorizationResponseBuilder
+        public AuthzResponseBuilder setOLTUBuilder(OAuthASResponse.OAuthAuthorizationResponseBuilder
                                                                         builder) {
             this.builder = builder;
             return this;
@@ -72,6 +55,11 @@ public class AuthzResponse extends ROApprovalResponse {
 
         public AuthzResponseBuilder setFragmentUrl(boolean isFragmentUrl) {
             this.isFragmentUrl = isFragmentUrl;
+            return this;
+        }
+
+        public AuthzResponseBuilder setParam(String key, String value) {
+            builder.setParam(key, value);
             return this;
         }
 

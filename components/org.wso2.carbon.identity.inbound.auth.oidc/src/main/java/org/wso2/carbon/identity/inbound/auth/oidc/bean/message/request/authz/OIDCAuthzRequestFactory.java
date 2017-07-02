@@ -30,14 +30,14 @@ import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2ClientExc
 import org.wso2.carbon.identity.inbound.auth.oauth2new.util.OAuth2Utils;
 import org.wso2.carbon.identity.inbound.auth.oidc.OIDC;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.text.ParseException;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 public class OIDCAuthzRequestFactory extends AuthzRequestFactory {
 
@@ -61,8 +61,7 @@ public class OIDCAuthzRequestFactory extends AuthzRequestFactory {
     public OIDCAuthzRequest.OIDCAuthzRequestBuilder create(HttpServletRequest request,
                                                            HttpServletResponse response) throws OAuth2ClientException {
 
-        OIDCAuthzRequest.OIDCAuthzRequestBuilder builder = new OIDCAuthzRequest.OIDCAuthzRequestBuilder
-                (request, response);
+        OIDCAuthzRequest.OIDCAuthzRequestBuilder builder = new OIDCAuthzRequest.OIDCAuthzRequestBuilder();
         create(builder, request, response);
         return builder;
     }

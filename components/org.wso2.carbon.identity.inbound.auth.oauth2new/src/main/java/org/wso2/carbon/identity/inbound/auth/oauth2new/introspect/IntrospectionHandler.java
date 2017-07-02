@@ -87,7 +87,7 @@ public class IntrospectionHandler extends AbstractIdentityMessageHandler {
                                                                                     IntrospectionMessageContext messageContext) {
 
         IntrospectionResponse.IntrospectionResponseBuilder builder = new IntrospectionResponse
-                .IntrospectionResponseBuilder(messageContext);
+                .IntrospectionResponseBuilder();
 
         introspectToken(accessToken, messageContext, builder);
 
@@ -105,7 +105,7 @@ public class IntrospectionHandler extends AbstractIdentityMessageHandler {
                                                                                      IntrospectionMessageContext messageContext) {
 
         IntrospectionResponse.IntrospectionResponseBuilder builder = new IntrospectionResponse
-                .IntrospectionResponseBuilder(messageContext);
+                .IntrospectionResponseBuilder();
 
         introspectToken(accessToken, messageContext, builder);
 

@@ -18,12 +18,12 @@
 
 package org.wso2.carbon.identity.inbound.auth.oauth2ext.grant.iwa.ntlm;
 
+import java.io.IOException;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 
 
 public class SimpleRequestDispatcher implements RequestDispatcher {

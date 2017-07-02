@@ -21,7 +21,6 @@ package org.wso2.carbon.identity.inbound.auth.oauth2new.introspect;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.FrameworkClientException;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
 import org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request.OAuth2IdentityRequestFactory;
-import org.wso2.carbon.utils.multitenancy.MultitenantConstants;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -39,7 +38,7 @@ public class IntrospectionRequestFactory extends OAuth2IdentityRequestFactory {
                                                                                                  IntrospectionClientException {
 
         IntrospectionRequest.IntrospectionRequestBuilder builder = new IntrospectionRequest.IntrospectionRequestBuilder
-                (request, response);
+                ();
         create(builder, request, response);
         return builder;
     }

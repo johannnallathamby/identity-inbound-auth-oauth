@@ -50,6 +50,12 @@ import org.apache.tomcat.InstanceManager;
 import org.apache.tomcat.JarScanner;
 import org.apache.tomcat.util.http.mapper.Mapper;
 
+import java.beans.PropertyChangeListener;
+import java.io.IOException;
+import java.net.URL;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 import javax.management.ObjectName;
 import javax.naming.directory.DirContext;
 import javax.servlet.ServletContainerInitializer;
@@ -58,12 +64,6 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletSecurityElement;
 import javax.servlet.descriptor.JspConfigDescriptor;
-import java.beans.PropertyChangeListener;
-import java.io.IOException;
-import java.net.URL;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
 
 
 public class SimpleContext implements Context {

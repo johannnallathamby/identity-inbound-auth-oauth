@@ -78,7 +78,7 @@ public class UserInfoProcessor extends OAuth2IdentityRequestProcessor {
         UserInfo userInfo = buildUserInfo(accessToken, messageContext);
 
         UserInfoResponse.UserInfoResponseBuilder userInfoResponseBuilder = new UserInfoResponse
-                .UserInfoResponseBuilder(messageContext);
+                .UserInfoResponseBuilder();
         userInfoResponseBuilder.setUserInfo(userInfo);
         return userInfoResponseBuilder;
     }

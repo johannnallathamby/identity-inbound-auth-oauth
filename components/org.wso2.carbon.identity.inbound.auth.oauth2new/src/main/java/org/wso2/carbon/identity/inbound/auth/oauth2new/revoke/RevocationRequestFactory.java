@@ -37,7 +37,7 @@ public class RevocationRequestFactory extends OAuth2IdentityRequestFactory {
     public RevocationRequest.RevokeRequestBuilder create(HttpServletRequest request,
                                                          HttpServletResponse response) throws OAuth2ClientException {
 
-        RevocationRequest.RevokeRequestBuilder builder = new RevocationRequest.RevokeRequestBuilder(request, response);
+        RevocationRequest.RevokeRequestBuilder builder = new RevocationRequest.RevokeRequestBuilder();
         try {
             super.create(builder, request, response);
         } catch (FrameworkClientException e) {

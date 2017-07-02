@@ -50,6 +50,11 @@
         <module>components/org.wso2.carbon.identity.oidc.dcr</module>
         <module>components/org.wso2.carbon.identity.discovery</module>
         <module>components/org.wso2.carbon.identity.webfinger</module>
+        <module>components/org.wso2.carbon.identity.inbound.auth.oauth2new</module>
+        <module>components/org.wso2.carbon.identity.inbound.auth.oauth2ext.grant.assertion.saml2</module>
+        <module>components/org.wso2.carbon.identity.inbound.auth.oauth2ext.grant.iwa.ntlm</module>
+        <module>components/org.wso2.carbon.identity.inbound.auth.oidc</module>
+        <module>components/org.wso2.carbon.identity.inbound.auth.oidc.ui</module>
 
         <module>features/org.wso2.carbon.identity.oauth.common.feature</module>
         <module>features/org.wso2.carbon.identity.oauth.feature</module>
