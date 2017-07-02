@@ -48,21 +48,15 @@ public class OAuth2IdentityRequest extends IdentityRequest {
 
         public OAuth2IdentityRequestBuilder(HttpServletRequest request, HttpServletResponse response) {
             super(request, response);
-            StringBuilder stringBuilder = new StringBuilder();
-            Scanner scanner = null;
-            try {
-                scanner = new Scanner(request.getInputStream());
-            } catch (IOException e) {
-                throw FrameworkRuntimeException.error("Cannot read the request body.");
-            }
-            while (scanner.hasNextLine()) {
-                stringBuilder.append(scanner.nextLine());
-            }
-            this.body = stringBuilder.toString();
         }
 
         public OAuth2IdentityRequestBuilder() {
 
+        }
+
+        public OAuth2IdentityRequestBuilder setBody(String body) {
+            this.body = body;
+            return this;
         }
 
         public OAuth2IdentityRequest build() throws FrameworkClientException {

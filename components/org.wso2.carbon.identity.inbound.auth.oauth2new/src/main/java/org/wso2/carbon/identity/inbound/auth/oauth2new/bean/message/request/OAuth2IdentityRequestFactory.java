@@ -18,11 +18,57 @@
 
 package org.wso2.carbon.identity.inbound.auth.oauth2new.bean.message.request;
 
+import org.wso2.carbon.identity.application.authentication.framework.inbound.FrameworkClientException;
+import org.wso2.carbon.identity.application.authentication.framework.inbound.FrameworkRuntimeException;
 import org.wso2.carbon.identity.application.authentication.framework.inbound.HttpIdentityRequestFactory;
+import org.wso2.carbon.identity.application.authentication.framework.inbound.IdentityRequest;
+import org.wso2.carbon.identity.inbound.auth.oauth2new.exception.OAuth2ClientException;
+
+import java.io.IOException;
+import java.util.Scanner;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 public abstract class OAuth2IdentityRequestFactory extends HttpIdentityRequestFactory {
 
     public int getPriority() {
         return 1;
+    }
+
+    @Override
+    public OAuth2IdentityRequest.OAuth2IdentityRequestBuilder create(HttpServletRequest request,
+                                                                   HttpServletResponse response) throws
+                                                                                                 OAuth2ClientException {
+
+        OAuth2IdentityRequest.OAuth2IdentityRequestBuilder builder =
+                new OAuth2IdentityRequest.OAuth2IdentityRequestBuilder(request, response);
+        create(builder, request, response);
+        return builder;
+    }
+
+    @Override
+    public void create(IdentityRequest.IdentityRequestBuilder builder, HttpServletRequest request,
+                       HttpServletResponse response) throws OAuth2ClientException {
+
+        OAuth2IdentityRequest.OAuth2IdentityRequestBuilder oAuth2IdentityRequestBuilder =
+                (OAuth2IdentityRequest.OAuth2IdentityRequestBuilder) builder;
+        try {
+            super.create(oAuth2IdentityRequestBuilder, request, response);
+
+            StringBuilder stringBuilder = new StringBuilder();
+            Scanner scanner = null;
+            try {
+                scanner = new Scanner(request.getInputStream());
+            } catch (IOException e) {
+                throw FrameworkRuntimeException.error("Cannot read the request body.");
+            }
+            while (scanner.hasNextLine()) {
+                stringBuilder.append(scanner.nextLine());
+            }
+            oAuth2IdentityRequestBuilder.setBody(stringBuilder.toString());
+
+        } catch (FrameworkClientException e) {
+            throw OAuth2ClientException.error(e.getMessage(), e);
+        }
     }
 }

@@ -33,6 +33,14 @@ public class OAuth2TenantMgtListener extends AbstractIdentityTenantMgtListener {
 
     @Override
     public void onPreDelete(int tenantId) throws StratosException {
+        inactivateTokens(tenantId);
+    }
+
+    public void onTenantDeactivation(int tenantId) throws StratosException {
+        inactivateTokens(tenantId);
+    }
+
+    private void inactivateTokens(int tenantId) {
 
         OAuth2DAO dao = HandlerManager.getInstance().getOAuth2DAO(null);
         Set<AccessToken> accessTokens = dao.getAccessTokensOfTenant(IdentityTenantUtil.getTenantDomain
@@ -46,4 +54,5 @@ public class OAuth2TenantMgtListener extends AbstractIdentityTenantMgtListener {
             dao.updateAuthzCodeState(authzCode.getAuthzCode(), OAuth2.TokenState.INACTIVE, null);
         }
     }
+
 }
